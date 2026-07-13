@@ -2,7 +2,7 @@
 <!--
 =====================================================================
   HECTARIS — Assolement & Prévision de campagne
-  © 2026 Renaud Vigneaux — EARL Vigneaux, Yonne (89), France
+  © 2026 Renaud Vigneaux — EARL Vigneaux, 7 rue de l'Orval, 89150 Brannay (89), France
   Tous droits réservés.
 
   Ce logiciel, son code source, son interface, sa structure de données,
@@ -12,7 +12,9 @@
   totale ou partielle, sans autorisation écrite préalable, est interdite
   (Code de la propriété intellectuelle, art. L.111-1 et suivants,
   L.122-4, L.335-2 et suivants).
-  Contact : EARL Vigneaux — Yonne (89) · [compléter ici : email / téléphone]
+  Contact : Renaud Vigneaux — EARL Vigneaux
+            7 rue de l'Orval, 89150 Brannay, France
+            Tél. 06 62 35 60 54 · rvigneaux@gmail.com
 =====================================================================
 -->
 <html lang="fr">
@@ -255,7 +257,7 @@ body::after{content:none}
       <div><b>Hectaris</b><span>ASSOLEMENT & PRÉVISION</span></div>
     </div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-foot">EARL Vigneaux · <b id="foot-camp"></b><br><span id="foot-surf"></span><br><span style="font-size:10px;opacity:.75">© 2026 Renaud Vigneaux — Tous droits réservés</span></div>
+    <div class="side-foot">Campagne <b id="foot-camp"></b><br><span id="foot-surf"></span><br><span style="font-size:10px;opacity:.75">© 2026 Renaud Vigneaux — Tous droits réservés<br>Données stockées localement dans votre navigateur.<br>Hectaris ne transmet aucune donnée à GitHub.</span></div>
   </aside>
   <div class="main">
     <div class="topbar">
@@ -279,8 +281,11 @@ body::after{content:none}
 "use strict";
 const LEGAL = {
   short: "© 2026 Renaud Vigneaux — EARL Vigneaux · Tous droits réservés",
-  owner: "Renaud Vigneaux — EARL Vigneaux, Yonne (89), France",
-  contact: "EARL Vigneaux — Yonne (89) · [compléter : email / téléphone]",
+  owner: "Renaud Vigneaux — EARL Vigneaux, 7 rue de l'Orval, 89150 Brannay, France",
+  contact: "Renaud Vigneaux — EARL Vigneaux, 7 rue de l'Orval, 89150 Brannay · Tél. 06 62 35 60 54 · rvigneaux@gmail.com",
+  contactHtml: 'Renaud Vigneaux — EARL Vigneaux<br>7 rue de l\'Orval, 89150 Brannay, France<br>'
+    + 'Tél. <a href="tel:+33662356054" style="color:var(--orange);font-weight:650;text-decoration:none">06 62 35 60 54</a> · '
+    + '<a href="mailto:rvigneaux@gmail.com" style="color:var(--orange);font-weight:650;text-decoration:none">rvigneaux@gmail.com</a>',
 };
 /* =====================================================================
    MODULE 1 — DB : base de données, campagnes, persistance, MIGRATION
@@ -308,120 +313,74 @@ const DEFAULT_PERIODS = [
 ];
 
 function defaultCampaign() {
+  /* Base VIERGE : uniquement des référentiels techniques génériques.
+     Aucune parcelle, aucun programme, aucun prix, aucune donnée d'exploitation. */
+  const CU = (id,name,color) => ({ id, name, color,
+    n:{a1:0,a2:0,a3:0,a4:0,f3:"sol39",f4:"sol39"}, fond:{}, eco:{rdt:0,prix:0,autres:0} });
   const cultures = [
-    { id:"colza", name:"Colza",          color:"#F2C230", n:{a1:80,a2:80,a3:0,a4:0,f3:"sol39",f4:"sol39"}, fond:{kz:150,pk:0,cp:0},   eco:{rdt:3.5,prix:450,autres:420} },
-    { id:"ble",   name:"Blé tendre",     color:"#C98A3D", n:{a1:80,a2:100,a3:40,a4:0,f3:"n33",f4:"n33"},   fond:{kz:100,pk:200,cp:0}, eco:{rdt:7.5,prix:190,autres:420} },
-    { id:"bler",  name:"Blé Rebelde",    color:"#8C5E2A", n:{a1:80,a2:100,a3:30,a4:30,f3:"n33",f4:"n33"},  fond:{kz:100,pk:200,cp:0}, eco:{rdt:6.5,prix:230,autres:420} },
-    { id:"oh",    name:"Orge hiver",     color:"#6D9E4F", n:{a1:80,a2:80,a3:0,a4:0,f3:"sol39",f4:"sol39"}, fond:{kz:100,pk:200,cp:0}, eco:{rdt:7.0,prix:175,autres:420} },
-    { id:"op",    name:"Orge printemps", color:"#A3C168", n:{a1:80,a2:80,a3:0,a4:0,f3:"sol39",f4:"sol39"}, fond:{kz:100,pk:200,cp:0}, eco:{rdt:6.5,prix:200,autres:420} },
-    { id:"tour",  name:"Tournesol",      color:"#E8862E", n:{a1:0,a2:0,a3:0,a4:0,f3:"sol39",f4:"sol39"},   fond:{kz:0,pk:200,cp:0},   eco:{rdt:2.8,prix:430,autres:420} },
-    { id:"jach",  name:"Jachère",        color:"#9AA79B", n:{a1:0,a2:0,a3:0,a4:0,f3:"sol39",f4:"sol39"},   fond:{kz:0,pk:0,cp:0},     eco:{rdt:0,prix:0,autres:0} },
+    CU("colza","Colza","#F2C230"), CU("ble","Blé tendre","#C98A3D"),
+    CU("oh","Orge hiver","#6D9E4F"), CU("op","Orge printemps","#A3C168"),
+    CU("tour","Tournesol","#E8862E"), CU("jach","Jachère","#9AA79B"),
   ];
-  const varieties = [
-    { id:"vmix",  cult:"colza", name:"Mélange Avenger/Blackberry/Hemotion/Ceos", pmg:null, grains:null, dose:1.0, prixKg:null, prixDose:70, comment:"Plante compagne Rosini 8 kg/ha" },
-    { id:"vfaro", cult:"oh",   name:"Faro",         pmg:45, grains:265, dose:null, prixKg:0.55, prixDose:null, comment:"Systiva" },
-    { id:"vplan", cult:"op",   name:"Planet",       pmg:45, grains:350, dose:null, prixKg:0.60, prixDose:null, comment:"Systiva" },
-    { id:"vkar",  cult:"ble",  name:"Karoque CV",   pmg:45, grains:330, dose:null, prixKg:0.55, prixDose:null, comment:"Semence certifiée" },
-    { id:"vkk",   cult:"ble",  name:"King Kong CV", pmg:45, grains:300, dose:null, prixKg:0.55, prixDose:null, comment:"Semence certifiée" },
-    { id:"vther", cult:"ble",  name:"Thermidor CV", pmg:45, grains:350, dose:null, prixKg:0.55, prixDose:null, comment:"Semence certifiée" },
-    { id:"vint",  cult:"ble",  name:"Intensity CV", pmg:45, grains:330, dose:null, prixKg:0.28, prixDose:null, comment:"Semence de ferme (triage)" },
-    { id:"vreb",  cult:"bler", name:"Rebelde CF",   pmg:45, grains:330, dose:null, prixKg:0.28, prixDose:null, comment:"Semence de ferme — blé améliorant" },
-    { id:"vtou",  cult:"tour", name:"À définir",    pmg:null, grains:null, dose:1.0, prixKg:null, prixDose:95, comment:"" },
-  ];
-  const P = (num,name,commune,storage,area,cult,vari,prev,comment) =>
-    ({ id:uid(), num, name, commune, storage, area, cult, vari, prev, comment, archived:false, nOv:{}, fOv:{} });
-  const parcels = [
-    P(1,"La Marnière","","fouch",11.68,"colza","vmix","",""), P(5,"La Ferme","","bran",4.26,"colza","vmix","",""),
-    P(9,"Route de Pont","","bran",21.35,"colza","vmix","",""), P(10,"Les Martins","","bran",3.45,"colza","vmix","",""),
-    P(19,"Route de Malitourne","","bran",1.93,"colza","vmix","",""), P(20,"Route des Loges","","bran",5.23,"colza","vmix","",""),
-    P(22,"Domaine","","bran",7.54,"colza","vmix","",""), P(2,"Gremelerie","","bran",4.77,"oh","vfaro","",""),
-    P(8,"Champjean Pylône","","bran",2.77,"oh","vfaro","",""), P(21,"Pente Champjean","","bran",4.45,"oh","vfaro","",""),
-    P(24,"Le Grand Marchais","","fouch",8.42,"oh","vfaro","",""), P(4,"Route de Sens","","bran",7.31,"op","vplan","","Semis printemps"),
-    P(6,"Bussy 2","","fouch",3.51,"ble","vint","Tournesol",""), P(12,"Fouchère","Fouchères","fouch",4.00,"ble","vkar","Colza",""),
-    P(13,"Mésangerie","","fouch",4.39,"ble","vkar","Colza",""), P(16,"La Commune","","bran",1.58,"ble","vther","Colza",""),
-    P(18,"Bussy","","fouch",7.85,"ble","vint","Tournesol",""), P(23,"Les Rouillons","","fouch",4.96,"ble","vkk","Colza",""),
-    P(27,"Les Barriliers","","fouch",20.60,"ble","vkar","Colza",""), P(29,"Brûlerie 1","","fouch",3.36,"ble","vkk","Colza",""),
-    P(32,"Paron 3 - grande parcelle","Paron","fouch",3.20,"bler","vreb","Colza","Blé améliorant"),
-    P(33,"Paron 4","Paron","fouch",1.80,"bler","vreb","Colza","Blé améliorant"),
-    P(34,"Paron 2 - dessous bois","Paron","fouch",1.75,"bler","vreb","Colza","Blé améliorant"),
-    P(35,"Paron 1","Paron","fouch",0.65,"bler","vreb","Colza","Blé améliorant"),
-    P(11,"Colombier","","",8.19,"tour","vtou","","Semis printemps"),
-    P("","Jachères (diverses)","","",8.96,"jach","","","11 zones IAE / PAC"),
-  ];
-  /* ---- Engrais v2 : moteur générique. appUnit = unité d'application, priceUnit = unité commerciale ---- */
-  const FZ = (id,name,cat,appUnit,priceUnit,price,extra) => Object.assign({
-    id, name, cat, appUnit, priceUnit, price, density:null, tenor:null, supplier:"Ynovae",
-    composition:"", comment:"", active:true, priceUpdated:"2025-10-01",
-    history:[{ id:uid(), date:"2025-10-01", supplier:"Ynovae", price, unit:priceUnit, qty:"", comment:"Prix initial", retained:true }],
-    cur:null, tgt:null, low:null, high:null, stock:0, decision:"Surveiller", pct:0,
-  }, extra||{});
+  const FZ = (id,name,cat,appUnit,extra) => Object.assign({
+    id, name, cat, appUnit, priceUnit:"t", price:null, density:null, tenor:null,
+    supplier:"", composition:"", comment:"", active:true, priceUpdated:"", history:[],
+    cur:null, tgt:null, low:null, high:null, stock:0, decision:"Surveiller", pct:0 }, extra||{});
   const fertilizers = [
-    FZ("sol39","Solution azotée 39","azote","l/ha","t",240,{ density:1.30, tenor:0.39, comment:"« 39 » = 39 kg N / 100 L",
-      cur:250, tgt:220, low:210, high:290, decision:"Sécuriser une partie", pct:50 }),
-    FZ("n33","N33 solide","azote","kg/ha","t",420,{ tenor:0.335, cur:430, tgt:390, low:370, high:500, decision:"Attendre" }),
-    FZ("kz","Kiezerite","fond","kg/ha","t",300,{ cur:300, tgt:280, low:260, high:360, decision:"Acheter maintenant", pct:100 }),
-    FZ("pk","PK+ 0-23.7","fond","kg/ha","t",450,{ cur:460, tgt:420, low:400, high:550, decision:"Acheter maintenant", pct:100 }),
-    FZ("cp","Compost","fond","t/ha","t",12,{ cur:12, tgt:10, low:8, high:16 }),
-  ];
-  const purchases = [
-    { id:uid(), date:"2025-11-15", fert:"sol39", supplier:"Ynovae", qty:20, price:235, place:"Brannay", comment:"Exemple — à remplacer" },
-  ];
-  const PR = (name,type,unit,price,cults,comment) => ({ id:uid(), name, type, unit, price, cults, comment, stock:0, ordered:0 });
-  const products = [
-    PR("Valéa Max","Fongicide","L",8,"Colza / Tournesol",""), PR("Metcostar","Fongicide","L",35,"Colza / Blé",""),
-    PR("Propulse","Fongicide","L",45,"Colza",""), PR("Cepro K","Fongicide","L",6,"Colza",""),
-    PR("Penbowl","Fongicide","L",15,"Tournesol",""), PR("Modan","Fongicide","L",40,"Blé / Orge",""),
-    PR("Baia","Fongicide","L",55,"Orge",""), PR("Cardik","Fongicide","L",30,"Orge",""),
-    PR("Vakanda","Fongicide","L",35,"Orge",""), PR("Cesto","Fongicide","L",25,"Orge",""),
-    PR("Amplitude","Fongicide","L",40,"Blé",""), PR("Priaxor","Fongicide","L",50,"Blé",""),
-    PR("Arkem","Fongicide","L",60,"Blé",""), PR("Stockholm","Fongicide","L",45,"Blé","T3"),
-    PR("Karaté Zeon","Insecticide","L",40,"Colza","+ X-Flow"), PR("Lambdastar","Insecticide","L",25,"Toutes",""),
-    PR("Cyplan","Insecticide","L",20,"Blé / Orge",""), PR("Metarex Duo","Autre","kg",3,"Toutes","Antilimace"),
-    PR("Anitop","Désherbage","L",25,"Colza",""), PR("Select","Désherbage","L",30,"Colza","Antigraminées"),
-    PR("Ampli","Autre","L",10,"Colza","Adjuvant"), PR("Ielo","Désherbage","L",40,"Colza",""),
-    PR("Defi","Désherbage","L",12,"Blé / Orge","ou Spannit"), PR("Cougar","Désherbage","L",20,"Orge",""),
-    PR("Mateno","Désherbage","L",30,"Blé",""), PR("Prowl","Désherbage","L",12,"Tournesol",""),
-    PR("Racer","Désherbage","L",25,"Tournesol",""), PR("Megafol","Autre","L",8,"Orge / Tournesol","Biostimulant"),
-    PR("Nitchequon","Autre","L",150,"Colza / Tournesol",""), PR("Unibore","Autre","L",5,"Tournesol","Bore"),
-    PR("X-Flow","Autre","L",8,"Colza","Adjuvant"),
-  ];
-  const pid = name => products.find(p=>p.name===name).id;
-  /* ---- Programmes d'interventions : période + culture + variété + parcelles + plusieurs produits ---- */
-  const PG = (period,type,cult,lines,vari) => ({
-    id:uid(), period, status:"Prévue", type, cult, vari:vari||"", parcels:null,
-    datePlan:"", objective:"", trigger:"", note:"", real:null,
-    lines: lines.map(([prod,dose,ltype])=>({ id:uid(), prod:pid(prod), dose, type:ltype||type, note:"" })),
-  });
-  const programs = [
-    PG("Postlevée","Désherbage","colza",[["Anitop",1.5],["Select",0.5],["Ampli",0.75,"Autre"]]),
-    PG("Automne","Insecticide","colza",[["Lambdastar",0.075]]),
-    PG("Automne","Désherbage","colza",[["Ielo",1.5]]),
-    PG("Reprise de végétation","Insecticide","colza",[["Karaté Zeon",0.075]]),
-    PG("Boutons accolés","Fongicide","colza",[["Valéa Max",2.0],["Metcostar",0.5]]),
-    PG("Floraison","Fongicide","colza",[["Propulse",0.9],["Cepro K",2.0]]),
-    PG("Désherbage automne","Désherbage","oh",[["Defi",3.0],["Cougar",0.5],["Megafol",1.5,"Autre"],["Cyplan",0.05,"Insecticide"]]),
-    PG("Sortie hiver","Insecticide","oh",[["Lambdastar",0.075]]),
-    PG("T1","Fongicide","oh",[["Modan",0.6]]),
-    PG("T2","Fongicide","oh",[["Baia",0.25],["Cardik",0.7],["Vakanda",0.35],["Cesto",1.0]]),
-    PG("Désherbage automne","Désherbage","ble",[["Mateno",2.0],["Defi",3.0],["Cyplan",0.05,"Insecticide"]]),
-    PG("Sortie hiver","Insecticide","ble",[["Lambdastar",0.12]]),
-    PG("T1","Fongicide","ble",[["Metcostar",0.4],["Modan",0.3]]),
-    PG("T2","Fongicide","ble",[["Amplitude",0.5],["Priaxor",0.5],["Arkem",0.025]]),
-    PG("T3","Fongicide","ble",[["Stockholm",0.7]]),
-    PG("Désherbage automne","Désherbage","bler",[["Mateno",2.0],["Defi",3.0],["Cyplan",0.05,"Insecticide"]]),
-    PG("T1","Fongicide","bler",[["Metcostar",0.4],["Modan",0.3]]),
-    PG("T2","Fongicide","bler",[["Amplitude",0.5],["Priaxor",0.5],["Arkem",0.025]]),
-    PG("T3","Fongicide","bler",[["Stockholm",0.7]]),
-    PG("Prélevée","Désherbage","tour",[["Prowl",2.0],["Racer",2.0]]),
-    PG("6 à 8 feuilles","Autre","tour",[["Unibore",4.0],["Megafol",1.0]]),
-    PG("Floraison","Fongicide","tour",[["Valéa Max",2.0],["Penbowl",2.5],["Nitchequon",0.045,"Autre"]]),
+    FZ("sol39","Solution azotée 39","azote","l/ha",{ density:1.30, tenor:0.39, comment:"« 39 » = 39 kg N / 100 L" }),
+    FZ("n33","Azote solide 33,5","azote","kg/ha",{ tenor:0.335 }),
+    FZ("kz","Kiezerite","fond","kg/ha"),
+    FZ("pk","Engrais PK","fond","kg/ha"),
+    FZ("cp","Compost","fond","t/ha"),
   ];
   return {
-    parcels, cultures, varieties, products, programs, fertilizers, purchases,
+    parcels:[], varieties:[], products:[], programs:[], purchases:[],
+    cultures, fertilizers,
     periods: DEFAULT_PERIODS.map(n=>({ id:uid(), name:n, archived:false })),
     seedOrders:{},
+    storageNames:{ bran:"Site 1", fouch:"Site 2" },
     params:{ tenor39:0.39, tenor33:0.335, density:1.30, pmgDiv:100, tva:20 },
   };
+}
+
+function demoCampaign() {
+  /* Ferme de DÉMONSTRATION : données entièrement fictives. */
+  const c = defaultCampaign();
+  c.demo = true;
+  c.storageNames = { bran:"Hangar", fouch:"Plateforme" };
+  const setCu=(id,n,fond,eco)=>{ const cu=c.cultures.find(x=>x.id===id); Object.assign(cu.n,n); Object.assign(cu.fond,fond); Object.assign(cu.eco,eco); };
+  setCu("colza",{a1:60,a2:80},{kz:150},{rdt:3.4,prix:440,autres:400});
+  setCu("ble",{a1:60,a2:80,a3:40,f3:"n33"},{pk:200},{rdt:7.0,prix:200,autres:400});
+  setCu("oh",{a1:70,a2:70},{pk:200},{rdt:6.5,prix:180,autres:400});
+  c.varieties = [
+    { id:"dv1", cult:"colza", name:"Variété démo colza", pmg:null, grains:null, dose:1.0, prixKg:null, prixDose:60, comment:"Donnée fictive" },
+    { id:"dv2", cult:"ble",  name:"Variété démo blé",   pmg:45, grains:320, dose:null, prixKg:0.50, prixDose:null, comment:"Donnée fictive" },
+    { id:"dv3", cult:"oh",   name:"Variété démo orge",  pmg:45, grains:300, dose:null, prixKg:0.50, prixDose:null, comment:"Donnée fictive" },
+  ];
+  c.parcels = [
+    { id:uid(), num:1, name:"Parcelle Nord",     commune:"Commune fictive", storage:"bran", area:8.50,  cult:"colza", vari:"dv1", prev:"",           comment:"Démonstration", archived:false, nOv:{}, fOv:{} },
+    { id:uid(), num:2, name:"Parcelle du Moulin",commune:"Commune fictive", storage:"bran", area:5.20,  cult:"ble",   vari:"dv2", prev:"Colza",      comment:"Démonstration", archived:false, nOv:{}, fOv:{} },
+    { id:uid(), num:3, name:"Grand Champ",       commune:"Commune fictive", storage:"fouch", area:12.40, cult:"oh",   vari:"dv3", prev:"Blé tendre", comment:"Démonstration", archived:false, nOv:{}, fOv:{} },
+  ];
+  c.products = [
+    { id:"dp1", name:"Fongicide générique",  type:"Fongicide",  unit:"L", price:30, cults:"", comment:"Produit fictif", stock:0, ordered:0 },
+    { id:"dp2", name:"Herbicide générique",  type:"Désherbage", unit:"L", price:20, cults:"", comment:"Produit fictif", stock:0, ordered:0 },
+    { id:"dp3", name:"Insecticide générique",type:"Insecticide",unit:"L", price:25, cults:"", comment:"Produit fictif", stock:0, ordered:0 },
+  ];
+  c.programs = [
+    { id:uid(), period:"Désherbage automne", status:"Prévue", type:"Désherbage", cult:"ble", vari:"", parcels:null,
+      datePlan:"", objective:"Exemple de programme", trigger:"", note:"Données fictives", real:null,
+      lines:[{ id:uid(), prod:"dp2", dose:2.0, type:"Désherbage", note:"" }] },
+    { id:uid(), period:"T1", status:"Prévue", type:"Fongicide", cult:"ble", vari:"", parcels:null,
+      datePlan:"", objective:"Exemple de programme", trigger:"", note:"Données fictives", real:null,
+      lines:[{ id:uid(), prod:"dp1", dose:0.8, type:"Fongicide", note:"" }] },
+  ];
+  const H=(f,p)=>{ f.price=p; f.priceUpdated=today();
+    f.history=[{ id:uid(), date:today(), supplier:"Démo", price:p, unit:"t", qty:"", comment:"Prix de démonstration", retained:true }]; };
+  H(c.fertilizers[0],240); c.fertilizers[0].cur=250; c.fertilizers[0].tgt=220; c.fertilizers[0].low=210; c.fertilizers[0].high=290;
+  H(c.fertilizers[1],420); c.fertilizers[1].cur=430; c.fertilizers[1].tgt=390; c.fertilizers[1].low=370; c.fertilizers[1].high=500;
+  H(c.fertilizers[2],300); H(c.fertilizers[3],450); H(c.fertilizers[4],12);
+  return c;
 }
 
 /* ---- MIGRATION : anciennes sauvegardes → modèle v2, sans perte ---- */
@@ -438,7 +397,7 @@ function migrateCampaign(c) {
     f.price = f.ref!=null ? f.ref : 0;                    // ancien prix de référence €/t
     if (f.id==="sol39") { f.density = c.params?.density ?? 1.33; f.tenor = c.params?.tenor39 ?? 0.39; }
     if (f.id==="n33")   { f.tenor = c.params?.tenor33 ?? 0.335; }
-    f.supplier = f.supplier ?? "Ynovae"; f.composition=""; f.active = true;
+    f.supplier = f.supplier ?? ""; f.composition=""; f.active = true;
     f.priceUpdated = f.priceUpdated ?? today();
     f.history = f.history ?? [{ id:uid(), date:f.priceUpdated, supplier:f.supplier, price:f.price, unit:"t", qty:"", comment:"Migration", retained:true }];
   });
@@ -463,20 +422,35 @@ function migrateCampaign(c) {
       c.periods.push({ id:uid(), name:pg.period, archived:false });
     pg.lines.forEach(l=>{ if(l.type==null) l.type=pg.type||"Autre"; });
   });
+  // Engrais azote indispensables aux calculs : les créer s'ils manquent
+  const ensureFert=(id,name,appUnit,tenor,density)=>{
+    if(!c.fertilizers.some(f=>f.id===id))
+      c.fertilizers.push({ id, name, cat:"azote", appUnit, priceUnit:"t", price:null, density:density??null,
+        tenor, supplier:"", composition:"", comment:"", active:true, priceUpdated:"", history:[],
+        cur:null, tgt:null, low:null, high:null, stock:0, decision:"Surveiller", pct:0 });
+  };
+  ensureFert("sol39","Solution azotée 39","l/ha", c.params?.tenor39 ?? 0.39, c.params?.density ?? 1.30);
+  ensureFert("n33","Azote solide 33,5","kg/ha", c.params?.tenor33 ?? 0.335);
   if (!c.seedOrders) c.seedOrders = {};
+  if (!c.storageNames) c.storageNames = { bran:"Cuve 1", fouch:"Cuve 2" };
+  (c.parcels||[]).forEach(p=>{ if(p.prev==null) p.prev=""; });
   return c;
 }
 
 const Store = {
   data:null,
+  firstRun:false,
   load() {
     try {
       const raw = Storage.get(DB_KEY);
       if (raw) { this.data = JSON.parse(raw);
         Object.values(this.data.campaigns).forEach(migrateCampaign); this.persist(); return; }
     } catch(e){ console.warn("Lecture locale impossible :", e); }
-    this.data = { version:2, active:"2026", campaigns:{ "2026": defaultCampaign() } };
-    this.persist();
+    // Aucune sauvegarde locale : base vierge en mémoire, assistant affiché, RIEN n'est écrit
+    // tant que l'utilisateur n'a pas choisi (les données existantes ne sont jamais remplacées).
+    const y = String(new Date().getFullYear());
+    this.data = { version:2, active:y, campaigns:{ [y]: defaultCampaign() } };
+    this.firstRun = true;
   },
   persist() {
     try {
@@ -490,11 +464,18 @@ const Store = {
   get camp(){ return this.data.campaigns[this.data.active]; },
   mutate(fn, silent){ fn(this.camp); this.persist(); if(!silent) UI.render(); },
   switchCampaign(n){ this.data.active=n; this.persist(); UI.renderShell(); UI.render(); },
-  createCampaign(n){
+  createCampaign(n, mode){
     if(this.data.campaigns[n]){ UI.toast("Cette campagne existe déjà"); return; }
-    this.data.campaigns[n]=JSON.parse(JSON.stringify(this.camp));
+    const src=this.camp, copy=JSON.parse(JSON.stringify(src));
+    if(mode!=="full"){
+      // Rotation : cultures actuelles → précédents culturaux ; interventions & achats non copiés
+      copy.parcels.forEach(p=>{ const cu=copy.cultures.find(x=>x.id===p.cult);
+        p.prev = cu ? cu.name : (p.prev||""); p.cult=""; p.vari=""; p.nOv={}; p.fOv={}; });
+      copy.programs=[]; copy.purchases=[]; copy.seedOrders={}; delete copy.demo;
+    }
+    this.data.campaigns[n]=copy;
     this.data.active=n; this.persist(); UI.renderShell(); UI.render();
-    UI.toast("Campagne "+n+" créée (copie de la précédente)");
+    UI.toast("Campagne "+n+" créée"+(mode!=="full"?" — cultures transférées en précédents":" (copie complète)"));
   },
   deleteCampaign(n){
     if(Object.keys(this.data.campaigns).length<=1){ UI.toast("Impossible : dernière campagne"); return; }
@@ -512,7 +493,7 @@ const FERT = {
   needsDensity(f){ return f.appUnit==="l/ha" && (f.priceUnit==="t" || f.priceUnit==="kg"); },
   /** quantité totale (en unité d'application) → tonnes ; null si non convertible */
   toTons(f, qty) {
-    if (qty==null) return null;
+    if (!f || qty==null) return null;
     if (f.appUnit==="kg/ha") return qty/1000;
     if (f.appUnit==="t/ha")  return qty;
     if (f.appUnit==="l/ha")  return f.density>0 ? qty*f.density/1000 : null;
@@ -520,6 +501,7 @@ const FERT = {
   },
   /** prix converti vers l'unité d'application (ex. €/t → €/L) ; {ok, val, label, reason} */
   unitPrice(f) {
+    if(!f) return { ok:false, reason:"Engrais introuvable" };
     const px=+f.price;
     if (!(px>0)) return { ok:false, reason:"Prix à renseigner" };
     if (px<0)    return { ok:false, reason:"Prix négatif" };
@@ -885,7 +867,7 @@ const EXPORTS = {
   importJson(file){ const rd=new FileReader();
     rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(!d.campaigns) throw 0;
       Object.values(d.campaigns).forEach(migrateCampaign);
-      Store.data=d; Store.persist(); UI.renderShell(); UI.render(); UI.toast("Données importées ✓");
+      Store.data=d; Store.firstRun=false; Store.persist(); UI.closeModal(); UI.renderShell(); UI.render(); UI.toast("Données importées ✓");
     }catch(e){ UI.toast("⚠ Fichier JSON invalide"); } };
     rd.readAsText(file); },
   xmlEsc(s){ return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); },
@@ -895,10 +877,10 @@ const EXPORTS = {
   excel(){
     const c=Store.camp,C=CALC,sd=C.seeds(c),nit=C.nitrogen(c),fd=C.fond(c),ph=C.phyto(c),fv=C.fertView(c);
     const cn=id=>C.cult(c,id)?.name||"", vn=id=>C.vari(c,id)?.name||"";
-    const PLACE={bran:"Brannay",fouch:"Fouchères","":""};
+    const PLACE=k=>k?place(c,k):"";
     const sheets=[];
     sheets.push(this.sheet("Assolement",[["N°","Parcelle","Commune","Lieu stockage","Surface ha","Culture","Variété","Précédent","Commentaire"],
-      ...C.active(c).map(p=>[p.num??"",p.name,p.commune,PLACE[p.storage]||"",+p.area,cn(p.cult),vn(p.vari),p.prev||"",p.comment||""])]));
+      ...C.active(c).map(p=>[p.num??"",p.name,p.commune,PLACE(p.storage),+p.area,cn(p.cult),vn(p.vari),p.prev||"",p.comment||""])]));
     sheets.push(this.sheet("Semences",[["Parcelle","Culture","Variété","Surface","kg/ha","kg total","Doses/ha","Doses","Coût"],
       ...sd.rows.map(r=>[r.parcel.name,cn(r.parcel.cult),r.v.name,+r.parcel.area,r.kgHa??"",r.kg??"",r.doseHa??"",r.doses??"",r.cost??0])]));
     sheets.push(this.sheet("Azote",[["Parcelle","Culture","Surface","Sol39 L","N33 kg","Coût"],
@@ -958,7 +940,7 @@ const PAGES = [
   { id:"cult",  name:"Cultures & variétés", icon:"cult",  sec:"Référentiels" },
   { id:"param", name:"Paramètres & données",icon:"param", sec:"Référentiels" },
 ];
-const PLACES = { "":"—", bran:"Brannay", fouch:"Fouchères" };
+const place = (c,k) => k ? ((c.storageNames||{})[k] || {bran:"Site 1",fouch:"Site 2"}[k] || "—") : "—";
 const stchip = s => `<span class="stchip st-${(s||"").replace(/ /g,"")}">${s||"—"}</span>`;
 
 const UI = {
@@ -987,7 +969,11 @@ const UI = {
     this.renderShell(); this.renderStrip();
     const pg=PAGES.find(p=>p.id===this.page);
     document.getElementById("crumb").textContent=pg.name;
-    document.getElementById("view").innerHTML=this["pg_"+this.page]();
+    const demo = Store.camp && Store.camp.demo
+      ? `<div class="alertbox" style="display:flex;gap:10px;align-items:center"><span>🧪</span>
+         <span><b style="display:inline">Données de démonstration</b> — ne pas utiliser comme référence agronomique.
+         Pour démarrer avec vos propres données : Paramètres → Réinitialiser Hectaris.</span></div>` : "";
+    document.getElementById("view").innerHTML = demo + this["pg_"+this.page]();
     window.scrollTo({top:0});
   },
   set(coll,id,key,val,isNum){
@@ -1016,6 +1002,30 @@ const UI = {
     return (withEmpty?[{v:"",l:"—"}]:[]).concat(c.cultures.map(cu=>({v:cu.id,l:cu.name}))); },
   variOpts(cultId){ const c=Store.camp;
     return [{v:"",l:"—"}].concat(c.varieties.filter(v=>!cultId||v.cult===cultId).map(v=>({v:v.id,l:v.name}))); },
+  prevOpts(){ const c=Store.camp;
+    const names=c.cultures.map(cu=>cu.name);
+    const extra=[...new Set(c.parcels.map(p=>p.prev).filter(v=>v&&!names.includes(v)))];
+    return [{v:"",l:"—"}].concat(names.concat(extra).map(n=>({v:n,l:n}))).concat([{v:"__autre",l:"Autre…"}]); },
+  setPrev(pid,val){
+    if(val==="__autre"){
+      const p=Store.camp.parcels.find(x=>x.id===pid);
+      this.modal("Précédent cultural — "+p.name,
+        `<div class="field"><label>Précédent cultural (saisie libre)</label><input id="m-prev" value="${(p.prev||"").replace(/"/g,'&quot;')}" placeholder="Luzerne, Pois, Betterave…"></div>`,
+        ()=>{ Store.mutate(c=>{ p.prev=this.mval("m-prev"); }); });
+      return;
+    }
+    Store.mutate(c=>{ const p=c.parcels.find(x=>x.id===pid); p.prev=val; });
+  },
+  prevSel(p){ return `<select class="ed" onchange="UI.setPrev('${p.id}',this.value)">`+
+    this.prevOpts().map(o=>`<option value="${o.v}" ${o.v===(p.prev||"")?"selected":""}>${o.l}</option>`).join("")+`</select>`; },
+  prevFiltOpts(list){
+    const vals=[...new Set(list.map(p=>p.prev).filter(Boolean))].sort();
+    return `<option value="">Précédent : tous</option><option value="__none">Sans précédent renseigné</option>`+
+      vals.map(v=>`<option value="${v}" ${v===(this._prevFilt||"")?"selected":""}>${v}</option>`).join("");
+  },
+  applyPrevFilt(list){ const f=this._prevFilt;
+    return !f ? list : f==="__none" ? list.filter(p=>!p.prev) : list.filter(p=>p.prev===f); },
+  _prevFilt:"",
   modal(title,body,onOk,okLabel="Enregistrer",wide){
     const root=document.getElementById("modal-root");
     root.innerHTML=`<div class="overlay" onclick="if(event.target===this)UI.closeModal()">
@@ -1032,8 +1042,53 @@ const UI = {
     const next=String((+Store.data.active||new Date().getFullYear())+1);
     this.modal("Nouvelle campagne",
       `<div class="field"><label>Nom de la campagne</label><input id="m-name" value="${next}"></div>
-       <p class="hint">La campagne <b>${Store.data.active}</b> sera copiée intégralement. Vous pourrez ensuite tout modifier sans toucher à l'historique.</p>`,
-      ()=>{ const n=this.mval("m-name"); if(!n) return false; Store.createCampaign(n); },"Créer la campagne");
+      <div style="display:grid;gap:10px;margin-top:6px">
+        <label style="display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:11px 13px;cursor:pointer">
+          <input type="radio" name="m-mode" value="rotate" checked style="margin-top:3px">
+          <span><b>Copier les parcelles et transformer les cultures actuelles en précédents culturaux</b>
+          <span class="hint" style="display:block;margin-top:3px">Recommandé. Parcelles, surfaces et communes copiées ; la culture ${Store.data.active} devient le précédent ; culture et variété de la nouvelle campagne à définir ; interventions et achats non copiés.</span></span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:11px 13px;cursor:pointer">
+          <input type="radio" name="m-mode" value="full" style="margin-top:3px">
+          <span><b>Dupliquer entièrement la campagne précédente</b>
+          <span class="hint" style="display:block;margin-top:3px">Copie complète : cultures, variétés, programmes d'interventions et achats inclus.</span></span></label>
+      </div>`,
+      ()=>{ const n=this.mval("m-name"); if(!n) return false;
+        const mode=document.querySelector('input[name="m-mode"]:checked')?.value||"rotate";
+        Store.createCampaign(n,mode); },"Créer la campagne");
+  },
+
+  /* ---------- Assistant de premier démarrage ---------- */
+  wizard(){
+    const y=String(new Date().getFullYear());
+    const root=document.getElementById("modal-root");
+    root.innerHTML=`<div class="overlay">
+      <div class="modal" style="width:min(560px,100%)">
+        <div class="m-hd"><h3>Bienvenue dans Hectaris</h3></div>
+        <div class="m-bd">
+          <p style="font-size:13.5px;color:var(--tx-2);line-height:1.6;margin-bottom:16px">
+          Vos données sont enregistrées <b>uniquement dans votre navigateur</b>.<br>
+          Elles ne sont ni envoyées sur GitHub, ni partagées avec d'autres utilisateurs.</p>
+          <div style="display:grid;gap:10px">
+            <button class="btn pri" style="justify-content:flex-start;padding:13px 16px" onclick="UI.wizardBlank()">
+              <span style="text-align:left"><b>Créer mon exploitation</b><br><span style="font-weight:400;font-size:12px;opacity:.9">Base vide, campagne ${y} — vous saisissez vos parcelles et vos référentiels.</span></span></button>
+            <label class="btn" style="justify-content:flex-start;padding:13px 16px;cursor:pointer">
+              <span style="text-align:left"><b>Importer une sauvegarde</b><br><span style="font-weight:400;font-size:12px;color:var(--tx-2)">Restaurer un fichier JSON exporté depuis Hectaris.</span></span>
+              <input type="file" accept=".json" hidden onchange="if(this.files[0])EXPORTS.importJson(this.files[0])"></label>
+            <button class="btn" style="justify-content:flex-start;padding:13px 16px" onclick="UI.wizardDemo()">
+              <span style="text-align:left"><b>Charger une démonstration</b><br><span style="font-weight:400;font-size:12px;color:var(--tx-2)">Ferme fictive pour découvrir l'application. Données de démonstration — ne pas utiliser comme référence agronomique.</span></span></button>
+          </div>
+        </div></div></div>`;
+  },
+  wizardBlank(){
+    Store.firstRun=false; Store.persist(); this.closeModal(); this.render();
+    this.toast("Exploitation créée — commencez par le Parcellaire et la page Engrais & prix");
+    this.go("parc");
+  },
+  wizardDemo(){
+    const y=String(new Date().getFullYear());
+    Store.data={ version:2, active:y, campaigns:{ [y]: demoCampaign() } };
+    Store.firstRun=false; Store.persist(); this.closeModal(); this.renderShell(); this.render();
+    this.toast("Démonstration chargée — données fictives");
   },
   signal(s){ return {g:'<span class="chip sig-g"><i></i>Intéressant</span>',a:'<span class="chip sig-a"><i></i>Acceptable</span>',
     r:'<span class="chip sig-r"><i></i>Cher</span>',n:'<span class="chip sig-n"><i></i>—</span>'}[s]; },
@@ -1071,7 +1126,7 @@ const UI = {
       ${K("Prochaine période",nextPeriod,toBuy.length+" produit(s) à commander","#8C5E2A")}
     </div>
     <div class="grid g4" style="margin-top:16px">
-      ${K("Solution 39",fmt(t.nit.sol39)+" L",(sol?.tons!=null?"= "+fmt(sol.tons,1)+" t · ":"")+"Brannay "+fmt(t.nit.byPlace.bran.sol39)+" / Fouchères "+fmt(t.nit.byPlace.fouch.sol39)+" L","var(--blue)")}
+      ${K("Solution 39",fmt(t.nit.sol39)+" L",(sol?.tons!=null?"= "+fmt(sol.tons,1)+" t · ":"")+place(c,"bran")+" "+fmt(t.nit.byPlace.bran.sol39)+" / "+place(c,"fouch")+" "+fmt(t.nit.byPlace.fouch.sol39)+" L","var(--blue)")}
       ${K("N33 solide",fmt(t.nit.n33)+" kg","= "+fmt(t.nit.n33/1000,1)+" t","var(--blue)")}
       ${K("Semences",fmt(t.sd.totKg)+" kg",fmt(t.sd.totDoses,1)+" doses · "+eur(t.sd.totCost),"#8C5E2A")}
       ${K("Coût engrais",eur(t.nit.cost+t.fd.cost),eurHa((t.nit.cost+t.fd.cost)/(t.surf||1))+(t.nit.priced&&t.fd.priced?"":" · ⚠ prix incomplets"),"var(--orange)")}
@@ -1099,40 +1154,63 @@ const UI = {
   /* ---------- ASSOLEMENT ---------- */
   pg_asso() {
     const c=Store.camp, by=CALC.surfByCult(c), tot=CALC.surfTot(c);
-    const rows=CALC.active(c).map(p=>`<tr>
+    const shown=this.applyPrevFilt(CALC.active(c));
+    const rows=shown.map(p=>`<tr>
         <td class="muted">${p.num??""}</td><td><b>${p.name}</b></td>
         <td>${this.inp("parcels",p.id,"area",p.area,{w:70})}</td>
+        <td>${this.prevSel(p)}</td>
         <td>${this.sel("parcels",p.id,"cult",p.cult,this.cultOpts(true))}</td>
         <td>${this.sel("parcels",p.id,"vari",p.vari,this.variOpts(p.cult))}</td>
         <td>${this.inp("parcels",p.id,"commune",p.commune,{num:false,w:90})}</td>
-        <td>${this.sel("parcels",p.id,"storage",p.storage,[{v:"",l:"—"},{v:"bran",l:"Brannay"},{v:"fouch",l:"Fouchères"}])}</td>
+        <td>${this.sel("parcels",p.id,"storage",p.storage,[{v:"",l:"—"},{v:"bran",l:place(c,"bran")},{v:"fouch",l:place(c,"fouch")}])}</td>
         <td>${this.inp("parcels",p.id,"comment",p.comment,{num:false,w:150})}</td></tr>`).join("");
     const rep=c.cultures.filter(cu=>by[cu.id]>0).map(cu=>({label:cu.name,value:Math.round(by[cu.id]*100)/100,color:cu.color}));
     return `
     <div class="page-head"><div><h1>Assolement</h1><p>Une ligne = une parcelle. Toute modification se propage aux semences, à l'azote, aux engrais, aux interventions et au prévisionnel.</p></div>
-      <div class="actions"><button class="btn" onclick="UI.go('parc')">Gérer le parcellaire</button>
+      <div class="actions"><select class="ed" style="border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:#fff"
+        onchange="UI._prevFilt=this.value;UI.render()">${this.prevFiltOpts(CALC.active(c))}</select>
+      <button class="btn" onclick="UI.go('parc')">Gérer le parcellaire</button>
       <button class="btn pri" onclick="UI.addParcel()">＋ Nouvelle parcelle</button></div></div>
     <div class="grid g3" style="margin-bottom:16px">
       <div class="kpi" style="--k:var(--green)"><div class="l">Surface totale</div><div class="v">${fmt(tot,2)} ha</div><div class="s">${CALC.active(c).length} parcelles</div></div>
       <div class="card"><div class="bd" style="padding:14px 18px">${CHARTS.bars(rep,"ha")}</div></div>
       <div class="card"><div class="hd"><h2>Lieux de stockage azote</h2></div><div class="bd">
         ${["bran","fouch"].map(k=>{const s=CALC.active(c).filter(p=>p.storage===k).reduce((a,p)=>a+ +p.area,0);
-          return `<div class="bar-row"><span>${PLACES[k]}</span><div class="tr"><i style="width:${tot?s/tot*100:0}%;background:var(--blue)"></i></div><span class="vv">${fmt(s,2)} ha</span></div>`;}).join("")}
+          return `<div class="bar-row"><span>${place(c,k)}</span><div class="tr"><i style="width:${tot?s/tot*100:0}%;background:var(--blue)"></i></div><span class="vv">${fmt(s,2)} ha</span></div>`;}).join("")}
       </div></div></div>
     <div class="card"><div class="tb-wrap"><table class="tb"><thead><tr>
-      <th>N°</th><th>Parcelle</th><th>Surface (ha)</th><th>Culture</th><th>Variété</th><th>Commune</th><th>Stockage azote</th><th>Commentaire</th>
+      <th>N°</th><th>Parcelle</th><th>Surface (ha)</th><th>Précédent cultural</th><th>Culture</th><th>Variété</th><th>Commune</th><th>Stockage azote</th><th>Commentaire</th>
     </tr></thead><tbody>${rows}
-    <tr class="tot"><td></td><td>TOTAL</td><td>${fmt(tot,2)} ha</td><td colspan="5">${Object.keys(by).length} cultures</td></tr>
-    </tbody></table></div></div>`;
+    <tr class="tot"><td></td><td>TOTAL${this._prevFilt?" (filtré)":""}</td><td>${fmt(shown.reduce((s,p)=>s+ +p.area,0),2)} ha</td><td colspan="6">${Object.keys(by).length} cultures</td></tr>
+    </tbody></table></div></div>` + this.assoPrevSynth(c);
+  },
+  assoPrevSynth(c) {
+    const act=CALC.active(c), sau=CALC.surfTot(c)||1;
+    const m={};
+    act.forEach(p=>{ const k=p.prev||"Non renseigné";
+      const b=m[k]||(m[k]={area:0,n:0}); b.area+=+p.area||0; b.n++; });
+    const rows=Object.entries(m).sort((a,b)=>b[1].area-a[1].area).map(([k,b])=>
+      `<tr><td>${k==="Non renseigné"?'<span class="muted">Non renseigné</span>':"<b>"+k+"</b>"}</td>
+      <td class="num">${fmt(b.area,2)} ha</td><td class="num">${fmt(b.area/sau*100,1)} %</td><td class="num">${b.n}</td></tr>`).join("");
+    return `<div class="card" style="margin-top:16px"><div class="hd"><h2>Répartition des précédents culturaux</h2>
+      <span class="sub">rotation — campagne ${Store.data.active}</span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr><th>Précédent</th><th class="num">Surface</th><th class="num">% SAU</th><th class="num">Parcelles</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="4" class="empty">Aucune parcelle</td></tr>'}</tbody></table></div></div>`;
   },
 
   /* ---------- PARCELLAIRE ---------- */
   pg_parc() {
     const c=Store.camp;
+    const shown=c.parcels.filter(p=>p.archived||!this._prevFilt?true:true).filter(p=>{
+      if(!this._prevFilt) return true;
+      if(this._prevFilt==="__none") return !p.prev;
+      return p.prev===this._prevFilt; });
     const row=p=>`<tr style="${p.archived?'opacity:.45':''}">
       <td><input type="checkbox" class="check pk" data-id="${p.id}"></td>
       <td class="muted">${p.num??""}</td><td><b>${p.name}</b>${p.archived?' <span class="tag">archivée</span>':''}</td>
-      <td class="num">${fmt(p.area,2)}</td><td>${CALC.cult(c,p.cult)?.name||"—"}</td><td>${p.commune||"—"}</td><td>${PLACES[p.storage]||"—"}</td>
+      <td>${p.commune||"—"}</td><td class="num">${fmt(p.area,2)}</td>
+      <td>${this.prevSel(p)}</td>
+      <td>${CALC.cult(c,p.cult)?.name||"—"}</td><td>${place(c,p.storage)}</td>
       <td style="white-space:nowrap">
         <button class="btn sm" onclick="UI.editParcel('${p.id}')">Modifier</button>
         <button class="btn sm" onclick="UI.splitParcel('${p.id}')">Diviser</button>
@@ -1140,31 +1218,44 @@ const UI = {
         <button class="btn sm ghost danger" onclick="UI.delParcel('${p.id}')">Suppr.</button></td></tr>`;
     return `
     <div class="page-head"><div><h1>Parcellaire</h1><p>Créer, modifier, diviser, fusionner ou archiver. Cochez plusieurs parcelles pour les fusionner.</p></div>
-      <div class="actions"><button class="btn" onclick="UI.mergeParcels()">Fusionner la sélection</button>
+      <div class="actions"><select class="ed" style="border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:#fff"
+        onchange="UI._prevFilt=this.value;UI.render()">${this.prevFiltOpts(c.parcels)}</select>
+      <button class="btn" onclick="UI.mergeParcels()">Fusionner la sélection</button>
       <button class="btn pri" onclick="UI.addParcel()">＋ Nouvelle parcelle</button></div></div>
     <div class="card"><div class="tb-wrap"><table class="tb"><thead><tr>
-      <th></th><th>N°</th><th>Nom</th><th class="num">Surface</th><th>Culture</th><th>Commune</th><th>Stockage</th><th>Actions</th>
-    </tr></thead><tbody>${c.parcels.map(row).join("")}</tbody></table></div></div>`;
+      <th></th><th>N°</th><th>Nom</th><th>Commune</th><th class="num">Surface</th><th>Précédent cultural</th><th>Culture</th><th>Stockage</th><th>Actions</th>
+    </tr></thead><tbody>${shown.map(row).join("")||'<tr><td colspan="9" class="empty">Aucune parcelle — créez la première ou changez le filtre.</td></tr>'}</tbody></table></div></div>`;
   },
   parcelForm(p={}) {
+    const prevOptions=this.prevOpts().filter(o=>o.v!=="__autre").map(o=>
+      `<option value="${o.v}" ${o.v===(p.prev||"")?"selected":""}>${o.l}</option>`).join("")
+      + `<option value="__autre">Autre (saisie libre)…</option>`;
     return `<div class="frow">
-      <div class="field"><label>N°</label><input id="m-num" value="${p.num??""}"></div>
-      <div class="field"><label>Nom</label><input id="m-name" value="${p.name||""}"></div></div>
+      <div class="field"><label>Nom</label><input id="m-name" value="${p.name||""}"></div>
+      <div class="field"><label>N°</label><input id="m-num" value="${p.num??""}"></div></div>
     <div class="frow">
-      <div class="field"><label>Surface (ha)</label><input id="m-area" type="number" step="0.01" value="${p.area??""}"></div>
-      <div class="field"><label>Commune</label><input id="m-com" value="${p.commune||""}"></div></div>
+      <div class="field"><label>Commune</label><input id="m-com" value="${p.commune||""}"></div>
+      <div class="field"><label>Surface (ha)</label><input id="m-area" type="number" step="0.01" value="${p.area??""}"></div></div>
     <div class="frow">
-      <div class="field"><label>Culture</label><select id="m-cult">${this.cultOpts(true).map(o=>`<option value="${o.v}" ${o.v===(p.cult||"")?"selected":""}>${o.l}</option>`).join("")}</select></div>
+      <div class="field"><label>Précédent cultural</label><select id="m-prev"
+        onchange="document.getElementById('m-prev-libre').style.display=this.value==='__autre'?'block':'none'">${prevOptions}</select>
+        <input id="m-prev-libre" placeholder="Précédent libre…" value="${(p.prev||"").replace(/"/g,'&quot;')}" style="display:none;margin-top:6px"></div>
+      <div class="field"><label>Culture</label><select id="m-cult">${this.cultOpts(true).map(o=>`<option value="${o.v}" ${o.v===(p.cult||"")?"selected":""}>${o.l}</option>`).join("")}</select></div></div>
+    <div class="frow">
       <div class="field"><label>Lieu de stockage azote</label><select id="m-sto">
-        ${[["",'—'],["bran","Brannay"],["fouch","Fouchères"]].map(([v,l])=>`<option value="${v}" ${v===(p.storage||"")?"selected":""}>${l}</option>`).join("")}</select></div></div>
-    <div class="field"><label>Commentaire</label><input id="m-cmt" value="${p.comment||""}"></div>`;
+        ${[["","—"],["bran",place(Store.camp,"bran")],["fouch",place(Store.camp,"fouch")]].map(([v,l])=>`<option value="${v}" ${v===(p.storage||"")?"selected":""}>${l}</option>`).join("")}</select></div>
+      <div class="field"><label>Commentaire</label><input id="m-cmt" value="${p.comment||""}"></div></div>`;
+  },
+  readPrevForm(){
+    const sel=this.mval("m-prev");
+    return sel==="__autre" ? this.mval("m-prev-libre") : sel;
   },
   addParcel() {
     this.modal("Nouvelle parcelle",this.parcelForm(),()=>{
       const name=this.mval("m-name"); if(!name){ this.toast("Un nom est requis"); return false; }
       Store.mutate(c=>c.parcels.push({ id:uid(), num:this.mval("m-num"), name,
         area:+this.mval("m-area")||0, commune:this.mval("m-com"), cult:this.mval("m-cult"),
-        vari:"", storage:this.mval("m-sto"), prev:"", comment:this.mval("m-cmt"), archived:false, nOv:{}, fOv:{} }));
+        vari:"", storage:this.mval("m-sto"), prev:this.readPrevForm(), comment:this.mval("m-cmt"), archived:false, nOv:{}, fOv:{} }));
       this.toast("Parcelle créée"); },"Créer");
   },
   editParcel(id) {
@@ -1172,7 +1263,7 @@ const UI = {
     this.modal("Modifier « "+p.name+" »",this.parcelForm(p),()=>{
       Store.mutate(c=>{ Object.assign(p,{ num:this.mval("m-num"), name:this.mval("m-name")||p.name,
         area:+this.mval("m-area")||0, commune:this.mval("m-com"), cult:this.mval("m-cult"),
-        storage:this.mval("m-sto"), comment:this.mval("m-cmt") }); }); });
+        storage:this.mval("m-sto"), prev:this.readPrevForm(), comment:this.mval("m-cmt") }); }); });
   },
   splitParcel(id) {
     const p=Store.camp.parcels.find(x=>x.id===id);
@@ -1322,7 +1413,7 @@ const UI = {
       return `<td class="num">${a.uN} uN <span class="muted">→ ${fmt(a.perHa)} ${a.form==="n33"?"kg":"L"}/ha</span></td>
               <td class="num calc">${fmt(a.tot)} ${a.form==="n33"?"kg":"L"}</td>`; };
     const rows=n.rows.map(r=>{ const p=r.parcel, ov=p.nOv||{};
-      return `<tr><td><b>${p.name}</b><div class="muted" style="font-size:11.5px">${r.cu.name} · ${fmt(p.area,2)} ha · ${PLACES[p.storage]||"—"}</div></td>
+      return `<tr><td><b>${p.name}</b><div class="muted" style="font-size:11.5px">${r.cu.name} · ${fmt(p.area,2)} ha · ${place(c,p.storage)}</div></td>
       ${ap(r,0)}${ap(r,1)}${ap(r,2)}${ap(r,3)}
       <td class="num calc">${fmt(r.sol39)} L</td><td class="num calc">${fmt(r.n33)} kg</td>
       <td class="num calc">${r.priced?eur(r.cost):MISS}</td><td class="num muted">${r.priced?eurHa(r.costHa):"—"}</td>
@@ -1340,8 +1431,8 @@ const UI = {
     <div class="grid g4" style="margin-bottom:16px">
       <div class="kpi" style="--k:var(--blue)"><div class="l">Solution 39</div><div class="v">${fmt(n.sol39)} L</div><div class="s">= ${fmt(FERT.toTons(f39,n.sol39),1)} t · ${up39.ok?up39.label:"—"}</div></div>
       <div class="kpi" style="--k:var(--blue)"><div class="l">N33 solide</div><div class="v">${fmt(n.n33)} kg</div><div class="s">= ${fmt(n.n33/1000,1)} t</div></div>
-      <div class="kpi" style="--k:var(--green)"><div class="l">Cuve Brannay</div><div class="v">${fmt(n.byPlace.bran.sol39)} L</div><div class="s">+ ${fmt(n.byPlace.bran.n33)} kg N33</div></div>
-      <div class="kpi" style="--k:var(--green)"><div class="l">Cuve Fouchères</div><div class="v">${fmt(n.byPlace.fouch.sol39)} L</div><div class="s">+ ${fmt(n.byPlace.fouch.n33)} kg N33</div></div>
+      <div class="kpi" style="--k:var(--green)"><div class="l">${place(c,"bran")}</div><div class="v">${fmt(n.byPlace.bran.sol39)} L</div><div class="s">+ ${fmt(n.byPlace.bran.n33)} kg N33</div></div>
+      <div class="kpi" style="--k:var(--green)"><div class="l">${place(c,"fouch")}</div><div class="v">${fmt(n.byPlace.fouch.sol39)} L</div><div class="s">+ ${fmt(n.byPlace.fouch.n33)} kg N33</div></div>
     </div>
     <div class="grid g2" style="margin-bottom:16px">
       <div class="card"><div class="hd"><h2>Par culture</h2><span class="sub">coût total ${n.priced?eur(n.cost):"incomplet"}</span></div>
@@ -1647,8 +1738,8 @@ const UI = {
       <div class="field"><label>Quantité (tonnes)</label><input id="m-qty" type="number" step="0.1"></div>
       <div class="field"><label>Prix (€/t HT)</label><input id="m-price" type="number" step="0.1"></div></div>
       <div class="frow">
-      <div class="field"><label>Lieu de livraison</label><select id="m-place"><option>Brannay</option><option>Fouchères</option><option>Ferme</option></select></div>
-      <div class="field"><label>Fournisseur</label><input id="m-sup" value="Ynovae"></div></div>
+      <div class="field"><label>Lieu de livraison</label><select id="m-place"><option>${place(c,"bran")}</option><option>${place(c,"fouch")}</option><option>Autre</option></select></div>
+      <div class="field"><label>Fournisseur</label><input id="m-sup" value=""></div></div>
       <div class="field"><label>Commentaire</label><input id="m-cmt"></div>`,
       ()=>{ const qty=+this.mval("m-qty"), price=+this.mval("m-price");
         if(!qty||!price){ this.toast("Quantité et prix requis"); return false; }
@@ -1835,6 +1926,7 @@ const UI = {
   /* ---------- Éditeur de programme (multi-produits, sélection parcelles) ---------- */
   editProgram(id, presetDup) {
     const c=Store.camp;
+    if(!c.products.length){ this.toast("Créez d'abord vos produits (bouton « Produits, prix & stocks »)"); this.editProducts(); return; }
     const pg = id ? c.programs.find(x=>x.id===id)
       : presetDup || { id:null, period:"", status:"Prévue", type:"Fongicide", cult:c.cultures[0].id, vari:"",
           parcels:null, datePlan:"", objective:"", trigger:"", note:"", real:null, lines:[] };
@@ -2026,6 +2118,10 @@ const UI = {
         <div class="tb-wrap"><table class="tb"><tbody>
         ${P("pmgDiv","Diviseur PMG (kg/ha = PMG × grains ÷ x)",1)}
         ${P("tva","TVA % (info — tous les prix sont HT)",1)}
+        <tr><td>Nom du lieu de stockage azote n°1</td><td class="num"><input class="ed" style="width:130px" value="${(c.storageNames?.bran||"").replace(/"/g,'&quot;')}"
+          onchange="Store.mutate(cc=>{ if(!cc.storageNames)cc.storageNames={}; cc.storageNames.bran=this.value; })"></td></tr>
+        <tr><td>Nom du lieu de stockage azote n°2</td><td class="num"><input class="ed" style="width:130px" value="${(c.storageNames?.fouch||"").replace(/"/g,'&quot;')}"
+          onchange="Store.mutate(cc=>{ if(!cc.storageNames)cc.storageNames={}; cc.storageNames.fouch=this.value; })"></td></tr>
         </tbody></table></div>
         <div class="bd hint">Teneur N (0,39 kg N/L — « 39 » = 39 kg N/100 L) et densité de la solution 39 : voir la fiche de l'engrais.
         Vérification : 80 uN ÷ 0,39 = 205 L/ha ✓ · prix €/L = €/t × densité ÷ 1000.</div></div>
@@ -2040,8 +2136,9 @@ const UI = {
       <button class="btn" onclick="EXPORTS.json()">Exporter JSON (sauvegarde complète)</button>
       <button class="btn" onclick="EXPORTS.pdf()">Exporter PDF (imprimer la page)</button>
       <label class="btn" style="cursor:pointer">Importer JSON<input type="file" accept=".json" hidden onchange="if(this.files[0])EXPORTS.importJson(this.files[0])"></label>
-      <button class="btn ghost danger" onclick="UI.resetAll()">Réinitialiser les données d'exemple</button></div>
-      <div class="bd hint" style="padding-top:0">L'import d'une ancienne sauvegarde est automatiquement migré : engrais convertis au nouveau format, interventions regroupées en programmes (« Période non renseignée » si absente), sans aucune perte.</div></div>
+      <button class="btn ghost danger" onclick="UI.resetAll()">Réinitialiser Hectaris</button></div>
+      <div class="bd hint" style="padding-top:0"><b>Pensez à exporter régulièrement une sauvegarde.</b> La suppression des données du navigateur (nettoyage, changement d'appareil) peut entraîner leur perte.
+      L'import d'une ancienne sauvegarde est automatiquement migré : engrais convertis au nouveau format, interventions regroupées en programmes (« Période non renseignée » si absente), sans aucune perte.</div></div>
     <div class="card" style="margin-top:16px"><div class="hd"><h2>Propriété intellectuelle & mentions légales</h2><span class="sub">${LEGAL.short}</span></div>
       <div class="bd" style="font-size:13px;line-height:1.65;color:var(--tx-2)">
       <b style="color:var(--tx)">Hectaris — Assolement & Prévision de campagne</b> est une création originale de <b style="color:var(--tx)">${LEGAL.owner}</b>.<br>
@@ -2054,20 +2151,26 @@ const UI = {
       en local sur son appareil et ne sont transmises à aucun serveur.<br>
       L'application est fournie « en l'état », à titre d'outil d'aide à la décision : les résultats ne se substituent pas au conseil
       agronomique, réglementaire ou comptable ; l'auteur ne saurait être tenu responsable des décisions prises sur leur fondement.<br>
-      <b style="color:var(--tx)">Contact :</b> ${LEGAL.contact}</div></div>`;
+      <div style="margin-top:12px;padding:12px 15px;background:var(--paper);border:1px solid var(--line);border-radius:10px;display:flex;gap:12px;align-items:flex-start">
+        <span style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--orange),#FFA040);display:grid;place-items:center;color:#fff;font-weight:800;flex:none">RV</span>
+        <div><b style="color:var(--tx)">Contact — autorisations, licences & partenariats</b><br>${LEGAL.contactHtml}</div>
+      </div></div></div>`;
   },
   delCamp(n){ this.modal("Supprimer la campagne "+n,
     `<p class="hint">Toutes les données de la campagne <b>${n}</b> seront définitivement supprimées.</p>`,
     ()=>{ Store.deleteCampaign(n); this.toast("Campagne supprimée"); },"Supprimer"); },
-  resetAll(){ this.modal("Réinitialiser",
-    `<p class="hint">Remplace toutes les données par le jeu d'exemple EARL Vigneaux 2026. Pensez à exporter un JSON avant.</p>`,
-    ()=>{ Storage.del(DB_KEY); Store.load(); UI.renderShell(); UI.render(); this.toast("Données réinitialisées"); },"Réinitialiser"); },
+  resetAll(){ this.modal("Réinitialiser Hectaris",
+    `<p class="hint" style="font-size:13.5px"><b>Cette action supprimera toutes les données enregistrées dans ce navigateur.</b><br>
+    Cette opération est irréversible sans sauvegarde exportée. Exportez un JSON avant si nécessaire.</p>`,
+    ()=>{ Storage.del(DB_KEY); Store.load(); UI.renderShell(); UI.render();
+      UI.closeModal(); UI.wizard(); return false; },"Tout supprimer"); },
 };
 
 /* ===================== Démarrage ===================== */
 Store.load();
 UI.renderShell();
 UI.render();
+if (Store.firstRun) UI.wizard();
 if (!Storage.ok) UI.toast("Mode aperçu : sauvegarde désactivée — téléchargez le fichier et ouvrez-le dans votre navigateur");
 </script>
 </body>
