@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Hectaris · Assolement</title>
+<meta name="description" content="Hectaris Assolement — outil manuel de construction et d'analyse de l'assolement.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   HECTARIS ASSOLEMENT v2 — interface claire et professionnelle
+   Fond clair, fort contraste, typographie Inter
+   ============================================================ */
+:root{
+  --bg:#f3f5f1;
+  --panel:#ffffff;
+  --panel2:#f7f8f5;
+  --line:#d9ded4;
+  --line2:#c3cabb;
+  --orange:#e8730c;
+  --orange-d:#c95f04;
+  --orange-bg:#fdf0e3;
+  --txt:#22301f;
+  --muted:#5e6a5a;
+  --green:#2f7d32;
+  --green-bg:#e9f4e9;
+  --red:#c62828;
+  --red-bg:#fdecea;
+  --blue:#1565c0;
+  --blue-bg:#e8f0fb;
+  --shadow:0 1px 3px rgba(34,48,31,.08),0 4px 14px rgba(34,48,31,.06);
+  --r:10px;
+  --fs:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --fm:ui-monospace,'SF Mono','Cascadia Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--txt);font-family:var(--fs);font-size:15px;line-height:1.55;min-height:100vh}
+::selection{background:var(--orange);color:#fff}
+
+/* ---------- entête ---------- */
+header{border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:50;box-shadow:0 1px 2px rgba(34,48,31,.05)}
+.hd{max-width:1220px;margin:0 auto;padding:14px 18px 10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-size:21px;font-weight:800;color:var(--txt);letter-spacing:-.3px;line-height:1.1}
+.logo em{font-style:normal;color:var(--orange)}
+.logo small{display:block;font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.pix{width:15px;height:15px;background:var(--orange);border-radius:4px;display:inline-block;margin-right:9px;vertical-align:-1px}
+.badge-alertes{margin-left:auto;font-size:12.5px;font-weight:700;padding:7px 12px;border:1.5px solid var(--line2);border-radius:99px;background:var(--panel2);cursor:pointer;color:var(--muted)}
+.badge-alertes.on{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+
+/* ---------- navigation ---------- */
+nav{max-width:1220px;margin:0 auto;padding:0 18px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{font-family:var(--fs);font-size:13.5px;font-weight:600;background:none;border:none;border-bottom:3px solid transparent;color:var(--muted);padding:10px 13px;cursor:pointer;white-space:nowrap}
+nav button:hover{color:var(--txt)}
+nav button.on{color:var(--orange-d);border-bottom-color:var(--orange)}
+
+/* ---------- structure ---------- */
+main{max-width:1220px;margin:0 auto;padding:22px 18px 90px}
+section.tab{display:none;animation:fadein .2s ease}
+section.tab.on{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+h2{font-size:21px;font-weight:800;letter-spacing:-.3px;margin:0 0 4px}
+h3{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--txt);margin:0 0 12px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:20px;max-width:900px}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+
+/* ---------- KPI ---------- */
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:13px 15px}
+.kpi .lab{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.kpi .val{font-family:var(--fm);font-size:22px;color:var(--txt);margin-top:4px;font-weight:700;letter-spacing:-.5px}
+.kpi .val.pos{color:var(--green)}.kpi .val.neg{color:var(--red)}.kpi .val.acc{color:var(--orange-d)}
+.kpi .det{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ---------- formulaires ---------- */
+label.f{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+input,select,textarea{width:100%;background:#fff;border:1.5px solid var(--line2);border-radius:7px;color:var(--txt);padding:8px 10px;font-family:var(--fs);font-size:14px;outline:none;transition:border-color .12s,box-shadow .12s}
+input:focus,select:focus,textarea:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(232,115,12,.15)}
+input[type=number]{text-align:right;font-family:var(--fm)}
+input[type=file]{padding:7px;border-style:dashed;background:var(--panel2)}
+.frow{display:grid;gap:12px;margin-bottom:14px}
+.btn{font-family:var(--fs);font-size:13.5px;font-weight:700;background:var(--orange);color:#fff;border:1.5px solid var(--orange);border-radius:8px;padding:10px 16px;cursor:pointer;box-shadow:0 1px 2px rgba(34,48,31,.15);transition:background .12s,transform .08s}
+.btn:hover{background:var(--orange-d);border-color:var(--orange-d)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:#fff;color:var(--txt);border-color:var(--line2);box-shadow:none}
+.btn.ghost:hover{border-color:var(--orange);color:var(--orange-d);background:var(--orange-bg)}
+.btn.danger{background:#fff;color:var(--red);border-color:var(--red)}
+.btn.danger:hover{background:var(--red-bg)}
+.btn.small{padding:5px 10px;font-size:12px}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* ---------- tableaux ---------- */
+.twrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);background:var(--panel);margin-bottom:20px}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);background:var(--panel2);padding:10px 11px;text-align:right;border-bottom:2px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td{padding:8px 11px;border-bottom:1px solid var(--line);font-family:var(--fm);font-size:13.5px;text-align:right;white-space:nowrap}
+tbody tr:nth-child(odd) td{background:#fcfdfb}
+tr:last-child td{border-bottom:none}
+tr.tot td{background:var(--orange-bg)!important;font-weight:700;color:var(--orange-d);border-top:2px solid var(--line2)}
+td .pos{color:var(--green);font-weight:600}td .neg{color:var(--red);font-weight:600}
+tr.best td{background:var(--green-bg)!important}
+tr.worst td{background:var(--red-bg)!important}
+td select{padding:5px 7px;font-size:13px;min-width:150px;font-family:var(--fs)}
+td input{padding:5px 7px;font-size:13px}
+.chip{display:inline-block;padding:2px 9px;font-size:11px;font-weight:700;border-radius:99px;border:1px solid var(--line2);color:var(--muted);background:var(--panel2)}
+.chip.ok{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+.chip.ko{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.chip.warn{border-color:var(--orange);color:var(--orange-d);background:var(--orange-bg)}
+.hxmodal{position:fixed;inset:0;background:rgba(34,48,31,.45);z-index:90;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}
+.hxbox{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);max-width:1040px;width:100%;padding:18px}
+.hxhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.hxhead h3{margin:0}
+@media print{.hxmodal{display:none!important}}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:baseline}
+
+/* ---------- cartes culture ---------- */
+.cult{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;position:relative}
+.cult.off{opacity:.55;background:var(--panel2)}
+.cult h4{font-size:15.5px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.cult .stats{font-size:13px;color:var(--muted);border-top:1px solid var(--line);margin-top:12px;padding-top:10px;line-height:1.7}
+.cult .stats b{color:var(--txt);font-family:var(--fm)}
+.sw{position:relative;width:42px;height:22px;background:var(--line);border:none;border-radius:99px;cursor:pointer;flex:none;margin-left:auto;transition:background .15s}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+.sw.on{background:var(--green)}
+.sw.on::after{left:23px}
+.charges-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:9px}
+.charges-grid label.f{font-size:10px;margin-bottom:3px}
+
+/* ---------- alertes ---------- */
+.alert{border:1px solid;border-left-width:5px;border-radius:8px;padding:11px 14px;margin-bottom:10px;font-size:13.5px;display:flex;gap:10px;align-items:flex-start}
+.alert b{font-weight:700}
+.alert .tag{flex:none;font-size:10.5px;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:99px;margin-top:1px}
+.alert.err{border-color:#e5b4b0;border-left-color:var(--red);background:var(--red-bg);color:#7c1d1d}
+.alert.err .tag{background:var(--red);color:#fff}
+.alert.warn{border-color:#f0d2ae;border-left-color:var(--orange);background:var(--orange-bg);color:#7a4a08}
+.alert.warn .tag{background:var(--orange);color:#fff}
+.alert.info{border-color:#bcd2ee;border-left-color:var(--blue);background:var(--blue-bg);color:#123f73}
+.alert.info .tag{background:var(--blue);color:#fff}
+.alert.ok{border-color:#bcd9bc;border-left-color:var(--green);background:var(--green-bg);color:#1d4d20}
+.alert.ok .tag{background:var(--green);color:#fff}
+
+/* ---------- synthèse d'assolement (barres) ---------- */
+.assol .arow{display:grid;grid-template-columns:170px 1fr 150px;gap:12px;align-items:center;padding:6px 0}
+.assol .arow .nm{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.assol .arow .vals{font-family:var(--fm);font-size:13px;text-align:right;font-weight:600}
+.assol .bar{background:var(--panel2);border:1px solid var(--line);border-radius:99px;height:16px;overflow:hidden}
+.assol .bar i{display:block;height:100%;border-radius:99px;transition:width .25s ease}
+.assol .arow.na .nm,.assol .arow.na .vals{color:var(--muted)}
+.assol .tots{display:flex;gap:18px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:10px;padding-top:10px;font-size:13.5px}
+.assol .tots b{font-family:var(--fm)}
+@media (max-width:640px){.assol .arow{grid-template-columns:1fr;gap:4px}.assol .arow .vals{text-align:left}}
+
+/* ---------- graphiques ---------- */
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+.chart svg{display:block;max-width:230px;margin:0 auto;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:7px 16px;margin-top:12px;font-size:12.5px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend b{color:var(--txt);font-family:var(--fm);font-weight:600}
+
+/* ---------- divers ---------- */
+.empty{text-align:center;padding:42px 20px;color:var(--muted)}
+.empty .px{font-size:30px;margin-bottom:8px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:8px}
+code{font-family:var(--fm);background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px}
+.item-list .row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.item-list .row:last-child{border-bottom:none}
+.item-list .txt{font-size:14px;flex:1;min-width:200px}
+.scn-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.scn-tabs button{font-family:var(--fs);font-size:13.5px;font-weight:700;padding:9px 18px;background:var(--panel);border:1.5px solid var(--line2);border-radius:99px;color:var(--muted);cursor:pointer}
+.scn-tabs button.on{border-color:var(--orange);color:var(--orange-d);background:var(--orange-bg)}
+.scn-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}
+.scn-card.best{border-color:var(--green);box-shadow:0 0 0 3px rgba(47,125,50,.12)}
+.scn-card h4{font-size:15px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.scn-card .mini{font-size:13px;line-height:1.9}
+.scn-card .mini .l{display:flex;justify-content:space-between;gap:10px}
+.scn-card .mini .l b{font-family:var(--fm);font-weight:600}
+.scn-card .kv{border-top:1px solid var(--line);margin-top:10px;padding-top:8px;font-size:13px}
+.scn-card .kv .l{display:flex;justify-content:space-between}
+.scn-card .kv b{font-family:var(--fm)}
+
+/* ---------- toast ---------- */
+#toasts{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;width:min(420px,92vw)}
+.toast{font-size:13.5px;font-weight:600;background:#26321f;border-radius:9px;color:#fff;padding:11px 15px;box-shadow:0 6px 20px rgba(0,0,0,.25);animation:pop .2s ease}
+.toast.err{background:var(--red)}
+.toast.ok{background:var(--green)}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:640px){.kpi .val{font-size:18px}main{padding:14px 10px 90px}}
+
+/* ---------- impression (export PDF) ---------- */
+@media print{
+  body{background:#fff;color:#000;font-size:11px}
+  header nav,.btn,.btnrow,#toasts,.badge-alertes,.sw,td select,input[type=file]{display:none!important}
+  .panel,.kpi,.twrap,.chart,.cult,.scn-card{box-shadow:none;border:1px solid #999;background:#fff;color:#000;break-inside:avoid}
+  section.tab{display:block!important;page-break-before:always}
+  section.tab:first-of-type{page-break-before:avoid}
+  td,th{color:#000;border-color:#ccc}
+  tbody tr:nth-child(odd) td{background:#fff}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd">
+    <div class="logo"><span class="pix"></span>Hectaris <em>Assolement</em><small>Construction &amp; analyse de l'assolement</small></div>
+    <button class="badge-alertes" id="badgeAlertes" title="Voir les alertes">0 alerte</button>
+  </div>
+  <nav id="nav">
+    <button data-tab="bord" class="on">Tableau de bord</button>
+    <button data-tab="parcelles">Parcelles</button>
+    <button data-tab="cultures">Cultures &amp; charges</button>
+    <button data-tab="contraintes">Contraintes</button>
+    <button data-tab="rotations">Rotations</button>
+    <button data-tab="optim">Affectation</button>
+    <button data-tab="scenarios">Scénarios</button>
+    <button data-tab="data">Sauvegarde</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ==================== TABLEAU DE BORD ==================== -->
+<section class="tab on" id="tab-bord">
+  <h2>Tableau de bord</h2>
+  <p class="sub">Synthèse économique du scénario actif : <b id="bordScn" style="color:var(--orange-d)"></b></p>
+  <div id="bordAlertes"></div>
+  <div class="grid g4" id="bordKpis"></div>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="chart"><h3>Répartition des cultures</h3><div id="chCultures"></div></div>
+    <div class="chart"><h3>Répartition des charges</h3><div id="chCharges"></div></div>
+    <div class="chart"><h3>Marge brute par culture (€/ha)</h3><div id="chMarges"></div></div>
+    <div class="chart"><h3>Contribution à la marge totale (%)</h3><div id="chContrib"></div></div>
+    <div class="chart"><h3>Coût de production par culture (€/ha)</h3><div id="chCouts"></div></div>
+  </div>
+  <div style="margin-top:20px">
+    <h3>Classement économique des cultures</h3>
+    <div class="twrap"><table id="tblClassement"></table></div>
+    <h3>Tableau économique par culture</h3>
+    <div class="twrap"><table id="tblEco"></table></div>
+    <h3>Détail des charges par culture (€/ha)</h3>
+    <div class="twrap"><table id="tblChargesDet"></table></div>
+  </div>
+</section>
+
+<!-- ==================== PARCELLES ==================== -->
+<section class="tab" id="tab-parcelles">
+  <h2>Parcelles</h2>
+  <p class="sub">Créez vos parcelles manuellement ou importez-les depuis un fichier CSV. La note de potentiel applique un coefficient sur le rendement attendu (5 = 100 %, 4 = 95 %, 3 = 90 %, 2 = 85 %, 1 = 80 %).</p>
+
+  <div class="grid g2">
+    <div class="panel">
+      <h3>Ajouter une parcelle</h3>
+      <div class="frow" style="grid-template-columns:1fr 2fr">
+        <div><label class="f">N° îlot</label><input id="pIlot" placeholder="12"></div>
+        <div><label class="f">Nom</label><input id="pNom" placeholder="Les Grandes Terres"></div>
+      </div>
+      <div class="frow" style="grid-template-columns:1fr 1fr 1fr">
+        <div><label class="f">Surface (ha)</label><input id="pSurf" type="number" step="0.01" min="0" placeholder="8.50"></div>
+        <div><label class="f">Potentiel (1–5)</label>
+          <select id="pNote"><option value="5">5 — 100 %</option><option value="4">4 — 95 %</option><option value="3" selected>3 — 90 %</option><option value="2">2 — 85 %</option><option value="1">1 — 80 %</option></select></div>
+        <div><label class="f">Précédent</label><input id="pPrec" list="dlCultures" placeholder="Colza"></div>
+      </div>
+      <button class="btn" id="btnAddParcelle">Ajouter la parcelle</button>
+    </div>
+
+    <div class="panel">
+      <h3>Import CSV</h3>
+      <p class="hint" style="margin:0 0 10px">Format attendu (séparateur <code>;</code> ou <code>,</code>), une ligne par parcelle :<br>
+      <code>ilot;nom;surface;precedent</code> — ex. <code>12;Les Grandes Terres;8,50;Colza</code><br>
+      La première ligne peut être un en-tête, elle sera détectée automatiquement.</p>
+      <input type="file" id="csvFile" accept=".csv,.txt">
+      <div class="btnrow" style="margin-top:10px">
+        <button class="btn ghost" id="btnImportCsv">Importer le fichier</button>
+        <span class="hint">Les parcelles importées restent modifiables.</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Liste des parcelles <span id="parcCount" style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span></h3>
+  <div class="twrap"><table id="tblParcelles"></table></div>
+  <datalist id="dlCultures"></datalist>
+</section>
+
+<!-- ==================== CULTURES ==================== -->
+<section class="tab" id="tab-cultures">
+  <h2>Cultures &amp; charges</h2>
+  <p class="sub">Activez uniquement les cultures que vous utilisez. Renseignez le rendement attendu, le prix de vente, la surface souhaitée et les charges par poste (dont la moisson). Tous les indicateurs se recalculent instantanément. Les valeurs pré-remplies sont indicatives : ajustez-les à votre exploitation.</p>
+  <div class="panel">
+    <h3>Paramètres économiques de l\u2019exploitation</h3>
+    <div class="frow" style="grid-template-columns:260px 1fr;align-items:end">
+      <div><label class="f">Charges de structure retenues pour l\u2019EBE (€/ha)</label>
+        <input id="ebeCharges" type="number" step="1" min="0" value=""></div>
+      <p class="hint" style="margin:0">Charges de structure décaissables <b>non déjà comprises dans les charges par culture</b> ci-dessous
+      (main-d\u2019œuvre permanente, entretien des bâtiments, frais généraux, assurances non affectées…). Ne ressaisissez pas la mécanisation,
+      le fermage ou l\u2019assurance déjà imputés aux cultures : ils resteraient comptés deux fois.
+      EBE estimé = marge brute totale − (charges de structure €/ha × surface totale). Estimation d\u2019aide à la décision :
+      l\u2019EBE comptable dépend de la classification réelle des produits et des charges de l\u2019exploitation.</p>
+    </div>
+  </div>
+  <div class="btnrow" style="margin-bottom:14px">
+    <button class="btn ghost" id="btnAddCulture">+ Ajouter une culture</button>
+  </div>
+  <div class="grid g2" id="cultList"></div>
+</section>
+
+<!-- ==================== CONTRAINTES ==================== -->
+<section class="tab" id="tab-contraintes">
+  <h2>Contraintes agronomiques</h2>
+  <p class="sub">Ajoutez autant de contraintes de surface que nécessaire, en hectares ou en pourcentage de la surface totale. Elles servent à contrôler l'assolement que vous saisissez : rien n'est corrigé automatiquement, mais toute contrainte non respectée déclenche une alerte claire indiquant la valeur attendue et la valeur actuelle.</p>
+  <div class="panel">
+    <h3>Nouvelle contrainte</h3>
+    <div class="frow" style="grid-template-columns:2fr 1fr 1fr 1fr auto;align-items:end">
+      <div><label class="f">Culture</label><select id="ctCulture"></select></div>
+      <div><label class="f">Type</label><select id="ctType"><option value="min">Minimum ≥</option><option value="max">Maximum ≤</option></select></div>
+      <div><label class="f">Valeur</label><input id="ctVal" type="number" step="0.1" min="0" placeholder="35"></div>
+      <div><label class="f">Unité</label><select id="ctUnite"><option value="pct">% surface</option><option value="ha">hectares</option></select></div>
+      <div><button class="btn" id="btnAddCt">Ajouter</button></div>
+    </div>
+  </div>
+  <div class="panel"><h3>Contraintes actives</h3><div class="item-list" id="ctList"></div></div>
+</section>
+
+<!-- ==================== ROTATIONS ==================== -->
+<section class="tab" id="tab-rotations">
+  <h2>Règles de rotation</h2>
+  <p class="sub">Définissez les successions et leur niveau : <b>Interdite</b> (bloquante, comme aujourd\u2019hui), <b>Déconseillée</b> (vigilance dans l\u2019aide au choix) ou <b>Favorable</b> (succession agronomiquement intéressante). Les règles interdites déclenchent toujours une alerte bloquante nommant la parcelle, le précédent, la culture et la règle violée.</p>
+  <div class="panel">
+    <h3>Nouvelle règle</h3>
+    <div class="frow" style="grid-template-columns:1fr 1fr 190px auto;align-items:end">
+      <div><label class="f">Culture suivante</label><input id="rtSuivant" list="dlCultures" placeholder="Blé"></div>
+      <div><label class="f">Après (précédent)</label><input id="rtPrec" list="dlCultures" placeholder="Blé"></div>
+      <div><label class="f">Niveau</label><select id="rtNiveau">
+        <option value="interdite">Interdite (bloquante)</option>
+        <option value="deconseillee">Déconseillée</option>
+        <option value="favorable">Favorable</option></select></div>
+      <div><button class="btn" id="btnAddRt">Ajouter</button></div>
+    </div>
+    <p class="hint">Lecture : « <i>Culture suivante</i> interdite / déconseillée / favorable après <i>précédent</i> ».</p>
+  </div>
+  <div class="panel"><h3>Règles actives</h3><div class="item-list" id="rtList"></div></div>
+</section>
+
+<!-- ==================== AFFECTATION ==================== -->
+<section class="tab" id="tab-optim">
+  <h2>Affectation</h2>
+  <p class="sub">Choisissez vous-même la culture de chaque parcelle. La synthèse ci-dessous se met à jour instantanément à chaque modification, avec le contrôle des contraintes et des rotations.</p>
+
+  <div class="panel assol" id="assolPanel">
+    <h3>Assolement en cours — scénario <span id="optScn" style="color:var(--orange-d)"></span></h3>
+    <div id="assolAlertes"></div>
+    <div id="assolBars"></div>
+    <div class="tots" id="assolTots"></div>
+  </div>
+
+  <div class="btnrow" style="margin-bottom:14px">
+    <button class="btn ghost small" id="btnClearAff">Vider l'affectation du scénario</button>
+  </div>
+  <h3>Affectation des parcelles</h3>
+  <div class="twrap"><table id="tblAffect"></table></div>
+</section>
+
+<!-- ==================== SCÉNARIOS ==================== -->
+<section class="tab" id="tab-scenarios">
+  <h2>Scénarios</h2>
+  <p class="sub">Comparez plusieurs hypothèses d'assolement. Chaque scénario mémorise sa propre affectation des parcelles ; les paramètres de cultures et de charges sont communs. Le meilleur scénario (marge brute) est mis en évidence.</p>
+  <div class="scn-tabs" id="scnTabs"></div>
+  <div class="btnrow" style="margin-bottom:18px">
+    <button class="btn ghost" id="btnScnCopy">Dupliquer le scénario actif vers…</button>
+    <select id="scnCopyTarget" style="width:auto"></select>
+  </div>
+
+  <h3>Synthèse de l'assolement par scénario</h3>
+  <div class="grid g3" id="scnSyntheses" style="margin-bottom:20px"></div>
+
+  <h3>Classement économique des cultures — <span id="scnClassementNom" style="color:var(--orange-d)"></span></h3>
+  <p class="hint" style="margin:-6px 0 10px">Sélectionnez un scénario ci-dessus pour afficher son classement. Les cultures sont classées de la plus rentable à la moins rentable (marge brute €/ha).</p>
+  <div class="twrap"><table id="tblClassementScn"></table></div>
+
+  <h3>Comparaison des surfaces par culture</h3>
+  <div class="twrap"><table id="tblScnSurf"></table></div>
+
+  <h3>Comparaison économique</h3>
+  <div class="twrap"><table id="tblScn"></table></div>
+</section>
+
+<!-- ==================== SAUVEGARDE ==================== -->
+<section class="tab" id="tab-data">
+  <h2>Sauvegarde &amp; exports</h2>
+  <p class="sub">Vos données sont sauvegardées automatiquement dans ce navigateur (localStorage), à chaque modification. Exportez régulièrement une copie JSON de sécurité.</p>
+  <div class="grid g3">
+    <div class="panel">
+      <h3>Export PDF</h3>
+      <p class="hint" style="margin-bottom:10px">Génère un dossier imprimable (tableau de bord + tableaux) via la boîte d'impression du navigateur — choisissez « Enregistrer au format PDF ».</p>
+      <button class="btn" id="btnPdf">Exporter en PDF</button>
+    </div>
+    <div class="panel">
+      <h3>Export Excel</h3>
+      <p class="hint" style="margin-bottom:10px">Fichier CSV (séparateur « ; », décimales à virgule) qui s'ouvre directement dans Excel : parcelles, économie par culture, charges et comparaison des scénarios.</p>
+      <button class="btn" id="btnXls">Exporter pour Excel</button>
+    </div>
+    <div class="panel">
+      <h3>Import / Export JSON</h3>
+      <div class="btnrow" style="margin-bottom:10px"><button class="btn" id="btnJsonExp">Exporter JSON</button></div>
+      <input type="file" id="jsonFile" accept=".json">
+      <div class="btnrow" style="margin-top:10px"><button class="btn ghost" id="btnJsonImp">Importer JSON</button></div>
+    </div>
+  </div>
+  <div class="panel" style="border-color:var(--red)">
+    <h3 style="color:var(--red)">Zone de réinitialisation</h3>
+    <p class="hint" style="margin-bottom:10px">Efface toutes les données du module Assolement de ce navigateur. Action irréversible — exportez un JSON avant.</p>
+    <button class="btn danger" id="btnReset">Réinitialiser le module</button>
+  </div>
+</section>
+
+</main>
+
+<div id="toasts"></div>
+
+<script>
+/* ============================================================
+   HECTARIS ASSOLEMENT v2 — moteur applicatif
+   Outil manuel de construction d'assolement.
+   Vanilla JS, sans dépendance, 100 % hors-ligne.
+   v2 : suppression de l'optimiseur automatique, poste "Moisson",
+   synthèse d'assolement temps réel, synthèses par scénario.
+   ============================================================ */
+'use strict';
+
+/* ---------- utilitaires ---------- */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const uid = () => 'x' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const num = v => { const n = parseFloat(String(v ?? '').replace(/\s/g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
+const fmt  = (n, d = 2) => isFinite(n) ? n.toLocaleString('fr-FR', {minimumFractionDigits: d, maximumFractionDigits: d}) : '—';
+const fmt0 = n => fmt(n, 0);
+const fmt1 = n => fmt(n, 1);
+const eur  = n => isFinite(n) ? fmt0(n) + ' €' : '—';
+const pct1 = n => isFinite(n) ? fmt1(n) + ' %' : '—';
+
+/* Coefficient de rendement lié à la note de potentiel */
+const COEF_NOTE = {5: 1.00, 4: 0.95, 3: 0.90, 2: 0.85, 1: 0.80};
+
+/* v4 : aptitude parcelle x culture et niveaux de rotation */
+const APT_COEF  = {bonne: 1.00, moyenne: 0.90, faible: 0.75, interdite: 0};
+const APT_LABEL = {bonne: 'Bonne', moyenne: 'Moyenne', faible: 'Faible', interdite: 'Interdite'};
+const ROT_VERBE = {interdite: 'interdit', deconseillee: 'déconseillé', favorable: 'favorable'};
+
+/* Postes de charges (indépendants, tous en €/ha) — v2 : ajout "Moisson" */
+const POSTES = [
+  ['semences', 'Semences'], ['azote', 'Azote'], ['dap', 'DAP'],
+  ['compost', 'Compost'], ['kieserite', 'Kiesérite'],
+  ['herbicides', 'Herbicides'], ['insecticides', 'Insecticides'],
+  ['fongicides', 'Fongicides'], ['regulateurs', 'Régulateurs'],
+  ['mecanisation', 'Mécanisation'], ['moisson', 'Moisson'], ['carburant', 'Carburant'],
+  ['assurance', 'Assurance'], ['fermage', 'Fermage'], ['divers', 'Divers']
+];
+
+/* Palette des cultures (fond clair) */
+const PALETTE = ['#e8730c', '#f0a534', '#2e86ab', '#5c8f3e', '#8e5bb5', '#c0392b', '#7a6a55', '#3aa6a6', '#c65b8a', '#4a6fb5'];
+
+/* ---------- état par défaut ---------- */
+function chargesVides() { const o = {}; POSTES.forEach(([k]) => o[k] = 0); return o; }
+function mkCulture(nom, actif, rdt, prix, ch) {
+  return { id: uid(), nom, actif, rendement: rdt, prix, surfaceSouhaitee: 0, charges: Object.assign(chargesVides(), ch || {}) };
+}
+function defaultState() {
+  const cultures = [
+    mkCulture('Blé', true, 7.0, 190, {semences:75, azote:180, dap:60, herbicides:90, insecticides:15, fongicides:70, regulateurs:12, mecanisation:160, moisson:105, carburant:60, assurance:25, fermage:160, divers:20}),
+    mkCulture('Blé de force', false, 6.5, 225, {semences:80, azote:210, dap:60, herbicides:90, insecticides:15, fongicides:75, regulateurs:12, mecanisation:160, moisson:105, carburant:60, assurance:25, fermage:160, divers:20}),
+    mkCulture("Orge d'hiver", true, 7.0, 175, {semences:70, azote:150, dap:55, herbicides:85, insecticides:10, fongicides:55, regulateurs:15, mecanisation:155, moisson:105, carburant:58, assurance:25, fermage:160, divers:20}),
+    mkCulture('Orge de printemps', false, 6.0, 220, {semences:85, azote:110, dap:50, herbicides:70, insecticides:8, fongicides:45, regulateurs:8, mecanisation:150, moisson:100, carburant:55, assurance:25, fermage:160, divers:20}),
+    mkCulture('Colza', true, 3.5, 450, {semences:65, azote:190, dap:70, kieserite:45, herbicides:140, insecticides:45, fongicides:40, regulateurs:20, mecanisation:165, moisson:115, carburant:65, assurance:30, fermage:160, divers:20}),
+    mkCulture('Tournesol', true, 2.8, 430, {semences:105, azote:40, dap:45, herbicides:95, insecticides:5, fongicides:10, mecanisation:145, moisson:110, carburant:55, assurance:25, fermage:160, divers:20}),
+    mkCulture('Chanvre', false, 6.5, 130, {semences:190, azote:100, dap:40, mecanisation:140, moisson:140, carburant:55, assurance:25, fermage:160, divers:20})
+  ];
+  const rotations = [
+    {id: uid(), suivant: 'Blé', precedent: 'Blé', actif: true, niveau: 'interdite'},
+    {id: uid(), suivant: 'Colza', precedent: 'Colza', actif: true, niveau: 'interdite'},
+    {id: uid(), suivant: 'Tournesol', precedent: 'Tournesol', actif: true, niveau: 'interdite'}
+  ];
+  return {
+    version: 3,
+    chargesStructureHa: 0,
+    parcelles: [],
+    cultures,
+    contraintes: [],
+    rotations,
+    scenarios: [
+      {id: 'A', nom: 'Scénario A', affectations: {}},
+      {id: 'B', nom: 'Scénario B', affectations: {}},
+      {id: 'C', nom: 'Scénario C', affectations: {}}
+    ],
+    scenarioActif: 'A'
+  };
+}
+
+/* ---------- persistance + migration ---------- */
+const LS_KEY = 'hectaris_assolement_v1';
+let state;
+try {
+  const raw = localStorage.getItem(LS_KEY);
+  state = raw ? JSON.parse(raw) : defaultState();
+  if (!state.scenarios || !state.cultures) state = defaultState();
+} catch (e) { state = defaultState(); }
+/* migration v1/v2 -> v4 : postes de charges, niveaux de rotation, aptitudes, charges de structure */
+function migrerState() {
+  (state.cultures || []).forEach(c => {
+    c.charges = c.charges || {};
+    POSTES.forEach(([k]) => { if (typeof c.charges[k] !== 'number' || !isFinite(c.charges[k])) c.charges[k] = num(c.charges[k]); });
+  });
+  /* anciennes règles de rotation -> niveau « Interdite » (comportement bloquant conservé à l'identique) */
+  (state.rotations || []).forEach(r => { if (!['interdite','deconseillee','favorable'].includes(r.niveau)) r.niveau = 'interdite'; });
+  /* aptitudes : non renseignées = « Bonne » (aucune parcelle existante ne devient défavorable) */
+  (state.parcelles || []).forEach(p => { if (typeof p.aptitudes !== 'object' || !p.aptitudes) p.aptitudes = {}; });
+  const cs = num(state.chargesStructureHa);
+  state.chargesStructureHa = isFinite(cs) && cs > 0 ? cs : 0;
+  state.version = 3;
+}
+migrerState();
+
+let saveTimer = null;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+    catch (e) { toast('Sauvegarde impossible (stockage plein ?)', 'err'); }
+  }, 150);
+}
+
+/* ---------- accès ---------- */
+const scn = () => state.scenarios.find(s => s.id === state.scenarioActif) || state.scenarios[0];
+const cultById = id => state.cultures.find(c => c.id === id) || null;
+const cultsActives = () => state.cultures.filter(c => c.actif);
+const surfaceTotale = () => state.parcelles.reduce((s, p) => s + num(p.surface), 0);
+const cultColor = c => PALETTE[state.cultures.indexOf(c) % PALETTE.length];
+
+/* ---------- calculs élémentaires (exacts) ---------- */
+function coutHa(c) { return POSTES.reduce((s, [k]) => s + num(c.charges[k]), 0); }
+function rdtCorrige(c, note) { return num(c.rendement) * (COEF_NOTE[note] || 1); }
+function margeHaParcelle(p, c) { return rdtParcelle(p, c) * num(c.prix) - coutHa(c); }
+
+/* Règles de rotation : statut de la succession precedent -> culture (interdite = bloquant, inchangé) */
+function rotationStatut(precedent, cultureNom) {
+  const np = norm(precedent), nc = norm(cultureNom);
+  if (!np || !nc) return 'autorisee';
+  const regles = state.rotations.filter(r => r.actif && norm(r.precedent) === np && norm(r.suivant) === nc);
+  if (regles.some(r => (r.niveau || 'interdite') === 'interdite')) return 'interdite';
+  if (regles.some(r => r.niveau === 'deconseillee')) return 'deconseillee';
+  if (regles.some(r => r.niveau === 'favorable')) return 'favorable';
+  return 'autorisee';
+}
+function rotationInterdite(precedent, cultureNom) { return rotationStatut(precedent, cultureNom) === 'interdite'; }
+
+/* ---------- aptitude parcelle x culture ---------- */
+function aptOf(p, c) {
+  const a = (p.aptitudes || {})[c.id];
+  return { niveau: (a && APT_COEF[a.niveau] !== undefined) ? a.niveau : 'bonne', note: (a && a.note) ? String(a.note) : '' };
+}
+/* Rendement estimé = rendement de référence x coefficient de potentiel x coefficient d'aptitude */
+function rdtParcelle(p, c) { return rdtCorrige(c, p.note) * APT_COEF[aptOf(p, c).niveau]; }
+
+/* Contraintes normalisées en hectares */
+function contraintesHa() {
+  const tot = surfaceTotale();
+  return state.contraintes.map(ct => ({
+    ...ct,
+    valHa: ct.unite === 'pct' ? num(ct.valeur) / 100 * tot : num(ct.valeur),
+    label: labelContrainte(ct)
+  }));
+}
+function labelContrainte(ct) {
+  const c = cultById(ct.cultureId);
+  return `${c ? c.nom : '?'} ${ct.type === 'min' ? 'minimum' : 'maximum'} ${fmt(num(ct.valeur), ct.unite === 'pct' ? 1 : 1)} ${ct.unite === 'pct' ? '%' : 'ha'}`;
+}
+
+/* ---------- agrégats économiques d'un scénario ---------- */
+function calcScenario(sc) {
+  const parCulture = new Map();
+  state.cultures.forEach(c => parCulture.set(c.id, {
+    culture: c, surface: 0, production: 0, ca: 0, cout: 0, nbParcelles: 0
+  }));
+  let sansCulture = 0;
+  state.parcelles.forEach(p => {
+    const cid = sc.affectations[p.id];
+    const c = cid ? cultById(cid) : null;
+    if (!c) { sansCulture += num(p.surface); return; }
+    const a = parCulture.get(c.id);
+    const surf = num(p.surface);
+    const prod = surf * rdtParcelle(p, c);
+    a.surface += surf;
+    a.production += prod;
+    a.ca += prod * num(c.prix);
+    a.cout += surf * coutHa(c);
+    a.nbParcelles++;
+  });
+  let tot = {surface: 0, production: 0, ca: 0, cout: 0};
+  const lignes = [];
+  parCulture.forEach(a => {
+    if (a.surface <= 0) return;
+    a.coutHa = a.cout / a.surface;
+    a.coutT = a.production > 0 ? a.cout / a.production : NaN;   // = prix de vente minimum
+    a.marge = a.ca - a.cout;
+    a.margeHa = a.marge / a.surface;
+    lignes.push(a);
+    tot.surface += a.surface; tot.production += a.production; tot.ca += a.ca; tot.cout += a.cout;
+  });
+  tot.marge = tot.ca - tot.cout;
+  tot.coutHa = tot.surface > 0 ? tot.cout / tot.surface : NaN;
+  tot.coutT  = tot.production > 0 ? tot.cout / tot.production : NaN;
+  tot.margeHa = tot.surface > 0 ? tot.marge / tot.surface : NaN;          // marge moyenne €/ha (surface affectée)
+  const st = surfaceTotale();
+  tot.valeurCreeeHa = st > 0 ? tot.marge / st : NaN;
+  /* EBE estimé : marge brute totale - charges de structure retenues (€/ha x surface TOTALE de l'exploitation) */
+  tot.chargesStructureHa = Math.max(0, num(state.chargesStructureHa));
+  tot.chargesStructure = tot.chargesStructureHa * st;
+  tot.ebe = tot.marge - tot.chargesStructure;
+  tot.ebeHa = st > 0 ? tot.ebe / st : NaN;
+  tot.ebeProvisoire = sansCulture > 0;                       // valeur créée €/ha = marge totale / surface totale
+  /* contribution de chaque culture à la marge totale (%) */
+  lignes.forEach(l => { l.contribution = tot.marge !== 0 ? l.marge / tot.marge * 100 : NaN; });
+  lignes.sort((a, b) => b.surface - a.surface);
+  return {lignes, tot, sansCulture};
+}
+
+/* ---------- alertes ---------- */
+/* ---------- aide au choix : classement des cultures pour une parcelle ---------- */
+function conseilsParcelle(p) {
+  const rows = cultsActives().map(c => {
+    const apt = aptOf(p, c);
+    const rot = rotationStatut(p.precedent, c.nom);
+    return { c, apt, rot, rdt: rdtParcelle(p, c), margeHa: margeHaParcelle(p, c),
+      interdit: rot === 'interdite' || apt.niveau === 'interdite' };
+  });
+  const ok = rows.filter(r => !r.interdit);
+  const best = ok.length ? Math.max(...ok.map(r => r.margeHa)) : NaN;
+  rows.forEach(r => {
+    if (r.interdit) r.avis = 'Interdit';
+    else if (r.apt.niveau === 'faible' || r.margeHa < 0) r.avis = 'Non recommandé';
+    else if (r.rot === 'deconseillee' || r.apt.niveau === 'moyenne' || r.margeHa < 100) r.avis = 'Vigilance';
+    else if (r.apt.niveau === 'bonne' && (r.rot === 'favorable' || r.rot === 'autorisee') && r.margeHa > 0 && r.margeHa >= best * 0.9) r.avis = 'Recommandé';
+    else r.avis = 'Possible';
+    r.explication = expliquerAvis(p, r, best);
+  });
+  const ordre = {'Recommandé': 0, 'Possible': 1, 'Vigilance': 2, 'Non recommandé': 3};
+  return rows.filter(r => !r.interdit).sort((a, b) => (ordre[a.avis] - ordre[b.avis]) || (b.margeHa - a.margeHa))
+    .concat(rows.filter(r => r.interdit).sort((a, b) => b.margeHa - a.margeHa));
+}
+function expliquerAvis(p, r, best) {
+  const e = [];
+  if (r.rot === 'interdite') e.push(`Culture interdite après « ${p.precedent} » (règle de rotation).`);
+  if (r.apt.niveau === 'interdite') e.push('Aptitude « Interdite » sur cette parcelle' + (r.apt.note ? ' : ' + r.apt.note : '') + '.');
+  if (r.interdit) return e.join(' ');
+  if (r.margeHa < 0) e.push('Marge prévisionnelle négative.');
+  if (r.apt.niveau === 'faible') e.push('Aptitude faible' + (r.apt.note ? ' : ' + r.apt.note : '') + '.');
+  if (r.apt.niveau === 'moyenne') e.push('Culture possible, mais aptitude moyenne sur cette parcelle' + (r.apt.note ? ' (' + r.apt.note + ')' : '') + '.');
+  if (r.rot === 'deconseillee') e.push(`Rotation déconseillée après « ${p.precedent} ».`);
+  if (r.rot === 'favorable') e.push(`Précédent « ${p.precedent} » favorable.`);
+  if (r.avis === 'Recommandé') e.push(isFinite(best) && r.margeHa >= best ? 'Bonne aptitude et meilleure marge estimée de la parcelle.' : 'Bonne aptitude et marge parmi les meilleures de la parcelle.');
+  if (r.avis === 'Vigilance' && r.margeHa >= 0 && r.margeHa < 100 && r.apt.niveau === 'bonne' && r.rot !== 'deconseillee') e.push('Marge estimée très proche de zéro.');
+  if (!e.length) e.push('Aucune règle particulière : culture possible.');
+  return e.join(' ');
+}
+function avisDe(p, c) { const r = conseilsParcelle(p).find(x => x.c.id === c.id); return r ? r.avis : ''; }
+const rotChip  = r => ({interdite:'<span class="chip ko">Interdite</span>', deconseillee:'<span class="chip warn">Déconseillée</span>', favorable:'<span class="chip ok">Favorable</span>', autorisee:'<span class="chip">Autorisée</span>'}[r] || '');
+const aptChip  = a => ({bonne:'<span class="chip ok">Bonne</span>', moyenne:'<span class="chip warn">Moyenne</span>', faible:'<span class="chip warn">Faible</span>', interdite:'<span class="chip ko">Interdite</span>'}[a] || '');
+const avisChip = a => `<span class="chip ${({'Recommandé':'ok','Possible':'','Vigilance':'warn','Non recommandé':'ko','Interdit':'ko'})[a] || ''}">${a}</span>`;
+
+function calcAlertes(sc) {
+  const A = [];
+  const tot = surfaceTotale();
+
+  if (state.parcelles.length === 0) {
+    A.push({t: 'info', m: "Aucune parcelle : créez vos parcelles ou importez un CSV (onglet Parcelles)."});
+    return A;
+  }
+  /* rotations non respectées -> bloquant */
+  state.parcelles.forEach(p => {
+    const c = cultById(sc.affectations[p.id]);
+    if (c && rotationInterdite(p.precedent, c.nom)) {
+      A.push({t: 'err', rotation: true, m: `Rotation non respectée sur la parcelle ${p.nom} (îlot ${p.ilot || '—'}, ${fmt(num(p.surface))} ha) : précédent « ${p.precedent} », culture choisie « ${c.nom} » — règle violée : « ${c.nom} » interdit après « ${p.precedent} ».`});
+    }
+  });
+  /* parcelles sans culture */
+  const sans = state.parcelles.filter(p => !cultById(sc.affectations[p.id]));
+  if (sans.length) A.push({t: 'warn', m: `${sans.length} parcelle(s) non affectée(s) (${fmt(sans.reduce((s,p)=>s+num(p.surface),0))} ha) : ${sans.slice(0,4).map(p=>p.nom).join(', ')}${sans.length>4?'…':''}`});
+  /* culture affectée devenue déconseillée, d'aptitude limitée ou à marge négative (information — le choix n'est jamais modifié) */
+  state.parcelles.forEach(p => {
+    const c = cultById(sc.affectations[p.id]); if (!c) return;
+    const apt = aptOf(p, c), rot = rotationStatut(p.precedent, c.nom), m = margeHaParcelle(p, c);
+    if (rot === 'deconseillee') A.push({t: 'warn', m: `Rotation déconseillée sur ${p.nom} : « ${c.nom} » après « ${p.precedent} ». Le choix reste le vôtre.`});
+    if (apt.niveau === 'faible') A.push({t: 'warn', m: `Aptitude faible de la parcelle ${p.nom} pour « ${c.nom} »${apt.note ? ' (' + apt.note + ')' : ''} : rendement estimé réduit à 75 %.`});
+    if (isFinite(m) && m < 0) A.push({t: 'warn', m: `Marge estimée négative sur ${p.nom} avec « ${c.nom} » : ${fmt0(m)} €/ha.`});
+  });
+  /* parcelles affectées à une culture désactivée */
+  state.parcelles.forEach(p => {
+    const c = cultById(sc.affectations[p.id]);
+    if (c && !c.actif) A.push({t: 'warn', m: `La parcelle ${p.nom} est affectée à « ${c.nom} », culture désactivée.`});
+  });
+  /* surfaces incorrectes */
+  state.parcelles.forEach(p => {
+    if (num(p.surface) <= 0) A.push({t: 'err', m: `Surface incorrecte (≤ 0) sur la parcelle ${p.nom}.`});
+  });
+  /* contraintes : valeur attendue vs valeur actuelle, dans l'unité de la contrainte */
+  const calc = calcScenario(sc);
+  contraintesHa().forEach(ct => {
+    const c = cultById(ct.cultureId); if (!c) return;
+    const l = calc.lignes.find(x => x.culture.id === c.id);
+    const surf = l ? l.surface : 0;
+    const viole = ct.type === 'min' ? surf < ct.valHa - 1e-6 : surf > ct.valHa + 1e-6;
+    if (!viole) return;
+    const actuel = ct.unite === 'pct'
+      ? `${pct1(tot > 0 ? surf / tot * 100 : 0)} (${fmt(surf)} ha)`
+      : `${fmt(surf)} ha`;
+    const attendu = ct.unite === 'pct'
+      ? `${ct.type === 'min' ? 'minimum' : 'maximum'} ${fmt1(num(ct.valeur))} % (${fmt(ct.valHa)} ha)`
+      : `${ct.type === 'min' ? 'minimum' : 'maximum'} ${fmt(ct.valHa)} ha`;
+    A.push({t: 'err', contrainte: true, m: `Contrainte non respectée : ${ct.label} — Actuel : ${actuel} — Attendu : ${attendu}.`});
+  });
+  /* culture active sans parcelle */
+  cultsActives().forEach(c => {
+    const l = calc.lignes.find(x => x.culture.id === c.id);
+    if (!l) A.push({t: 'warn', m: `Culture active sans parcelle affectée : ${c.nom}.`});
+  });
+  /* incohérences économiques */
+  calc.lignes.forEach(l => {
+    if (l.marge < 0) A.push({t: 'err', m: `Marge brute négative sur ${l.culture.nom} : ${eur(l.marge)} (prix de vente ${fmt(num(l.culture.prix))} €/t < prix minimum ${fmt(l.coutT)} €/t).`});
+    else if (isFinite(l.coutT) && num(l.culture.prix) < l.coutT * 1.05)
+      A.push({t: 'warn', m: `Marge fragile sur ${l.culture.nom} : prix de vente ${fmt(num(l.culture.prix))} €/t proche du prix minimum ${fmt(l.coutT)} €/t.`});
+  });
+  cultsActives().forEach(c => {
+    if (num(c.rendement) <= 0) A.push({t: 'err', m: `Rendement attendu nul ou incorrect sur ${c.nom}.`});
+    if (num(c.prix) <= 0) A.push({t: 'warn', m: `Prix de vente non renseigné sur ${c.nom}.`});
+  });
+  /* surfaces souhaitées vs affectées */
+  cultsActives().forEach(c => {
+    const l = calc.lignes.find(x => x.culture.id === c.id);
+    const cible = num(c.surfaceSouhaitee);
+    if (cible > 0) {
+      const surf = l ? l.surface : 0;
+      if (Math.abs(surf - cible) > Math.max(1, cible * 0.1))
+        A.push({t: 'info', m: `${c.nom} : surface affectée ${fmt(surf)} ha vs souhaitée ${fmt(cible)} ha.`});
+    }
+  });
+  /* incohérence contraintes vs surface totale */
+  const sommeMin = contraintesHa().filter(x => x.type === 'min').reduce((s, x) => s + x.valHa, 0);
+  if (sommeMin > tot + 1e-6) A.push({t: 'err', m: `Contraintes incohérentes : la somme des minimums (${fmt(sommeMin)} ha) dépasse la surface totale (${fmt(tot)} ha).`});
+  return A;
+}
+
+/* ---------- répartition de l'assolement (partagée : affectation, scénarios) ---------- */
+function repartition(sc) {
+  const tot = surfaceTotale();
+  const calc = calcScenario(sc);
+  const items = calc.lignes.map(l => ({
+    nom: l.culture.nom, color: cultColor(l.culture),
+    ha: l.surface, pct: tot > 0 ? l.surface / tot * 100 : 0
+  }));
+  return {items, tot, calc,
+    nonAffecte: calc.sansCulture,
+    pctNonAffecte: tot > 0 ? calc.sansCulture / tot * 100 : 0,
+    affecte: calc.tot.surface,
+    pctAffecte: tot > 0 ? calc.tot.surface / tot * 100 : 0};
+}
+
+/* ============================================================
+   RENDU
+   ============================================================ */
+let tabCourant = 'bord';
+
+function renderAll() {
+  renderDatalist();
+  renderBadge();
+  switch (tabCourant) {
+    case 'bord':        renderBord(); break;
+    case 'parcelles':   renderParcelles(); break;
+    case 'cultures':    renderCultures(); break;
+    case 'contraintes': renderContraintes(); break;
+    case 'rotations':   renderRotations(); break;
+    case 'optim':       renderAffectation(); break;
+    case 'scenarios':   renderScenarios(); break;
+  }
+}
+function renderDatalist() {
+  $('#dlCultures').innerHTML = state.cultures.map(c => `<option value="${esc(c.nom)}">`).join('');
+}
+function renderBadge() {
+  const n = calcAlertes(scn()).filter(a => a.t === 'err' || a.t === 'warn').length;
+  const b = $('#badgeAlertes');
+  b.textContent = n + ' alerte' + (n > 1 ? 's' : '');
+  b.classList.toggle('on', n > 0);
+}
+function alertHtml(a) {
+  const tags = {err: 'Bloquant', warn: 'Attention', info: 'Info', ok: 'OK'};
+  return `<div class="alert ${a.t}"><span class="tag">${tags[a.t]}</span><span class="body">${esc(a.m)}</span></div>`;
+}
+
+/* ---------- tableau de bord ---------- */
+function renderBord() {
+  const s = scn();
+  $('#bordScn').textContent = s.nom;
+  const calc = calcScenario(s);
+  const t = calc.tot;
+
+  const A = calcAlertes(s);
+  $('#bordAlertes').innerHTML = A.length
+    ? A.slice(0, 12).map(alertHtml).join('')
+      + (A.length > 12 ? alertHtml({t: 'info', m: `${A.length - 12} autre(s) alerte(s)…`}) : '')
+    : alertHtml({t: 'ok', m: 'Aucune alerte : assolement cohérent, contraintes et rotations respectées.'});
+
+  const kpis = [
+    ['Surface totale', fmt(surfaceTotale()) + ' ha', `${state.parcelles.length} parcelle(s) · ${fmt(calc.sansCulture)} ha non affectés`, ''],
+    ['Chiffre d\u2019affaires prévisionnel', eur(t.ca), '', 'acc'],
+    ['Charges totales', eur(t.cout), '', ''],
+    ['Coût moyen / ha', isFinite(t.coutHa) ? fmt0(t.coutHa) + ' €/ha' : '—', 'sur surface affectée', ''],
+    ['Marge brute totale', eur(t.marge), '', t.marge >= 0 ? 'pos' : 'neg'],
+    ['Marge moyenne / ha', isFinite(t.margeHa) ? fmt0(t.margeHa) + ' €/ha' : '—', 'sur surface affectée', t.margeHa >= 0 ? 'pos' : 'neg'],
+    ['Valeur créée / ha', isFinite(t.valeurCreeeHa) ? fmt0(t.valeurCreeeHa) + ' €/ha' : '—', 'marge totale / surface totale', 'acc'],
+    ['EBE estimé / ha' + (t.ebeProvisoire ? ' (provisoire)' : ''), isFinite(t.ebeHa) ? fmt0(t.ebeHa) + ' €/ha' : '—',
+      `${eur(t.ebe)} au total · structure ${fmt0(t.chargesStructureHa)} €/ha — estimation d\u2019aide à la décision`, t.ebe >= 0 ? 'pos' : 'neg'],
+    ['Cultures affectées', String(calc.lignes.length), cultsActives().length + ' active(s)', '']
+  ];
+  $('#bordKpis').innerHTML = kpis.map(([l, v, d, cls]) =>
+    `<div class="kpi"><div class="lab">${l}</div><div class="val ${cls}">${v}</div>${d ? `<div class="det">${d}</div>` : ''}</div>`).join('');
+
+  const dataCult = calc.lignes.map(l => ({label: l.culture.nom, value: l.surface, color: cultColor(l.culture)}));
+  if (calc.sansCulture > 0) dataCult.push({label: 'Non affecté', value: calc.sansCulture, color: '#c3cabb'});
+  $('#chCultures').innerHTML = svgPie(dataCult, v => fmt(v) + ' ha');
+
+  const chTot = {};
+  calc.lignes.forEach(l => POSTES.forEach(([k, lab]) => chTot[lab] = (chTot[lab] || 0) + num(l.culture.charges[k]) * l.surface));
+  const dataCh = Object.entries(chTot).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])
+    .map(([label, value], i) => ({label, value, color: PALETTE[i % PALETTE.length]}));
+  $('#chCharges').innerHTML = svgPie(dataCh, v => eur(v));
+
+  $('#chMarges').innerHTML  = svgBars(calc.lignes.map(l => ({label: l.culture.nom, value: l.margeHa, color: cultColor(l.culture)})), v => fmt0(v) + ' €/ha');
+  $('#chContrib').innerHTML = svgBars(calc.lignes.map(l => ({label: l.culture.nom, value: l.contribution, color: cultColor(l.culture)})), v => pct1(v));
+  $('#chCouts').innerHTML   = svgBars(calc.lignes.map(l => ({label: l.culture.nom, value: l.coutHa, color: cultColor(l.culture)})), v => fmt0(v) + ' €/ha');
+  $('#tblClassement').innerHTML = classementHtml(calc);
+
+  const rows = calc.lignes.map(l => `<tr>
+      <td><span class="dot" style="background:${cultColor(l.culture)}"></span>${esc(l.culture.nom)}</td>
+      <td>${fmt(l.surface)}</td>
+      <td>${fmt(rdtMoyen(l), 2)}</td>
+      <td>${fmt(l.production, 1)}</td>
+      <td>${fmt0(l.coutHa)}</td>
+      <td>${eur(l.cout)}</td>
+      <td>${fmt(l.coutT)}</td>
+      <td>${fmt(num(l.culture.prix))}</td>
+      <td>${eur(l.ca)}</td>
+      <td><span class="${l.marge >= 0 ? 'pos' : 'neg'}">${eur(l.marge)}</span></td>
+      <td>${fmt0(l.margeHa)}</td>
+      <td>${pct1(l.contribution)}</td>
+    </tr>`).join('');
+  $('#tblEco').innerHTML = `<thead><tr><th>Culture</th><th>Surface (ha)</th><th>Rdt corrigé (t/ha)</th><th>Production (t)</th><th>Coût (€/ha)</th><th>Charges totales</th><th>Prix mini (€/t)</th><th>Prix vente (€/t)</th><th>CA</th><th>Marge brute</th><th>Marge (€/ha)</th><th>Contribution</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="12" style="text-align:center;color:var(--muted)">Aucune culture affectée — utilisez l\u2019onglet Affectation.</td></tr>'}
+    ${rows ? `<tr class="tot"><td>TOTAL</td><td>${fmt(t.surface)}</td><td>—</td><td>—</td><td>${fmt0(t.coutHa)}</td><td>${eur(t.cout)}</td><td>—</td><td>—</td><td>${eur(t.ca)}</td><td>${eur(t.marge)}</td><td>${fmt0(t.margeHa)}</td><td>100 %</td></tr>` : ''}</tbody>`;
+
+  const cs = calc.lignes.map(l => l.culture);
+  $('#tblChargesDet').innerHTML = `<thead><tr><th>Poste</th>${cs.map(c => `<th>${esc(c.nom)}</th>`).join('')}</tr></thead><tbody>
+    ${POSTES.map(([k, lab]) => `<tr><td>${lab}</td>${cs.map(c => `<td>${fmt0(num(c.charges[k]))}</td>`).join('')}</tr>`).join('')}
+    <tr class="tot"><td>Total €/ha</td>${cs.map(c => `<td>${fmt0(coutHa(c))}</td>`).join('')}</tr></tbody>`;
+}
+function rdtMoyen(l) { return l.surface > 0 ? l.production / l.surface : NaN; }
+
+/* Classement économique des cultures : de la plus rentable à la moins rentable (marge €/ha) */
+function classementHtml(calc) {
+  const lignes = calc.lignes.slice().sort((a, b) => b.margeHa - a.margeHa);
+  if (!lignes.length) return `<tbody><tr><td style="text-align:center;color:var(--muted)">Aucune culture affectée — le classement apparaîtra ici.</td></tr></tbody>`;
+  const rows = lignes.map((l, i) => {
+    const cls = i === 0 ? 'best' : (i === lignes.length - 1 && lignes.length > 1 ? 'worst' : '');
+    const moteur = isFinite(l.contribution) && l.contribution >= 30 && l.marge > 0;
+    return `<tr class="${cls}">
+      <td><b>${i + 1}</b>${i === 0 ? ' 🥇' : ''}${cls === 'worst' ? ' ⚠' : ''}</td>
+      <td><span class="dot" style="background:${cultColor(l.culture)}"></span>${esc(l.culture.nom)}${moteur ? ' <span class="chip ok">Moteur de marge</span>' : ''}</td>
+      <td>${fmt(l.surface)} ha</td>
+      <td><span class="${l.margeHa >= 0 ? 'pos' : 'neg'}">${fmt0(l.margeHa)}</span></td>
+      <td>${eur(l.marge)}</td>
+      <td>${pct1(l.contribution)}</td>
+      <td>${fmt0(l.coutHa)}</td>
+      <td>${fmt(l.coutT)}</td>
+    </tr>`;
+  }).join('');
+  return `<thead><tr><th>Rang</th><th>Culture</th><th>Surface</th><th>Marge brute €/ha</th><th>Marge brute totale</th><th>Contribution à la marge</th><th>Coût €/ha</th><th>Prix minimum €/t</th></tr></thead><tbody>${rows}</tbody>`;
+}
+
+/* ---------- graphiques SVG maison (fond clair, sans dépendance) ---------- */
+function svgPie(data, fmtV) {
+  const tot = data.reduce((s, d) => s + d.value, 0);
+  if (!tot) return '<p class="hint">Aucune donnée.</p>';
+  let a0 = -Math.PI / 2, paths = '';
+  data.forEach(d => {
+    const a1 = a0 + d.value / tot * 2 * Math.PI;
+    const big = (a1 - a0) > Math.PI ? 1 : 0;
+    const x0 = 100 + 82 * Math.cos(a0), y0 = 100 + 82 * Math.sin(a0);
+    const x1 = 100 + 82 * Math.cos(a1), y1 = 100 + 82 * Math.sin(a1);
+    paths += data.length === 1
+      ? `<circle cx="100" cy="100" r="82" fill="${d.color}" stroke="#fff" stroke-width="2"/>`
+      : `<path d="M100,100 L${x0.toFixed(1)},${y0.toFixed(1)} A82,82 0 ${big} 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${d.color}" stroke="#fff" stroke-width="2"><title>${esc(d.label)} : ${fmtV(d.value)} (${fmt(d.value / tot * 100, 1)} %)</title></path>`;
+    a0 = a1;
+  });
+  const legend = data.map(d => `<span><span class="dot" style="background:${d.color}"></span>${esc(d.label)} — <b>${fmtV(d.value)}</b>&nbsp;(${fmt(d.value / tot * 100, 1)} %)</span>`).join('');
+  return `<svg viewBox="0 0 200 200" role="img">${paths}</svg><div class="legend">${legend}</div>`;
+}
+function svgBars(data, fmtV) {
+  if (!data.length) return '<p class="hint">Aucune donnée.</p>';
+  const max = Math.max(...data.map(d => Math.abs(d.value)), 1);
+  const rows = data.map(d => {
+    const w = Math.abs(d.value) / max * 100;
+    return `<div style="margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted)"><span>${esc(d.label)}</span><span style="font-family:var(--fm);font-weight:600;color:${d.value < 0 ? 'var(--red)' : 'var(--txt)'}">${fmtV(d.value)}</span></div>
+      <div style="background:var(--panel2);border:1px solid var(--line);height:15px;border-radius:99px;overflow:hidden"><div style="height:100%;width:${w.toFixed(1)}%;background:${d.value < 0 ? 'var(--red)' : d.color};border-radius:99px"></div></div>
+    </div>`;
+  }).join('');
+  return `<div>${rows}</div>`;
+}
+
+/* ---------- parcelles ---------- */
+function renderParcelles() {
+  $('#parcCount').textContent = state.parcelles.length ? `— ${state.parcelles.length} parcelle(s), ${fmt(surfaceTotale())} ha` : '';
+  if (!state.parcelles.length) {
+    $('#tblParcelles').innerHTML = `<tbody><tr><td class="empty" style="text-align:center"><div class="px">🌾</div>Aucune parcelle pour le moment.<br>Ajoutez-en une ci-dessus ou importez un CSV.</td></tr></tbody>`;
+    return;
+  }
+  const opts = n => [5, 4, 3, 2, 1].map(v => `<option value="${v}" ${v == n ? 'selected' : ''}>${v} — ${fmt0(COEF_NOTE[v] * 100)} %</option>`).join('');
+  $('#tblParcelles').innerHTML = `<thead><tr><th>Îlot</th><th>Nom</th><th>Surface (ha)</th><th>Potentiel</th><th>Précédent</th><th></th></tr></thead><tbody>
+    ${state.parcelles.map(p => `<tr>
+      <td><input data-p="${p.id}" data-k="ilot" value="${esc(p.ilot)}" style="width:70px"></td>
+      <td style="text-align:left"><input data-p="${p.id}" data-k="nom" value="${esc(p.nom)}" style="min-width:150px"></td>
+      <td><input data-p="${p.id}" data-k="surface" type="number" step="0.01" min="0" value="${p.surface}" style="width:95px"></td>
+      <td><select data-p="${p.id}" data-k="note">${opts(p.note)}</select></td>
+      <td><input data-p="${p.id}" data-k="precedent" list="dlCultures" value="${esc(p.precedent)}" style="min-width:120px"></td>
+      <td style="white-space:nowrap"><button class="btn ghost small" data-apts="${p.id}">Aptitudes${Object.keys(p.aptitudes || {}).length ? ' ✓' : ''}</button>
+      <button class="btn danger small" data-del-p="${p.id}">Suppr.</button></td>
+    </tr>`).join('')}
+    <tr class="tot"><td></td><td>TOTAL</td><td>${fmt(surfaceTotale())}</td><td colspan="3"></td></tr></tbody>`;
+}
+
+/* ---------- cultures ---------- */
+function renderCultures() {
+  const s = scn();
+  const calc = calcScenario(s);
+  $('#cultList').innerHTML = state.cultures.map(c => {
+    const l = calc.lignes.find(x => x.culture.id === c.id);
+    const cHa = coutHa(c);
+    const prixMin = num(c.rendement) > 0 ? cHa / num(c.rendement) : NaN;
+    const margeHa = num(c.rendement) * num(c.prix) - cHa;
+    return `<div class="cult ${c.actif ? '' : 'off'}">
+      <h4><span class="dot" style="background:${cultColor(c)}"></span>${esc(c.nom)}
+        <span class="sw ${c.actif ? 'on' : ''}" data-sw="${c.id}" title="Activer / désactiver" role="switch" aria-checked="${c.actif}" tabindex="0"></span></h4>
+      <div class="frow" style="grid-template-columns:1fr 1fr 1fr">
+        <div><label class="f">Rendement (t/ha)</label><input data-c="${c.id}" data-k="rendement" type="number" step="0.1" min="0" value="${c.rendement}"></div>
+        <div><label class="f">Prix vente (€/t)</label><input data-c="${c.id}" data-k="prix" type="number" step="1" min="0" value="${c.prix}"></div>
+        <div><label class="f">Surface souhaitée (ha)</label><input data-c="${c.id}" data-k="surfaceSouhaitee" type="number" step="0.5" min="0" value="${c.surfaceSouhaitee}"></div>
+      </div>
+      <label class="f">Charges (€/ha)</label>
+      <div class="charges-grid">
+        ${POSTES.map(([k, lab]) => `<div><label class="f">${lab}</label><input data-c="${c.id}" data-ch="${k}" type="number" step="1" min="0" value="${num(c.charges[k])}"></div>`).join('')}
+      </div>
+      <div class="stats">
+        Coût de production : <b>${fmt0(cHa)} €/ha</b> · Prix de vente minimum (rdt note 5) : <b>${fmt(prixMin)} €/t</b><br>
+        Marge brute théorique : <b style="color:${margeHa >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt0(margeHa)} €/ha</b>
+        ${l ? `<br>Affecté : <b>${fmt(l.surface)} ha</b> · rdt corrigé moyen <b>${fmt(rdtMoyen(l))} t/ha</b> · prix mini réel <b>${fmt(l.coutT)} €/t</b> · marge <b>${eur(l.marge)}</b> (contribution ${pct1(l.contribution)})` : ' · <span style="color:var(--muted)">aucune parcelle affectée</span>'}
+      </div>
+      <div class="btnrow" style="margin-top:10px"><button class="btn danger small" data-del-c="${c.id}">Supprimer la culture</button></div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- contraintes ---------- */
+function renderContraintes() {
+  $('#ctCulture').innerHTML = state.cultures.map(c => `<option value="${c.id}">${esc(c.nom)}</option>`).join('');
+  const s = scn(), calc = calcScenario(s);
+  const tot = surfaceTotale();
+  $('#ctList').innerHTML = state.contraintes.length ? contraintesHa().map(ct => {
+    const c = cultById(ct.cultureId);
+    const l = c ? calc.lignes.find(x => x.culture.id === c.id) : null;
+    const surf = l ? l.surface : 0;
+    const ok = ct.type === 'min' ? surf >= ct.valHa - 1e-6 : surf <= ct.valHa + 1e-6;
+    const actuel = ct.unite === 'pct' ? `${pct1(tot > 0 ? surf / tot * 100 : 0)} soit ${fmt(surf)} ha` : `${fmt(surf)} ha`;
+    return `<div class="row">
+      <span class="chip ${ok ? 'ok' : 'ko'}">${ok ? 'Respectée' : 'Non respectée'}</span>
+      <span class="txt"><b>${esc(ct.label)}</b> <span style="color:var(--muted)">(soit ${fmt(ct.valHa)} ha) — actuel : ${actuel}</span></span>
+      <button class="btn danger small" data-del-ct="${ct.id}">Suppr.</button>
+    </div>`;
+  }).join('') : '<p class="hint">Aucune contrainte définie. Exemples : Colza ≥ 35 %, Chanvre ≤ 10 ha, Blé ≤ 50 %…</p>';
+}
+
+/* ---------- rotations ---------- */
+function renderRotations() {
+  $('#rtList').innerHTML = state.rotations.length ? state.rotations.map(r => { const niv = ['interdite','deconseillee','favorable'].includes(r.niveau) ? r.niveau : 'interdite';
+    return `<div class="row">
+      <span class="sw ${r.actif ? 'on' : ''}" data-swrt="${r.id}" role="switch" aria-checked="${r.actif}" tabindex="0" title="Activer / désactiver"></span>
+      <span class="txt">« <b>${esc(r.suivant)}</b> » <b>${ROT_VERBE[niv]}</b> après « <b>${esc(r.precedent)}</b> » ${rotChip(niv === 'interdite' ? 'interdite' : niv)}</span>
+      <select data-rtniv="${r.id}" title="Niveau de la règle">
+        <option value="interdite" ${niv === 'interdite' ? 'selected' : ''}>Interdite</option>
+        <option value="deconseillee" ${niv === 'deconseillee' ? 'selected' : ''}>Déconseillée</option>
+        <option value="favorable" ${niv === 'favorable' ? 'selected' : ''}>Favorable</option>
+      </select>
+      <button class="btn danger small" data-del-rt="${r.id}">Suppr.</button>
+    </div>`; }).join('') : '<p class="hint">Aucune règle. Ajoutez par exemple : Blé interdit après Blé.</p>';
+}
+
+/* ---------- affectation (manuelle) + synthèse temps réel ---------- */
+function renderAffectation() {
+  const s = scn();
+  $('#optScn').textContent = s.nom;
+  renderSyntheseAssolement();
+
+  if (!state.parcelles.length) {
+    $('#tblAffect').innerHTML = `<tbody><tr><td class="empty" style="text-align:center"><div class="px">🌾</div>Créez d'abord vos parcelles.</td></tr></tbody>`;
+    return;
+  }
+  const actives = cultsActives();
+  $('#tblAffect').innerHTML = `<thead><tr><th>Îlot</th><th>Parcelle</th><th>Surface (ha)</th><th>Potentiel</th><th>Précédent</th><th>Culture affectée</th><th>Marge (€/ha)</th><th>Marge parcelle</th><th>Rotation</th><th>Avis</th><th>Aide</th></tr></thead><tbody>
+    ${state.parcelles.map(p => {
+      const cid = s.affectations[p.id] || '';
+      const c = cultById(cid);
+      const interdit = c ? rotationInterdite(p.precedent, c.nom) : false;
+      const mHa = c ? margeHaParcelle(p, c) : NaN;
+      const opts = ['<option value="">— aucune —</option>'].concat(actives.map(a => {
+        const ko = rotationInterdite(p.precedent, a.nom) || aptOf(p, a).niveau === 'interdite';
+        return `<option value="${a.id}" ${a.id === cid ? 'selected' : ''} ${ko ? 'disabled' : ''}>${esc(a.nom)}${ko ? ' (interdit)' : ''} · ${fmt0(margeHaParcelle(p, a))} €/ha</option>`;
+      }));
+      if (c && !c.actif) opts.push(`<option value="${c.id}" selected>${esc(c.nom)} (désactivée)</option>`);
+      return `<tr>
+        <td>${esc(p.ilot)}</td><td style="text-align:left">${esc(p.nom)}</td><td>${fmt(num(p.surface))}</td>
+        <td>${p.note} (${fmt0(COEF_NOTE[p.note] * 100)} %)</td><td style="text-align:left">${esc(p.precedent)}</td>
+        <td><select data-aff="${p.id}">${opts.join('')}</select></td>
+        <td>${c ? `<span class="${mHa >= 0 ? 'pos' : 'neg'}">${fmt0(mHa)}</span>` : '—'}</td>
+        <td>${c ? eur(mHa * num(p.surface)) : '—'}</td>
+        <td>${c ? (interdit ? '<span class="chip ko">Interdite</span>' : '<span class="chip ok">OK</span>') : ''}</td>
+        <td>${c ? avisChip(avisDe(p, c)) : '—'}</td>
+        <td><button class="btn ghost small" data-conseils="${p.id}">Conseils</button></td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+
+/* Synthèse permanente de l'assolement en cours (mise à jour instantanée) */
+function renderSyntheseAssolement() {
+  const s = scn();
+  const r = repartition(s);
+
+  /* alertes ciblées : rotations, contraintes, parcelles non affectées */
+  const A = calcAlertes(s).filter(a => a.rotation || a.contrainte || /non affectée/.test(a.m));
+  $('#assolAlertes').innerHTML = A.map(alertHtml).join('');
+
+  if (!state.parcelles.length) {
+    $('#assolBars').innerHTML = '<p class="hint">Aucune parcelle : la synthèse apparaîtra ici.</p>';
+    $('#assolTots').innerHTML = '';
+    return;
+  }
+  const rows = r.items.map(it => `
+    <div class="arow">
+      <span class="nm"><span class="dot" style="background:${it.color}"></span>${esc(it.nom)}</span>
+      <span class="bar"><i style="width:${Math.min(100, it.pct).toFixed(1)}%;background:${it.color}"></i></span>
+      <span class="vals">${fmt(it.ha)} ha — ${pct1(it.pct)}</span>
+    </div>`).join('');
+  const naRow = r.nonAffecte > 0 ? `
+    <div class="arow na">
+      <span class="nm"><span class="dot" style="background:#c3cabb"></span>Non affecté</span>
+      <span class="bar"><i style="width:${Math.min(100, r.pctNonAffecte).toFixed(1)}%;background:#c3cabb"></i></span>
+      <span class="vals">${fmt(r.nonAffecte)} ha — ${pct1(r.pctNonAffecte)}</span>
+    </div>` : '';
+  $('#assolBars').innerHTML = (rows || '<p class="hint">Aucune culture affectée pour le moment.</p>') + naRow;
+  $('#assolTots').innerHTML = `
+    <span>Surface totale : <b>${fmt(r.tot)} ha</b></span>
+    <span>Affecté : <b>${fmt(r.affecte)} ha</b> (${pct1(r.pctAffecte)})</span>
+    <span>Non affecté : <b style="color:${r.nonAffecte > 0 ? 'var(--red)' : 'var(--green)'}">${fmt(r.nonAffecte)} ha</b> (${pct1(r.pctNonAffecte)})</span>
+    <span>Marge brute totale : <b style="color:${r.calc.tot.marge >= 0 ? 'var(--green)' : 'var(--red)'}">${eur(r.calc.tot.marge)}</b></span>
+    <span>Valeur créée : <b style="color:${r.calc.tot.valeurCreeeHa >= 0 ? 'var(--green)' : 'var(--red)'}">${isFinite(r.calc.tot.valeurCreeeHa) ? fmt0(r.calc.tot.valeurCreeeHa) + ' €/ha' : '—'}</b></span>`;
+}
+
+/* ---------- scénarios ---------- */
+function renderScenarios() {
+  $('#scnTabs').innerHTML = state.scenarios.map(sc =>
+    `<button data-scn="${sc.id}" class="${sc.id === state.scenarioActif ? 'on' : ''}">${esc(sc.nom)}</button>`).join('');
+  $('#scnCopyTarget').innerHTML = state.scenarios.filter(sc => sc.id !== state.scenarioActif)
+    .map(sc => `<option value="${sc.id}">${esc(sc.nom)}</option>`).join('');
+
+  const reps = state.scenarios.map(sc => ({sc, r: repartition(sc)}));
+  const withSurface = reps.filter(x => x.r.calc.tot.surface > 0);
+  const bestMarge = withSurface.length ? Math.max(...withSurface.map(x => x.r.calc.tot.marge)) : NaN;
+  const isBest = x => withSurface.length > 0 && x.r.calc.tot.surface > 0 && x.r.calc.tot.marge === bestMarge;
+
+  /* --- synthèse d'assolement par scénario --- */
+  $('#scnSyntheses').innerHTML = reps.map(x => {
+    const t = x.r.calc.tot;
+    const lignes = x.r.items.map(it =>
+      `<div class="l"><span><span class="dot" style="background:${it.color}"></span>${esc(it.nom)}</span><b>${fmt(it.ha)} ha — ${pct1(it.pct)}</b></div>`).join('');
+    const na = x.r.nonAffecte > 0
+      ? `<div class="l" style="color:var(--muted)"><span><span class="dot" style="background:#c3cabb"></span>Non affecté</span><b>${fmt(x.r.nonAffecte)} ha — ${pct1(x.r.pctNonAffecte)}</b></div>` : '';
+    return `<div class="scn-card ${isBest(x) ? 'best' : ''}">
+      <h4>${esc(x.sc.nom)} ${isBest(x) ? '<span class="chip ok">★ Meilleure marge</span>' : ''} ${x.sc.id === state.scenarioActif ? '<span class="chip">Actif</span>' : ''}</h4>
+      <div class="mini">${lignes || '<span class="hint">Aucune culture affectée.</span>'}${na}</div>
+      <div class="kv">
+        <div class="l"><span>Surface du scénario</span><b>${fmt(t.surface)} ha</b></div>
+        <div class="l"><span>Chiffre d\u2019affaires prévisionnel</span><b>${eur(t.ca)}</b></div>
+        <div class="l"><span>Charges totales</span><b>${eur(t.cout)}</b></div>
+        <div class="l"><span>Marge brute totale</span><b style="color:${t.marge >= 0 ? 'var(--green)' : 'var(--red)'}">${eur(t.marge)}</b></div>
+        <div class="l"><span>Valeur créée / ha</span><b style="color:${t.valeurCreeeHa >= 0 ? 'var(--green)' : 'var(--red)'}">${isFinite(t.valeurCreeeHa) ? fmt0(t.valeurCreeeHa) + ' €/ha' : '—'}</b></div>
+        <div class="l"><span title="Estimation d\u2019aide à la décision. L\u2019EBE comptable dépend de la classification réelle des produits et des charges de l\u2019exploitation.">EBE estimé / ha${t.ebeProvisoire ? ' (provisoire)' : ''}</span><b style="color:${t.ebe >= 0 ? 'var(--green)' : 'var(--red)'}">${isFinite(t.ebeHa) ? fmt0(t.ebeHa) + ' €/ha' : '—'}</b></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  /* --- classement économique des cultures du scénario actif --- */
+  $('#scnClassementNom').textContent = scn().nom;
+  $('#tblClassementScn').innerHTML = classementHtml(calcScenario(scn()));
+
+  /* --- comparaison des surfaces par culture --- */
+  const cultUsees = state.cultures.filter(c => reps.some(x => x.r.items.some(it => it.nom === c.nom)));
+  const cell = (x, c) => {
+    const it = x.r.items.find(i => i.nom === c.nom);
+    return it ? `${fmt(it.ha)} ha <span style="color:var(--muted)">(${pct1(it.pct)})</span>` : '<span style="color:var(--muted)">—</span>';
+  };
+  $('#tblScnSurf').innerHTML = `<thead><tr><th>Culture</th>${reps.map(x => `<th>${esc(x.sc.nom)}${isBest(x) ? ' ★' : ''}</th>`).join('')}</tr></thead><tbody>
+    ${cultUsees.map(c => `<tr><td><span class="dot" style="background:${cultColor(c)}"></span>${esc(c.nom)}</td>${reps.map(x => `<td>${cell(x, c)}</td>`).join('')}</tr>`).join('')
+      || `<tr><td colspan="${1 + reps.length}" style="text-align:center;color:var(--muted)">Aucune affectation dans les scénarios.</td></tr>`}
+    ${cultUsees.length ? `<tr><td style="color:var(--muted)">Non affecté</td>${reps.map(x => `<td>${x.r.nonAffecte > 0 ? `${fmt(x.r.nonAffecte)} ha <span style="color:var(--muted)">(${pct1(x.r.pctNonAffecte)})</span>` : '<span style="color:var(--muted)">—</span>'}</td>`).join('')}</tr>
+    <tr class="tot"><td>Surface affectée</td>${reps.map(x => `<td>${fmt(x.r.affecte)} ha (${pct1(x.r.pctAffecte)})</td>`).join('')}</tr>` : ''}</tbody>`;
+
+  /* --- comparaison économique --- */
+  const lignes = [
+    ['Surface affectée (ha)', x => fmt(x.r.calc.tot.surface)],
+    ['Chiffre d\u2019affaires prévisionnel', x => eur(x.r.calc.tot.ca)],
+    ['Charges totales', x => eur(x.r.calc.tot.cout)],
+    ['Coût moyen (€/ha)', x => fmt0(x.r.calc.tot.coutHa)],
+    ['Marge brute totale', x => `<b class="${x.r.calc.tot.marge >= 0 ? 'pos' : 'neg'}">${eur(x.r.calc.tot.marge)}</b>`],
+    ['Marge moyenne (€/ha)', x => fmt0(x.r.calc.tot.margeHa)],
+    ['Valeur créée (€/ha)', x => `<b class="${x.r.calc.tot.valeurCreeeHa >= 0 ? 'pos' : 'neg'}">${fmt0(x.r.calc.tot.valeurCreeeHa)}</b>`],
+    ['EBE estimé total', x => `${eur(x.r.calc.tot.ebe)}${x.r.calc.tot.ebeProvisoire ? ' <span class="chip warn" title="Scénario incomplet : parcelles non affectées">provisoire</span>' : ''}`],
+    ['EBE estimé (€/ha)', x => `<b class="${x.r.calc.tot.ebeHa >= 0 ? 'pos' : 'neg'}" title="Estimation d\u2019aide à la décision. L\u2019EBE comptable dépend de la classification réelle des produits et des charges de l\u2019exploitation.">${fmt0(x.r.calc.tot.ebeHa)}</b>`],
+    ['Alertes bloquantes', x => String(calcAlertes(x.sc).filter(a => a.t === 'err').length)]
+  ];
+  $('#tblScn').innerHTML = `<thead><tr><th>Indicateur</th>${reps.map(x =>
+      `<th style="text-align:right">${esc(x.sc.nom)}${isBest(x) ? ' ★' : ''}</th>`).join('')}</tr></thead>
+    <tbody>${lignes.map(([lab, f]) => `<tr><td>${lab}</td>${reps.map(x => `<td>${f(x)}</td>`).join('')}</tr>`).join('')}
+    <tr class="best"><td>Meilleur scénario (marge)</td>${reps.map(x =>
+      `<td>${isBest(x) ? '<span class="chip ok">★ Meilleur</span>' : ''}</td>`).join('')}</tr></tbody>`;
+}
+
+/* ---------- fenêtres (conseils, aptitudes) — respectent l'identité existante ---------- */
+function ouvrirModal(titre, html) {
+  fermerModal();
+  const d = document.createElement('div');
+  d.className = 'hxmodal'; d.id = 'hxmodal';
+  d.innerHTML = `<div class="hxbox"><div class="hxhead"><h3>${titre}</h3>
+    <button class="btn ghost small" id="hxclose">Fermer</button></div><div>${html}</div></div>`;
+  document.body.appendChild(d);
+  d.addEventListener('click', e => { if (e.target === d || e.target.id === 'hxclose') { fermerModal(); renderAll(); } });
+}
+function fermerModal() { const d = $('#hxmodal'); if (d) d.remove(); }
+
+/* Aide au choix : classement expliqué des cultures d'une parcelle (l'affectation reste manuelle) */
+function voirConseils(pid) {
+  const p = state.parcelles.find(x => x.id === pid); if (!p) return;
+  const rows = conseilsParcelle(p);
+  const cid = scn().affectations[p.id];
+  let rang = 0;
+  const body = rows.map(r => {
+    if (!r.interdit) rang++;
+    const dejaAffectee = r.c.id === cid;
+    const btn = r.interdit ? '<span class="chip ko">Non sélectionnable</span>'
+      : dejaAffectee ? '<span class="chip ok">Affectée</span>'
+      : `<button class="btn ghost small" data-choisir="${p.id}|${r.c.id}">Choisir cette culture</button>`;
+    return `<tr style="${r.interdit ? 'opacity:.55' : ''}">
+      <td><b>${r.interdit ? '—' : rang}</b></td>
+      <td style="text-align:left"><span class="dot" style="background:${cultColor(r.c)}"></span>${esc(r.c.nom)}</td>
+      <td>${fmt(r.rdt, 2)}</td>
+      <td><span class="${r.margeHa >= 0 ? 'pos' : 'neg'}">${fmt0(r.margeHa)}</span></td>
+      <td>${rotChip(r.rot)}</td>
+      <td>${aptChip(r.apt.niveau)}</td>
+      <td>${avisChip(r.avis)}</td>
+      <td style="text-align:left;max-width:280px;white-space:normal">${esc(r.explication)}</td>
+      <td>${btn}</td></tr>`;
+  }).join('');
+  ouvrirModal(`Cultures conseillées — ${esc(p.nom)} <span class="chip">${fmt(num(p.surface))} ha · potentiel ${p.note}${p.precedent ? ' · précédent ' + esc(p.precedent) : ''}</span>`,
+    `<div class="twrap"><table><thead><tr><th>Rang</th><th>Culture</th><th>Rdt estimé (t/ha)</th><th>Marge estimée (€/ha)</th><th>Rotation</th><th>Aptitude</th><th>Avis</th><th>Explication</th><th></th></tr></thead>
+    <tbody>${body || '<tr><td colspan="9" style="text-align:center;color:var(--muted)">Aucune culture active.</td></tr>'}</tbody></table></div>
+    <p class="hint">Classement d'aide à la décision, recalculé à partir de vos rendements, prix, charges, potentiel, aptitudes et règles de rotation. L'affectation reste entièrement manuelle : rien n'est choisi sans votre action.</p>`);
+}
+
+/* Aptitudes d'une parcelle pour chaque culture active */
+function editerAptitudes(pid) {
+  const p = state.parcelles.find(x => x.id === pid); if (!p) return;
+  const body = cultsActives().map(c => {
+    const a = aptOf(p, c);
+    const sel = ['bonne', 'moyenne', 'faible', 'interdite'].map(k =>
+      `<option value="${k}" ${k === a.niveau ? 'selected' : ''}>${APT_LABEL[k]}${k !== 'interdite' ? ' — ' + fmt0(APT_COEF[k] * 100) + ' %' : ''}</option>`).join('');
+    return `<tr>
+      <td style="text-align:left"><span class="dot" style="background:${cultColor(c)}"></span>${esc(c.nom)}</td>
+      <td><select data-apt="${p.id}|${c.id}">${sel}</select></td>
+      <td style="text-align:left"><input data-aptnote="${p.id}|${c.id}" value="${esc(a.note)}" placeholder="Commentaire facultatif : terre séchante, hydromorphe, cailloux…" style="min-width:260px"></td>
+    </tr>`;
+  }).join('');
+  ouvrirModal(`Aptitudes — ${esc(p.nom)}`,
+    `<p class="hint">Aptitude propre à cette parcelle pour chaque culture. Par défaut « Bonne » (100 % du rendement corrigé par le potentiel) ;
+    Moyenne = 90 %, Faible = 75 %, Interdite = culture non sélectionnable. Le commentaire apparaît dans l'explication des conseils.</p>
+    <div class="twrap"><table><thead><tr><th>Culture</th><th>Aptitude</th><th>Commentaire</th></tr></thead><tbody>${body}</tbody></table></div>`);
+}
+
+/* ---------- toasts ---------- */
+function toast(msg, type = '') {
+  const d = document.createElement('div');
+  d.className = 'toast ' + type;
+  d.textContent = msg;
+  $('#toasts').appendChild(d);
+  setTimeout(() => d.remove(), 3200);
+}
+
+/* ============================================================
+   ÉVÉNEMENTS (délégation — pas de handlers inline)
+   ============================================================ */
+$('#nav').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]'); if (!b) return;
+  tabCourant = b.dataset.tab;
+  $$('#nav button').forEach(x => x.classList.toggle('on', x === b));
+  $$('section.tab').forEach(x => x.classList.toggle('on', x.id === 'tab-' + tabCourant));
+  renderAll();
+});
+$('#badgeAlertes').addEventListener('click', () => { $('#nav button[data-tab="bord"]').click(); window.scrollTo({top: 0}); });
+
+/* parcelles : ajout */
+$('#btnAddParcelle').addEventListener('click', () => {
+  const nom = $('#pNom').value.trim(), surf = num($('#pSurf').value);
+  if (!nom) { toast('Nom de parcelle requis', 'err'); return; }
+  if (surf <= 0) { toast('Surface invalide', 'err'); return; }
+  state.parcelles.push({id: uid(), ilot: $('#pIlot').value.trim(), nom, surface: surf, note: parseInt($('#pNote').value, 10), precedent: $('#pPrec').value.trim()});
+  $('#pIlot').value = $('#pNom').value = $('#pSurf').value = $('#pPrec').value = '';
+  save(); renderAll(); toast('Parcelle ajoutée', 'ok');
+});
+
+/* parcelles : import CSV */
+$('#btnImportCsv').addEventListener('click', () => {
+  const f = $('#csvFile').files[0];
+  if (!f) { toast('Choisissez un fichier CSV', 'err'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const lignes = String(reader.result).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (!lignes.length) throw new Error('Fichier vide');
+      const sep = (lignes[0].match(/;/g) || []).length >= (lignes[0].match(/,/g) || []).length ? ';' : ',';
+      let n = 0;
+      lignes.forEach((l, i) => {
+        const c = l.split(sep).map(x => x.trim().replace(/^"|"$/g, ''));
+        if (c.length < 3) return;
+        const surf = num(c[2]);
+        if (i === 0 && (!isFinite(parseFloat(String(c[2]).replace(',', '.'))) || /surface/i.test(l))) return; // en-tête
+        if (surf <= 0) return;
+        state.parcelles.push({id: uid(), ilot: c[0] || '', nom: c[1] || ('Parcelle ' + (state.parcelles.length + 1)), surface: surf, note: 3, precedent: c[3] || ''});
+        n++;
+      });
+      if (!n) throw new Error('Aucune ligne exploitable (format attendu : ilot;nom;surface;precedent)');
+      save(); renderAll(); toast(n + ' parcelle(s) importée(s)', 'ok');
+      $('#csvFile').value = '';
+    } catch (err) { toast('Import impossible : ' + err.message, 'err'); }
+  };
+  reader.readAsText(f, 'utf-8');
+});
+
+/* édition / suppression (délégation globale) */
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.p) {
+    const p = state.parcelles.find(x => x.id === t.dataset.p); if (!p) return;
+    const k = t.dataset.k;
+    p[k] = (k === 'surface') ? num(t.value) : (k === 'note') ? parseInt(t.value, 10) : t.value;
+    save(); renderBadge();
+  }
+  if (t.dataset.c) {
+    const c = cultById(t.dataset.c); if (!c) return;
+    if (t.dataset.ch) c.charges[t.dataset.ch] = num(t.value);
+    else c[t.dataset.k] = (t.dataset.k === 'nom') ? t.value : num(t.value);
+    save(); renderBadge();
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.p && t.dataset.k === 'note') { save(); renderAll(); }
+  if (t.dataset.aff !== undefined && t.dataset.aff) {       // affectation manuelle -> synthèse instantanée
+    scn().affectations[t.dataset.aff] = t.value || undefined;
+    if (!t.value) delete scn().affectations[t.dataset.aff];
+    save(); renderAll();
+  }
+  if (t.dataset.c && !t.dataset.ch) { renderCultures(); }
+  if (t.dataset.apt) {
+    const [pid, cid] = t.dataset.apt.split('|');
+    const p = state.parcelles.find(x => x.id === pid); if (!p) return;
+    p.aptitudes = p.aptitudes || {};
+    const cur = p.aptitudes[cid] || {};
+    p.aptitudes[cid] = { niveau: t.value, note: cur.note || '' };
+    if (t.value === 'bonne' && !p.aptitudes[cid].note) delete p.aptitudes[cid];
+    save(); renderBadge();
+  }
+  if (t.dataset.rtniv) {
+    const r = state.rotations.find(x => x.id === t.dataset.rtniv);
+    if (r) { r.niveau = t.value; save(); renderAll(); }
+  }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.aptnote) {
+    const [pid, cid] = t.dataset.aptnote.split('|');
+    const p = state.parcelles.find(x => x.id === pid); if (!p) return;
+    p.aptitudes = p.aptitudes || {};
+    const cur = p.aptitudes[cid] || { niveau: 'bonne' };
+    p.aptitudes[cid] = { niveau: cur.niveau || 'bonne', note: t.value };
+    if ((p.aptitudes[cid].niveau === 'bonne') && !t.value) delete p.aptitudes[cid];
+    save(); renderBadge();
+  }
+});
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t.dataset.delP) { if (confirm('Supprimer cette parcelle ?')) {
+    state.parcelles = state.parcelles.filter(p => p.id !== t.dataset.delP);
+    state.scenarios.forEach(sc => delete sc.affectations[t.dataset.delP]);
+    save(); renderAll(); toast('Parcelle supprimée');
+  }}
+  if (t.dataset.delC) { if (confirm('Supprimer cette culture ? Les affectations correspondantes seront retirées.')) {
+    state.cultures = state.cultures.filter(c => c.id !== t.dataset.delC);
+    state.contraintes = state.contraintes.filter(ct => ct.cultureId !== t.dataset.delC);
+    state.scenarios.forEach(sc => Object.keys(sc.affectations).forEach(pid => { if (sc.affectations[pid] === t.dataset.delC) delete sc.affectations[pid]; }));
+    save(); renderAll(); toast('Culture supprimée');
+  }}
+  if (t.dataset.delCt) { state.contraintes = state.contraintes.filter(c => c.id !== t.dataset.delCt); save(); renderAll(); }
+  if (t.dataset.delRt) { state.rotations = state.rotations.filter(r => r.id !== t.dataset.delRt); save(); renderAll(); }
+  if (t.dataset.sw) { const c = cultById(t.dataset.sw); if (c) { c.actif = !c.actif; save(); renderAll(); } }
+  if (t.dataset.swrt) { const r = state.rotations.find(x => x.id === t.dataset.swrt); if (r) { r.actif = !r.actif; save(); renderAll(); } }
+  if (t.dataset.scn) { state.scenarioActif = t.dataset.scn; save(); renderAll(); toast('Scénario actif : ' + scn().nom); }
+  if (t.dataset.apts) { editerAptitudes(t.dataset.apts); }
+  if (t.dataset.conseils) { voirConseils(t.dataset.conseils); }
+  if (t.dataset.choisir) {
+    const [pid, cid] = t.dataset.choisir.split('|');
+    const p = state.parcelles.find(x => x.id === pid), c = cultById(cid);
+    if (!p || !c) return;
+    if (rotationInterdite(p.precedent, c.nom) || aptOf(p, c).niveau === 'interdite') { toast('Culture interdite sur cette parcelle', 'err'); return; }
+    const actuel = cultById(scn().affectations[p.id]);
+    if (actuel && actuel.id !== cid && !confirm(`La parcelle ${p.nom} est déjà affectée à « ${actuel.nom} ». Remplacer par « ${c.nom} » ?`)) return;
+    scn().affectations[p.id] = cid;
+    save(); renderAll(); voirConseils(pid);
+    toast(`${c.nom} affectée à ${p.nom} (${scn().nom})`, 'ok');
+  }
+});
+
+/* charges de structure pour l'EBE estimé */
+$('#ebeCharges').value = num(state.chargesStructureHa) || 0;
+$('#ebeCharges').addEventListener('input', () => {
+  const v = num($('#ebeCharges').value);
+  state.chargesStructureHa = v >= 0 ? v : 0;
+  save(); renderBadge();
+});
+
+/* cultures : ajout */
+$('#btnAddCulture').addEventListener('click', () => {
+  const nom = prompt('Nom de la nouvelle culture :');
+  if (!nom || !nom.trim()) return;
+  if (state.cultures.some(c => norm(c.nom) === norm(nom))) { toast('Cette culture existe déjà', 'err'); return; }
+  state.cultures.push(mkCulture(nom.trim(), true, 0, 0, {}));
+  save(); renderAll(); toast('Culture ajoutée — renseignez ses paramètres', 'ok');
+});
+
+/* contraintes : ajout */
+$('#btnAddCt').addEventListener('click', () => {
+  const v = num($('#ctVal').value);
+  if (v <= 0) { toast('Valeur invalide', 'err'); return; }
+  state.contraintes.push({id: uid(), cultureId: $('#ctCulture').value, type: $('#ctType').value, valeur: v, unite: $('#ctUnite').value});
+  $('#ctVal').value = '';
+  save(); renderAll(); toast('Contrainte ajoutée', 'ok');
+});
+
+/* rotations : ajout */
+$('#btnAddRt').addEventListener('click', () => {
+  const su = $('#rtSuivant').value.trim(), pr = $('#rtPrec').value.trim();
+  if (!su || !pr) { toast('Renseignez les deux cultures', 'err'); return; }
+  if (state.rotations.some(r => norm(r.suivant) === norm(su) && norm(r.precedent) === norm(pr))) { toast('Règle déjà existante', 'err'); return; }
+  state.rotations.push({id: uid(), suivant: su, precedent: pr, actif: true, niveau: $('#rtNiveau').value});
+  $('#rtSuivant').value = $('#rtPrec').value = '';
+  save(); renderAll(); toast('Règle ajoutée', 'ok');
+});
+
+/* affectation : vider */
+$('#btnClearAff').addEventListener('click', () => {
+  if (!confirm('Vider toutes les affectations du scénario actif ?')) return;
+  scn().affectations = {}; save(); renderAll();
+});
+
+/* scénarios : duplication */
+$('#btnScnCopy').addEventListener('click', () => {
+  const target = state.scenarios.find(s => s.id === $('#scnCopyTarget').value);
+  if (!target) return;
+  target.affectations = JSON.parse(JSON.stringify(scn().affectations));
+  save(); renderAll(); toast('Copié vers ' + target.nom, 'ok');
+});
+
+/* ---------- exports ---------- */
+$('#btnPdf').addEventListener('click', () => { renderBord(); window.print(); });
+
+$('#btnXls').addEventListener('click', () => {
+  const S = ';', fN = n => isFinite(n) ? String(Math.round(n * 100) / 100).replace('.', ',') : '';
+  const q = s => '"' + String(s ?? '').replace(/"/g, '""') + '"';
+  const L = [];
+  L.push(['HECTARIS ASSOLEMENT', 'Export du ' + new Date().toLocaleDateString('fr-FR'), 'Scénario actif : ' + scn().nom].map(q).join(S));
+  L.push('');
+  L.push('PARCELLES');
+  L.push(['Ilot', 'Nom', 'Surface (ha)', 'Note potentiel', 'Coefficient', 'Précédent', 'Culture affectée'].map(q).join(S));
+  state.parcelles.forEach(p => {
+    const c = cultById(scn().affectations[p.id]);
+    L.push([q(p.ilot), q(p.nom), fN(num(p.surface)), p.note, fN(COEF_NOTE[p.note]), q(p.precedent), q(c ? c.nom : '')].join(S));
+  });
+  L.push('');
+  const calc = calcScenario(scn());
+  L.push('ECONOMIE PAR CULTURE');
+  L.push(['Culture', 'Surface (ha)', 'Rdt corrigé (t/ha)', 'Production (t)', 'Coût (€/ha)', 'Charges totales (€)', 'Coût/t = Prix mini (€/t)', 'Prix vente (€/t)', 'CA (€)', 'Marge brute (€)', 'Marge (€/ha)', 'Contribution (%)'].map(q).join(S));
+  calc.lignes.forEach(l => L.push([q(l.culture.nom), fN(l.surface), fN(rdtMoyen(l)), fN(l.production), fN(l.coutHa), fN(l.cout), fN(l.coutT), fN(num(l.culture.prix)), fN(l.ca), fN(l.marge), fN(l.margeHa), fN(l.contribution)].join(S)));
+  const t = calc.tot;
+  L.push([q('TOTAL'), fN(t.surface), '', '', fN(t.coutHa), fN(t.cout), '', '', fN(t.ca), fN(t.marge), fN(t.margeHa), '100'].join(S));
+  L.push('');
+  L.push('EBE ESTIME (estimation d\u2019aide a la decision)');
+  L.push([q('Charges de structure retenues (€/ha)'), fN(t.chargesStructureHa)].join(S));
+  L.push([q('Charges de structure totales (€)'), fN(t.chargesStructure)].join(S));
+  L.push([q('Marge brute totale (€)'), fN(t.marge)].join(S));
+  L.push([q('EBE estime total (€)'), fN(t.ebe), t.ebeProvisoire ? q('provisoire : parcelles non affectees') : ''].join(S));
+  L.push([q('EBE estime (€/ha, surface totale)'), fN(t.ebeHa)].join(S));
+  L.push('');
+  L.push('CHARGES PAR CULTURE (€/ha)');
+  const cs = state.cultures.filter(c => c.actif);
+  L.push([q('Poste')].concat(cs.map(c => q(c.nom))).join(S));
+  POSTES.forEach(([k, lab]) => L.push([q(lab)].concat(cs.map(c => fN(num(c.charges[k])))).join(S)));
+  L.push([q('TOTAL €/ha')].concat(cs.map(c => fN(coutHa(c)))).join(S));
+  L.push('');
+  L.push('SURFACES PAR SCENARIO');
+  L.push([q('Culture')].concat(state.scenarios.map(sc => q(sc.nom + ' (ha)')).concat(state.scenarios.map(sc => q(sc.nom + ' (%)')))).join(S));
+  const reps = state.scenarios.map(sc => repartition(sc));
+  state.cultures.forEach(c => {
+    const has = reps.some(r => r.items.some(it => it.nom === c.nom));
+    if (!has) return;
+    const ha = reps.map(r => { const it = r.items.find(i => i.nom === c.nom); return fN(it ? it.ha : 0); });
+    const pc = reps.map(r => { const it = r.items.find(i => i.nom === c.nom); return fN(it ? it.pct : 0); });
+    L.push([q(c.nom)].concat(ha).concat(pc).join(S));
+  });
+  L.push([q('Non affecté')].concat(reps.map(r => fN(r.nonAffecte))).concat(reps.map(r => fN(r.pctNonAffecte))).join(S));
+  L.push('');
+  L.push('COMPARAISON DES SCENARIOS');
+  L.push([q('Indicateur')].concat(state.scenarios.map(sc => q(sc.nom))).join(S));
+  const cc = state.scenarios.map(sc => calcScenario(sc).tot);
+  [['Surface affectée (ha)', 'surface'], ['CA prévisionnel (€)', 'ca'], ['Charges totales (€)', 'cout'], ['Coût moyen (€/ha)', 'coutHa'], ['Marge brute totale (€)', 'marge'], ['Marge moyenne (€/ha)', 'margeHa'], ['Valeur créée (€/ha)', 'valeurCreeeHa'], ['EBE estimé total (€)', 'ebe'], ['EBE estimé (€/ha)', 'ebeHa']]
+    .forEach(([lab, k]) => L.push([q(lab)].concat(cc.map(x => fN(x[k]))).join(S)));
+  L.push('');
+  L.push('REGLES DE ROTATION');
+  L.push(['Culture suivante', 'Precedent', 'Niveau', 'Active'].map(q).join(S));
+  state.rotations.forEach(r => L.push([q(r.suivant), q(r.precedent), q(ROT_VERBE[r.niveau || 'interdite']), q(r.actif ? 'oui' : 'non')].join(S)));
+  L.push('');
+  L.push('APTITUDES PARCELLE x CULTURE (hors valeur par defaut « Bonne »)');
+  L.push(['Parcelle', 'Culture', 'Aptitude', 'Commentaire'].map(q).join(S));
+  state.parcelles.forEach(p => Object.entries(p.aptitudes || {}).forEach(([cid, a]) => {
+    const c = cultById(cid); if (!c) return;
+    L.push([q(p.nom), q(c.nom), q(APT_LABEL[a.niveau] || 'Bonne'), q(a.note || '')].join(S));
+  }));
+  L.push('');
+  L.push('CONSEILS PAR PARCELLE (classement indicatif — scenario actif)');
+  L.push(['Parcelle', 'Rang', 'Culture', 'Rdt estime (t/ha)', 'Marge estimee (€/ha)', 'Rotation', 'Aptitude', 'Avis', 'Explication'].map(q).join(S));
+  state.parcelles.forEach(p => {
+    let rang = 0;
+    conseilsParcelle(p).forEach(r => {
+      if (!r.interdit) rang++;
+      L.push([q(p.nom), r.interdit ? q('—') : rang, q(r.c.nom), fN(r.rdt), fN(r.margeHa),
+        q({interdite:'Interdite',deconseillee:'Déconseillée',favorable:'Favorable',autorisee:'Autorisée'}[r.rot]),
+        q(APT_LABEL[r.apt.niveau]), q(r.avis), q(r.explication)].join(S));
+    });
+  });
+  telecharger('\ufeff' + L.join('\r\n'), 'hectaris_assolement.csv', 'text/csv;charset=utf-8');
+  toast('Export Excel généré', 'ok');
+});
+
+$('#btnJsonExp').addEventListener('click', () => {
+  telecharger(JSON.stringify(state, null, 2), 'hectaris_assolement.json', 'application/json');
+  toast('Export JSON généré', 'ok');
+});
+$('#btnJsonImp').addEventListener('click', () => {
+  const f = $('#jsonFile').files[0];
+  if (!f) { toast('Choisissez un fichier JSON', 'err'); return; }
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d.cultures || !d.scenarios || !d.parcelles) throw new Error('structure inattendue');
+      state = d;
+      migrerState();   /* postes, niveaux de rotation, aptitudes, charges de structure */
+      $('#ebeCharges').value = num(state.chargesStructureHa) || 0;
+      save(); renderAll(); toast('Données importées', 'ok');
+      $('#jsonFile').value = '';
+    } catch (err) { toast('JSON invalide : ' + err.message, 'err'); }
+  };
+  r.readAsText(f, 'utf-8');
+});
+$('#btnReset').addEventListener('click', () => {
+  if (!confirm('Réinitialiser tout le module Assolement ? Cette action est irréversible.')) return;
+  if (!confirm('Dernière confirmation : toutes les parcelles, cultures, contraintes et scénarios seront effacés.')) return;
+  state = defaultState(); save(); renderAll(); toast('Module réinitialisé');
+});
+
+function telecharger(contenu, nom, type) {
+  const blob = new Blob([contenu], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = nom;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* accessibilité : interrupteurs au clavier */
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && (e.target.dataset.sw || e.target.dataset.swrt)) {
+    e.preventDefault(); e.target.click();
+  }
+});
+
+/* premier rendu */
+renderAll();
+</script>
+</body>
+</html>
