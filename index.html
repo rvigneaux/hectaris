@@ -540,6 +540,26 @@ const FERT = {
     const t=this.toTons(f, qty);
     return t==null ? null : Math.round(t*pricePerTon);
   },
+  /** Prix de l'unité d'azote (€/u N) — engrais de catégorie « azote » uniquement.
+      Solution (l/ha)  : €/t × densité ÷ (1000 × teneur)   — teneur en kg N/L
+      Solide  (kg/ha)  : €/t ÷ (1000 × teneur)             — teneur en kg N/kg
+      Jamais de faux « 0 €/u N » : retourne la raison si une donnée manque. */
+  nitrogenUnitPrice(f) {
+    if (!f || f.cat !== "azote") return { ok:false, reason:"" };
+    let pxT = +f.price;
+    if (f.priceUnit === "kg") pxT = pxT * 1000;            // €/kg → €/t
+    else if (f.priceUnit !== "t") return { ok:false, reason:"Prix en €/t requis" };
+    if (!(pxT > 0)) return { ok:false, reason:"Prix à renseigner" };
+    const tenor = +f.tenor;
+    if (!(tenor > 0)) return { ok:false, reason:"Teneur à renseigner" };
+    if (f.appUnit === "l/ha") {
+      const d = +f.density;
+      if (!(d > 0)) return { ok:false, reason:"Densité à renseigner" };
+      return { ok:true, val: pxT * d / (1000 * tenor) };
+    }
+    if (f.appUnit === "kg/ha") return { ok:true, val: pxT / (1000 * tenor) };
+    return { ok:false, reason:"Unité d'application non gérée" };
+  },
   histStats(f) {
     const h=(f.history||[]).filter(x=>+x.price>0).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
     if (!h.length) return null;
@@ -1514,14 +1534,41 @@ const UI = {
   /* ---------- ENGRAIS & PRIX (référentiel + historique) ---------- */
   pg_eng() {
     const c=Store.camp;
+    /* Classement des engrais azotés par prix de l'unité N (recalculé à chaque rendu) */
+    const azotes=c.fertilizers.filter(f=>f.cat==="azote"&&f.active!==false)
+      .map(f=>({ f, un:FERT.nitrogenUnitPrice(f) }));
+    const classes=azotes.filter(x=>x.un.ok).sort((a,b)=>a.un.val-b.un.val);
+    const medailles=["🥇","🥈","🥉"];
+    const classement = azotes.length ? `
+    <div class="card" style="margin-bottom:16px"><div class="hd"><h2>Comparateur azote — prix de l'unité N</h2>
+      <span class="sub">l'indicateur qui compare vraiment les formes d'azote</span></div>
+      <div class="bd" style="display:flex;gap:14px;flex-wrap:wrap">
+      ${classes.map((x,i)=>`
+        <div style="flex:1;min-width:210px;border:1px solid ${i===0?"var(--green)":"var(--line)"};border-radius:12px;padding:13px 16px;background:${i===0?"var(--green-bg,#EDF5ED)":"var(--paper)"}">
+          <div style="font-size:12px;font-weight:700;color:var(--tx-2)">${medailles[i]||(i+1)+"."} ${x.f.name}</div>
+          <div style="font-size:26px;font-weight:850;color:var(--green);letter-spacing:-.5px;margin:3px 0">${fmt(x.un.val,2)} €/u N</div>
+          <div class="muted" style="font-size:11.5px">${fmt(x.f.price)} ${PRICE_UNITS[x.f.priceUnit]}${x.f.appUnit==="l/ha"?" · densité "+(x.f.density??"—"):""} · teneur ${x.f.tenor??"—"}</div>
+        </div>`).join("")}
+      ${azotes.filter(x=>!x.un.ok).map(x=>`
+        <div style="flex:1;min-width:210px;border:1px dashed var(--line);border-radius:12px;padding:13px 16px">
+          <div style="font-size:12px;font-weight:700;color:var(--tx-2)">${x.f.name}</div>
+          <div class="miss" style="font-size:15px;margin:6px 0">${x.un.reason}</div>
+        </div>`).join("")}
+      </div></div>` : "";
     const rows=c.fertilizers.map(f=>{
       const up=FERT.unitPrice(f), h=FERT.histStats(f);
+      const un=FERT.nitrogenUnitPrice(f);
+      const rang=classes.findIndex(x=>x.f.id===f.id);
+      const unCell = f.cat!=="azote" ? '<span class="muted">—</span>'
+        : un.ok ? `<span style="font-size:16px;font-weight:850;color:var(--green);white-space:nowrap">${rang>=0&&rang<3?medailles[rang]+" ":""}${fmt(un.val,2)} €/u N</span>`
+        : `<span class="miss">${un.reason}</span>`;
       return `<tr style="${f.active===false?'opacity:.45':''}">
       <td><b>${f.name}</b>${f.active===false?' <span class="tag">archivé</span>':''}
         <div class="muted" style="font-size:11.5px">${f.cat==="azote"?"Azote":"Fond"} · ${f.supplier||"—"}${f.composition?" · "+f.composition:""}</div></td>
       <td>${f.appUnit}</td><td>${PRICE_UNITS[f.priceUnit]}</td>
       <td class="num" style="font-weight:700">${+f.price>0?fmt(f.price,f.priceUnit==="kg"||f.priceUnit==="L"?2:0):MISS}</td>
       <td class="num muted">${up.ok?(up.label||"forfait"):'<span class="miss">'+up.reason+'</span>'}</td>
+      <td class="num">${unCell}</td>
       <td class="num">${f.density??"—"}</td>
       <td class="muted">${f.priceUpdated||"—"}</td>
       <td>${h?`<span class="muted">dernier ${fmt(h.last)} · meilleur ${fmt(h.best)} · moy. ${fmt(h.avg)}${h.delta!=null?" · "+(h.delta>0?"▲ +":"▼ ")+fmt(h.delta):""}</span>`:"—"}</td>
@@ -1536,8 +1583,10 @@ const UI = {
       <p>Chaque engrais a son unité d'application et son unité commerciale : l'application choisit seule la bonne conversion.
       Exemple : 400 €/t × densité 1,30 ÷ 1000 = 0,52 €/L. L'historique conserve tous les prix proposés.</p></div>
       <div class="actions"><button class="btn pri" onclick="UI.addFert('fond')">＋ Ajouter un engrais</button></div></div>
+    ${classement}
     <div class="card"><div class="tb-wrap"><table class="tb"><thead><tr>
       <th>Engrais</th><th>Application</th><th>Unité prix</th><th class="num">Prix</th><th class="num">Prix converti</th>
+      <th class="num" style="color:var(--green)">Prix de l'unité N</th>
       <th class="num">Densité</th><th>MAJ prix</th><th>Historique</th><th>Actions</th>
       </tr></thead><tbody>${rows}</tbody></table></div></div>
     <div class="hint" style="margin-top:10px">Un engrais utilisé dans une campagne doit être <b>archivé</b> plutôt que supprimé : il sort des saisies mais l'historique est conservé.</div>`;
@@ -1556,6 +1605,9 @@ const UI = {
       <div class="field"><label>Prix</label><input id="m-price" type="number" step="0.01" value="${f.price??""}"></div>
       <div class="field"><label>Densité (kg/L) — requise si appliqué en l/ha et acheté au poids</label><input id="m-dens" type="number" step="0.01" value="${f.density??""}" placeholder="1.30"></div></div>
     <div class="frow">
+      <div class="field"><label>Teneur en azote — kg N/L (solutions) ou kg N/kg (solides) · engrais azotés</label><input id="m-tenor" type="number" step="0.001" value="${f.tenor??""}" placeholder="0.39 ou 0.335"></div>
+      <div class="field"></div></div>
+    <div class="frow">
       <div class="field"><label>Fournisseur</label><input id="m-sup" value="${f.supplier||""}"></div>
       <div class="field"><label>Composition</label><input id="m-comp" value="${f.composition||""}"></div></div>
     <div class="field"><label>Commentaire</label><input id="m-cmt" value="${f.comment||""}"></div>`;
@@ -1567,11 +1619,13 @@ const UI = {
     if(price!=null&&price<0){ this.toast("Prix négatif interdit"); return false; }
     const dens=this.mnum("m-dens");
     if(dens!=null&&dens<=0){ this.toast("La densité doit être positive"); return false; }
+    const tenor=this.mnum("m-tenor");
+    if(tenor!=null&&(tenor<=0||tenor>1)){ this.toast("Teneur invalide (ex. 0,39 ou 0,335)"); return false; }
     const app=this.mval("m-app"), pu=this.mval("m-pu");
     const tmp={ appUnit:app, priceUnit:pu, price:price||0, density:dens };
     if(price>0){ const up=FERT.unitPrice(tmp); if(!up.ok&&up.reason.startsWith("Unités")){ this.toast("⚠ "+up.reason); return false; } }
     Object.assign(f,{ name, cat:this.mval("m-cat"), appUnit:app, priceUnit:pu,
-      density:dens, supplier:this.mval("m-sup"), composition:this.mval("m-comp"), comment:this.mval("m-cmt") });
+      density:dens, tenor, supplier:this.mval("m-sup"), composition:this.mval("m-comp"), comment:this.mval("m-cmt") });
     if(price!=null&&price!==f.price){
       f.price=price; f.priceUpdated=today();
       (f.history=f.history||[]).push({ id:uid(), date:today(), supplier:f.supplier, price, unit:pu, qty:"", comment:"", retained:true });
