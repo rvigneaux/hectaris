@@ -2991,13 +2991,13 @@ const CARTO = {
       this.mapEl=el;
       const p=this.parcel();
       if(p&&p.geo) this.showParcel(p,true);
-      this.redraw();
+      this.readout();
       if(navigator.onLine===false) UI.toast("Hors ligne : le fond de carte ne peut pas se charger (les calculs restent disponibles)");
     }catch(e){ el.innerHTML='<div class="empty"><b>Carte indisponible dans cet environnement</b>'+e.message+'</div>'; }
   },
   dot(cls){ return L.divIcon({className:"", html:'<div class="'+cls+'"></div>', iconSize:[16,16], iconAnchor:[8,8]}); },
   select(pid){ this.pid=pid; this.reset(); const p=this.parcel();
-    if(p&&p.geo){ this.showParcel(p,true); } this.redraw(); },
+    if(p&&p.geo){ this.showParcel(p,true); } this.readout(); },
   showParcel(p,fit){
     if(this._pl) this._pl.remove();
     if(p.geo){ this._pl=L.polygon(p.geo,{color:"#F57C00",weight:3,fillOpacity:.12}).addTo(this.map);
