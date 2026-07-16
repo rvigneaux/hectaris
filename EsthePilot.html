@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EsthéPilot — Pilotage de l'institut</title>
+<!--
+  ═══════════════════════════════════════════════════════════════
+  EsthéPilot — Application autonome de pilotage d'institut de beauté
+  100 % HTML / CSS / JavaScript — Fonctionne hors ligne
+  Données stockées en LocalStorage (clé : "esthepilot_v1")
+  Export / Import JSON intégrés
+  ═══════════════════════════════════════════════════════════════
+-->
+<style>
+/* ══════════════ VARIABLES & BASE ══════════════ */
+:root{
+  --rose:        #E8B4BC;   /* rose poudré */
+  --rose-pale:   #F7E4E8;
+  --rose-fonce:  #C98A96;
+  --sauge:       #9CAF94;   /* vert sauge */
+  --sauge-pale:  #E4ECE1;
+  --sauge-fonce: #6E8567;
+  --blanc:       #FDFCFA;
+  --creme:       #FAF6F3;
+  --encre:       #4A4145;   /* texte principal */
+  --encre-doux:  #8C7F84;   /* texte secondaire */
+  --alerte:      #C0392B;
+  --alerte-pale: #FBEAE8;
+  --or:          #C9A96A;
+  --ombre:       0 6px 24px rgba(120, 90, 100, .10);
+  --ombre-hover: 0 10px 32px rgba(120, 90, 100, .16);
+  --rayon:       20px;
+  --font-titre:  "Didot", "Bodoni MT", "Playfair Display", Georgia, serif;
+  --font-texte:  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:var(--font-texte);
+  background:linear-gradient(160deg, var(--creme) 0%, var(--rose-pale) 55%, var(--sauge-pale) 100%);
+  background-attachment:fixed;
+  color:var(--encre);
+  min-height:100vh;
+  font-size:15px;
+  line-height:1.55;
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;}
+}
+
+/* ══════════════ EN-TÊTE ══════════════ */
+header{
+  padding:26px 22px 12px;
+  text-align:center;
+}
+.logo{
+  font-family:var(--font-titre);
+  font-size:34px;
+  letter-spacing:.5px;
+  color:var(--encre);
+}
+.logo em{font-style:normal;color:var(--rose-fonce);}
+.logo .fleur{color:var(--sauge-fonce);font-size:24px;vertical-align:8px;}
+.baseline{
+  font-size:12.5px;
+  letter-spacing:2.5px;
+  text-transform:uppercase;
+  color:var(--encre-doux);
+  margin-top:2px;
+}
+
+/* Bandeau motivation */
+.motivation{
+  max-width:760px;
+  margin:16px auto 0;
+  padding:14px 22px;
+  background:rgba(255,255,255,.75);
+  backdrop-filter:blur(6px);
+  border:1px solid rgba(201,138,150,.25);
+  border-radius:var(--rayon);
+  font-family:var(--font-titre);
+  font-size:17px;
+  font-style:italic;
+  color:var(--encre);
+  box-shadow:var(--ombre);
+  animation:apparition .8s ease both;
+}
+.motivation::before{content:"✦ ";color:var(--or);}
+@keyframes apparition{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+/* ══════════════ NAVIGATION ══════════════ */
+nav{
+  position:sticky;top:0;z-index:50;
+  display:flex;justify-content:center;gap:6px;flex-wrap:wrap;
+  padding:12px 8px;
+  margin:14px auto 8px;
+  background:rgba(253,252,250,.85);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(201,138,150,.18);
+}
+nav button{
+  border:none;cursor:pointer;
+  padding:9px 16px;
+  border-radius:999px;
+  background:transparent;
+  color:var(--encre-doux);
+  font-size:13.5px;font-weight:600;
+  font-family:var(--font-texte);
+  transition:all .25s ease;
+}
+nav button:hover{background:var(--rose-pale);color:var(--rose-fonce);}
+nav button.actif{
+  background:linear-gradient(120deg,var(--rose) 0%, var(--rose-fonce) 100%);
+  color:#fff;
+  box-shadow:0 4px 14px rgba(201,138,150,.35);
+}
+nav button:focus-visible{outline:2px solid var(--rose-fonce);outline-offset:2px;}
+
+/* ══════════════ STRUCTURE ══════════════ */
+main{max-width:1080px;margin:0 auto;padding:14px 18px 70px;}
+section.page{display:none;animation:apparition .45s ease both;}
+section.page.visible{display:block;}
+h2.titre-page{
+  font-family:var(--font-titre);
+  font-size:27px;font-weight:500;
+  margin:14px 0 4px;
+  color:var(--encre);
+}
+.sous-titre{color:var(--encre-doux);font-size:14px;margin-bottom:20px;}
+
+/* ══════════════ CARTES & GRILLES ══════════════ */
+.grille-kpi{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:14px;margin-bottom:22px;
+}
+.carte{
+  background:rgba(255,255,255,.88);
+  border-radius:var(--rayon);
+  padding:18px 20px;
+  box-shadow:var(--ombre);
+  border:1px solid rgba(255,255,255,.9);
+  transition:transform .25s ease, box-shadow .25s ease;
+}
+.carte:hover{transform:translateY(-3px);box-shadow:var(--ombre-hover);}
+.kpi-label{font-size:11.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--encre-doux);display:flex;align-items:center;gap:6px;}
+.kpi-valeur{font-family:var(--font-titre);font-size:30px;margin-top:6px;color:var(--encre);}
+.kpi-valeur small{font-size:16px;color:var(--encre-doux);}
+.kpi-delta{font-size:12.5px;margin-top:4px;font-weight:600;}
+.delta-pos{color:var(--sauge-fonce);}
+.delta-neg{color:var(--alerte);}
+.delta-neutre{color:var(--encre-doux);}
+
+/* Barre de progression objectif */
+.progression{margin-top:10px;}
+.barre-fond{height:10px;border-radius:999px;background:var(--rose-pale);overflow:hidden;}
+.barre-remplie{
+  height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--sauge) 0%, var(--sauge-fonce) 100%);
+  transition:width .8s cubic-bezier(.2,.8,.3,1);
+}
+.barre-remplie.rose{background:linear-gradient(90deg,var(--rose) 0%, var(--rose-fonce) 100%);}
+
+.grille-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:760px){.grille-2{grid-template-columns:1fr;}}
+.titre-carte{
+  font-family:var(--font-titre);font-size:18px;
+  margin-bottom:12px;color:var(--encre);
+  display:flex;align-items:center;gap:8px;
+}
+
+/* ══════════════ FORMULAIRES ══════════════ */
+label{display:block;font-size:12.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--encre-doux);margin:14px 0 5px;}
+input[type=date],input[type=number],input[type=text],textarea,select{
+  width:100%;
+  padding:11px 14px;
+  border:1.5px solid rgba(201,138,150,.35);
+  border-radius:14px;
+  background:#fff;
+  font-family:var(--font-texte);
+  font-size:15px;color:var(--encre);
+  transition:border .2s, box-shadow .2s;
+}
+input:focus,textarea:focus{outline:none;border-color:var(--rose-fonce);box-shadow:0 0 0 3px rgba(232,180,188,.30);}
+textarea{resize:vertical;min-height:70px;}
+.ligne-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0 16px;}
+
+/* Compteurs de prestations */
+.grille-prestations{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-top:8px;}
+.chip-presta{
+  display:flex;align-items:center;justify-content:space-between;
+  background:#fff;border:1.5px solid rgba(156,175,148,.4);
+  border-radius:14px;padding:8px 10px 8px 14px;
+  transition:all .2s;
+}
+.chip-presta.active{background:var(--sauge-pale);border-color:var(--sauge-fonce);}
+.chip-presta .nom{font-size:13.5px;font-weight:600;}
+.chip-presta .compteur{display:flex;align-items:center;gap:8px;}
+.chip-presta button{
+  width:26px;height:26px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--sauge-pale);color:var(--sauge-fonce);
+  font-size:16px;font-weight:700;line-height:1;
+  transition:all .15s;
+}
+.chip-presta button:hover{background:var(--sauge);color:#fff;}
+.chip-presta .nb{min-width:18px;text-align:center;font-weight:700;color:var(--sauge-fonce);}
+
+.bouton{
+  display:inline-block;border:none;cursor:pointer;
+  padding:13px 30px;border-radius:999px;
+  background:linear-gradient(120deg,var(--rose) 0%, var(--rose-fonce) 100%);
+  color:#fff;font-size:15px;font-weight:700;letter-spacing:.4px;
+  font-family:var(--font-texte);
+  box-shadow:0 6px 18px rgba(201,138,150,.4);
+  transition:transform .2s, box-shadow .2s;
+  margin-top:20px;
+}
+.bouton:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(201,138,150,.5);}
+.bouton.secondaire{background:linear-gradient(120deg,var(--sauge) 0%, var(--sauge-fonce) 100%);box-shadow:0 6px 18px rgba(110,133,103,.35);}
+.bouton.discret{background:#fff;color:var(--encre-doux);border:1.5px solid rgba(140,127,132,.3);box-shadow:none;}
+.bouton.danger{background:#fff;color:var(--alerte);border:1.5px solid rgba(192,57,43,.4);box-shadow:none;}
+.bouton:focus-visible{outline:2px solid var(--encre);outline-offset:2px;}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--encre);color:#fff;
+  padding:12px 26px;border-radius:999px;
+  font-size:14px;font-weight:600;
+  opacity:0;pointer-events:none;
+  transition:all .35s ease;z-index:100;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+.toast.visible{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ══════════════ TABLEAUX & STATISTIQUES ══════════════ */
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{
+  text-align:left;padding:10px 12px;
+  font-size:11px;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--encre-doux);border-bottom:2px solid var(--rose-pale);
+}
+td{padding:10px 12px;border-bottom:1px solid rgba(232,180,188,.25);}
+tr:hover td{background:rgba(247,228,232,.35);}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+.badge{
+  display:inline-block;padding:3px 12px;border-radius:999px;
+  font-size:12px;font-weight:700;
+}
+.badge-sauge{background:var(--sauge-pale);color:var(--sauge-fonce);}
+.badge-rose{background:var(--rose-pale);color:var(--rose-fonce);}
+
+/* ══════════════ PLAN D'ACTIONS ══════════════ */
+.priorite{
+  background:var(--alerte-pale);
+  border:2.5px solid var(--alerte);
+  border-radius:var(--rayon);
+  padding:22px 26px;
+  margin-bottom:22px;
+  box-shadow:0 8px 28px rgba(192,57,43,.18);
+  animation:pulsation 3.5s ease-in-out infinite;
+}
+@keyframes pulsation{
+  0%,100%{box-shadow:0 8px 28px rgba(192,57,43,.15);}
+  50%{box-shadow:0 8px 34px rgba(192,57,43,.32);}
+}
+.priorite h3{
+  color:var(--alerte);font-size:20px;
+  font-family:var(--font-texte);font-weight:800;
+  letter-spacing:.5px;margin-bottom:10px;
+}
+.priorite p{margin:7px 0;font-size:14.5px;}
+.priorite strong{color:var(--alerte);}
+.canaux{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;}
+.canaux span{
+  background:#fff;border:1.5px solid var(--alerte);
+  color:var(--alerte);font-weight:700;font-size:13px;
+  padding:5px 15px;border-radius:999px;
+}
+
+.conseil{
+  display:flex;gap:14px;align-items:flex-start;
+  background:rgba(255,255,255,.88);
+  border-radius:16px;padding:16px 18px;
+  margin-bottom:10px;
+  border-left:4px solid var(--sauge);
+  box-shadow:var(--ombre);
+}
+.conseil .ico{font-size:22px;line-height:1.2;}
+.conseil .txt strong{display:block;font-size:14.5px;margin-bottom:2px;}
+.conseil .txt span{font-size:13.5px;color:var(--encre-doux);}
+.conseil.important{border-left-color:var(--rose-fonce);}
+
+/* Validation de la responsable */
+.reco-item{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:12px 14px;border-radius:14px;
+  background:var(--sauge-pale);
+  margin-bottom:8px;font-size:14px;
+}
+.reco-item .date{font-size:11.5px;color:var(--sauge-fonce);font-weight:700;white-space:nowrap;margin-top:2px;}
+.reco-item .texte{flex:1;}
+.reco-item button{
+  border:none;background:transparent;cursor:pointer;
+  color:var(--encre-doux);font-size:15px;padding:2px 6px;border-radius:8px;
+}
+.reco-item button:hover{background:rgba(0,0,0,.06);color:var(--alerte);}
+
+/* ══════════════ GRAPHIQUES SVG ══════════════ */
+.graphe{width:100%;height:auto;display:block;}
+.legende{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12.5px;color:var(--encre-doux);}
+.legende span{display:flex;align-items:center;gap:6px;}
+.legende i{width:11px;height:11px;border-radius:3px;display:inline-block;}
+
+.vide{
+  text-align:center;padding:36px 20px;color:var(--encre-doux);
+  font-size:14.5px;
+}
+.vide .ico{font-size:36px;display:block;margin-bottom:10px;}
+
+/* Journal des saisies */
+.entree-jour{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:14px;background:#fff;
+  margin-bottom:8px;box-shadow:0 2px 8px rgba(120,90,100,.07);
+  font-size:13.5px;flex-wrap:wrap;
+}
+.entree-jour .d{font-weight:700;}
+.entree-jour .ca{font-family:var(--font-titre);font-size:17px;color:var(--rose-fonce);}
+.entree-jour button{border:none;background:transparent;cursor:pointer;color:var(--encre-doux);border-radius:8px;padding:4px 8px;}
+.entree-jour button:hover{color:var(--alerte);background:rgba(0,0,0,.05);}
+
+footer{
+  text-align:center;padding:30px 20px 40px;
+  font-size:12px;color:var(--encre-doux);letter-spacing:.5px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Esthé<em>Pilot</em> <span class="fleur">❀</span></div>
+  <div class="baseline">Pilotage &amp; développement de l'institut</div>
+  <div class="motivation" id="motivation"></div>
+</header>
+
+<nav id="nav">
+  <button data-page="tableau" class="actif">🏠 Tableau de bord</button>
+  <button data-page="saisie">✍️ Saisie du jour</button>
+  <button data-page="stats">📊 Statistiques</button>
+  <button data-page="actions">🎯 Plan d'actions</button>
+  <button data-page="objectifs">🏆 Objectifs</button>
+  <button data-page="sauvegarde">💾 Sauvegarde</button>
+  <button data-page="mentions">©️ Mentions légales</button>
+</nav>
+
+<main>
+
+<!-- ══════════════ TABLEAU DE BORD ══════════════ -->
+<section class="page visible" id="page-tableau">
+  <h2 class="titre-page">Tableau de bord</h2>
+  <p class="sous-titre" id="tb-date"></p>
+  <div class="grille-kpi" id="tb-kpi"></div>
+  <div class="carte" style="margin-bottom:16px;">
+    <div class="titre-carte">🎯 Progression vers l'objectif du mois</div>
+    <div id="tb-objectif"></div>
+  </div>
+  <div class="grille-2">
+    <div class="carte">
+      <div class="titre-carte">📈 Évolution du chiffre d'affaires</div>
+      <div id="g-ca"></div>
+    </div>
+    <div class="carte">
+      <div class="titre-carte">👩 Évolution du nombre de clientes</div>
+      <div id="g-clientes"></div>
+    </div>
+    <div class="carte">
+      <div class="titre-carte">🛍️ Évolution du panier moyen</div>
+      <div id="g-panier"></div>
+    </div>
+    <div class="carte">
+      <div class="titre-carte">💆‍♀️ Répartition des prestations (30 j)</div>
+      <div id="g-prestations"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ SAISIE ══════════════ -->
+<section class="page" id="page-saisie">
+  <h2 class="titre-page">Saisie quotidienne</h2>
+  <p class="sous-titre">Chaque matin, renseigne les résultats de la veille — moins de deux minutes ⏱️</p>
+  <div class="carte">
+    <div class="ligne-form">
+      <div>
+        <label for="s-date">Date</label>
+        <input type="date" id="s-date">
+      </div>
+      <div>
+        <label for="s-ca-presta">CA prestations (€)</label>
+        <input type="number" id="s-ca-presta" min="0" step="0.01" placeholder="0,00">
+      </div>
+      <div>
+        <label for="s-ca-ventes">CA ventes produits (€)</label>
+        <input type="number" id="s-ca-ventes" min="0" step="0.01" placeholder="0,00">
+      </div>
+      <div>
+        <label for="s-clientes">Nombre de clientes</label>
+        <input type="number" id="s-clientes" min="0" step="1" placeholder="0">
+      </div>
+    </div>
+    <label>Prestations réalisées</label>
+    <div class="grille-prestations" id="s-prestations"></div>
+    <label for="s-commentaire">Commentaire (facultatif)</label>
+    <textarea id="s-commentaire" placeholder="Ambiance de la journée, remarques, idées…"></textarea>
+    <button class="bouton" id="s-enregistrer">Enregistrer la journée ✓</button>
+  </div>
+  <div class="carte" style="margin-top:16px;">
+    <div class="titre-carte">🗓️ Dernières saisies</div>
+    <div id="s-journal"></div>
+  </div>
+</section>
+
+<!-- ══════════════ STATISTIQUES ══════════════ -->
+<section class="page" id="page-stats">
+  <h2 class="titre-page">Statistiques</h2>
+  <p class="sous-titre">Calculées automatiquement à partir des saisies quotidiennes</p>
+  <div class="grille-kpi" id="st-kpi"></div>
+  <div class="grille-2">
+    <div class="carte">
+      <div class="titre-carte">🏅 Records &amp; faits marquants</div>
+      <div id="st-records"></div>
+    </div>
+    <div class="carte">
+      <div class="titre-carte">💆‍♀️ Détail des prestations (30 jours)</div>
+      <div id="st-prestations"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ PLAN D'ACTIONS ══════════════ -->
+<section class="page" id="page-actions">
+  <h2 class="titre-page">Plan d'actions</h2>
+  <p class="sous-titre">Chaque chiffre appelle une action. Cette page ne doit jamais rester lettre morte.</p>
+
+  <div class="priorite">
+    <h3>🚨 PRIORITÉ ABSOLUE</h3>
+    <p><strong>Le démarchage des clientes déjà connues du salon est OBLIGATOIRE chaque semaine.</strong></p>
+    <div class="canaux">
+      <span>📞 Téléphone</span><span>💬 SMS</span><span>📨 Messenger</span>
+      <span>📘 Facebook</span><span>📸 Instagram</span><span>✉️ Email</span>
+    </div>
+    <p>Chaque journée doit comporter <strong>au minimum une action de relance ou de fidélisation</strong>.</p>
+    <p><strong>Sans actions commerciales, il n'y a pas de développement.</strong></p>
+  </div>
+
+  <div class="titre-carte" style="margin-bottom:10px;">💡 Conseils du jour, générés à partir de tes chiffres</div>
+  <div id="a-conseils"></div>
+
+  <div class="carte" style="margin-top:22px;">
+    <div class="titre-carte">✒️ Validation de la responsable</div>
+    <p style="font-size:13.5px;color:var(--encre-doux);margin-bottom:6px;">
+      Espace réservé aux recommandations de la responsable du salon ou du dirigeant.
+    </p>
+    <label for="a-reco-texte">Nouvelle recommandation</label>
+    <textarea id="a-reco-texte" placeholder="Ex. : Continuer les relances. Mettre en avant les soins visage. Appeler les clientes anniversaires…"></textarea>
+    <button class="bouton secondaire" id="a-reco-ajouter">Ajouter la recommandation</button>
+    <div id="a-reco-liste" style="margin-top:18px;"></div>
+  </div>
+</section>
+
+<!-- ══════════════ OBJECTIFS ══════════════ -->
+<section class="page" id="page-objectifs">
+  <h2 class="titre-page">Objectifs du mois</h2>
+  <p class="sous-titre">Définis le cap, l'application calcule chaque jour le chemin restant</p>
+  <div class="carte">
+    <div class="ligne-form">
+      <div>
+        <label for="o-ca">Objectif CA mensuel (€)</label>
+        <input type="number" id="o-ca" min="0" step="50">
+      </div>
+      <div>
+        <label for="o-ventes">Objectif ventes produits (€)</label>
+        <input type="number" id="o-ventes" min="0" step="10">
+      </div>
+      <div>
+        <label for="o-clientes">Objectif clientes / mois</label>
+        <input type="number" id="o-clientes" min="0" step="1">
+      </div>
+    </div>
+    <button class="bouton" id="o-enregistrer">Enregistrer les objectifs ✓</button>
+  </div>
+  <div style="margin-top:18px;" id="o-suivi"></div>
+</section>
+
+<!-- ══════════════ SAUVEGARDE ══════════════ -->
+<section class="page" id="page-sauvegarde">
+  <h2 class="titre-page">Sauvegarde des données</h2>
+  <p class="sous-titre">Les données sont enregistrées automatiquement dans ce navigateur, sur cet appareil</p>
+  <div class="carte">
+    <div class="titre-carte">💾 Sauvegarde &amp; restauration</div>
+    <p style="font-size:14px;color:var(--encre-doux);">
+      Pense à exporter régulièrement une sauvegarde JSON (une fois par semaine, par exemple) :
+      elle te protège en cas de changement d'ordinateur ou de nettoyage du navigateur.
+    </p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button class="bouton secondaire" id="b-export">⬇️ Exporter la sauvegarde JSON</button>
+      <button class="bouton discret" id="b-import">⬆️ Importer une sauvegarde JSON</button>
+      <input type="file" id="b-fichier" accept="application/json" style="display:none;">
+    </div>
+    <div id="b-infos" style="margin-top:18px;font-size:13.5px;color:var(--encre-doux);"></div>
+  </div>
+  <div class="carte" style="margin-top:16px;">
+    <div class="titre-carte">🗑️ Remise à zéro</div>
+    <p style="font-size:14px;color:var(--encre-doux);">
+      Efface définitivement toutes les saisies, objectifs et recommandations de cet appareil.
+      Exporte d'abord une sauvegarde si tu veux conserver l'historique.
+    </p>
+    <button class="bouton danger" id="b-raz">Tout effacer…</button>
+  </div>
+</section>
+
+<!-- ══════════════ COPYRIGHT / MENTIONS LÉGALES ══════════════ -->
+<section class="page" id="page-mentions">
+  <h2 class="titre-page">Copyright / Mentions légales</h2>
+  <p class="sous-titre">Informations légales relatives à l'application EsthéPilot</p>
+
+  <div class="carte" style="margin-bottom:16px;">
+    <div class="titre-carte">❀ EsthéPilot</div>
+    <p style="font-size:14.5px;">Version Bêta 1.0</p>
+    <p style="font-size:14.5px;">© 2026 Renaud Vigneaux</p>
+    <p style="font-size:14.5px;"><strong>Tous droits réservés.</strong></p>
+  </div>
+
+  <div class="carte" style="margin-bottom:16px;">
+    <div class="titre-carte">👤 Éditeur</div>
+    <p style="font-size:14.5px;">Renaud Vigneaux</p>
+    <p style="font-size:14.5px;">7 rue de l'Orval</p>
+    <p style="font-size:14.5px;">89150 Brannay</p>
+    <p style="font-size:14.5px;">France</p>
+    <p style="font-size:14.5px;margin-top:10px;">Téléphone : 06 62 35 60 54</p>
+    <p style="font-size:14.5px;">E-mail : rvigneaux@gmail.com</p>
+  </div>
+
+  <div class="carte" style="margin-bottom:16px;">
+    <div class="titre-carte">⚖️ Propriété intellectuelle</div>
+    <p style="font-size:14.5px;margin-bottom:10px;">
+      Cette application, son code source, son interface utilisateur, son design, son identité visuelle,
+      ses textes, ses calculs, ses graphiques, son fonctionnement et l'ensemble de ses fonctionnalités
+      sont protégés par le Code de la propriété intellectuelle.
+    </p>
+    <p style="font-size:14.5px;margin-bottom:10px;">
+      Toute reproduction, diffusion, copie, adaptation, modification, rétro-ingénierie, commercialisation
+      ou exploitation, totale ou partielle, sans l'autorisation écrite préalable de Renaud Vigneaux
+      est strictement interdite.
+    </p>
+    <p style="font-size:14.5px;">
+      Cette version est une version bêta destinée exclusivement aux tests et à l'évaluation.
+    </p>
+  </div>
+
+  <div class="carte">
+    <div class="titre-carte">🗓️ Historique</div>
+    <p style="font-size:14.5px;">Création : juillet 2026</p>
+    <p style="font-size:14.5px;">Dernière mise à jour : juillet 2026</p>
+    <p style="font-size:14.5px;">Version : Bêta 1.0</p>
+  </div>
+</section>
+
+</main>
+
+<footer>EsthéPilot · Application autonome hors ligne · Données stockées localement sur cet appareil</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   EsthéPilot — Moteur JavaScript
+   Organisation du code :
+   1. Constantes (prestations, citations)
+   2. Stockage LocalStorage (chargement / sauvegarde)
+   3. Fonctions utilitaires (formats, dates, agrégats)
+   4. Navigation entre pages
+   5. Saisie quotidienne
+   6. Tableau de bord + graphiques SVG
+   7. Statistiques
+   8. Plan d'actions (conseils automatiques + validation responsable)
+   9. Objectifs
+   10. Sauvegarde / export / import / remise à zéro
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─────────── 1. CONSTANTES ─────────── */
+
+const PRESTATIONS = [
+  "Soin visage", "Massage", "LPG", "Épilation", "Ongles", "Maquillage",
+  "Beauté des pieds", "Beauté des mains", "Extensions de cils",
+  "Rehaussement de cils", "Autre"
+];
+
+const CITATIONS = [
+  "La réussite ne dépend pas seulement de ton savoir-faire mais aussi des clientes que tu fais revenir.",
+  "La meilleure publicité est une cliente qui revient.",
+  "Chaque contact aujourd'hui prépare ton chiffre d'affaires de demain.",
+  "Un agenda plein ne tombe pas du ciel : il se construit un appel à la fois.",
+  "Une cliente fidèle vaut dix nouvelles clientes à conquérir.",
+  "Ce que tu ne proposes pas, personne ne l'achètera.",
+  "Le soin le mieux réalisé du monde ne sert à rien si personne ne le sait.",
+  "Une story aujourd'hui, une cliente demain.",
+  "Ton fichier clientes est ton plus grand trésor : fais-le vivre.",
+  "Les petits gestes commerciaux quotidiens font les grands mois.",
+  "Chaque cliente qui sort du salon doit avoir une raison d'y revenir.",
+  "On ne subit pas son chiffre d'affaires, on le provoque.",
+  "Proposer, c'est respecter la cliente : elle a le droit de dire oui.",
+  "La régularité bat le talent quand le talent n'est pas régulier.",
+  "Aujourd'hui est le meilleur jour pour relancer une cliente absente."
+];
+
+const CLE_STOCKAGE = "esthepilot_v1";
+
+/* ─────────── 2. STOCKAGE ─────────── */
+
+// Structure des données :
+// {
+//   entrees: [{date:"2026-07-03", caPresta:0, caVentes:0, clientes:0,
+//              prestations:{"Soin visage":2,...}, commentaire:""}],
+//   objectifs: {ca:0, ventes:0, clientes:0},
+//   recommandations: [{id, date:"2026-07-03", texte:""}]
+// }
+let donnees = chargerDonnees();
+
+function chargerDonnees(){
+  try{
+    const brut = localStorage.getItem(CLE_STOCKAGE);
+    if(brut){
+      const d = JSON.parse(brut);
+      return {
+        entrees: Array.isArray(d.entrees) ? d.entrees : [],
+        objectifs: d.objectifs || {ca:0, ventes:0, clientes:0},
+        recommandations: Array.isArray(d.recommandations) ? d.recommandations : []
+      };
+    }
+  }catch(e){ console.warn("Lecture du stockage impossible :", e); }
+  return {entrees:[], objectifs:{ca:0, ventes:0, clientes:0}, recommandations:[]};
+}
+
+function sauvegarder(){
+  try{
+    localStorage.setItem(CLE_STOCKAGE, JSON.stringify(donnees));
+  }catch(e){
+    afficherToast("⚠️ Sauvegarde impossible (stockage plein ou bloqué)");
+  }
+}
+
+/* ─────────── 3. UTILITAIRES ─────────── */
+
+const fmtEuro = n => (Math.round(n*100)/100).toLocaleString("fr-FR",{minimumFractionDigits:0, maximumFractionDigits:2}) + " €";
+const fmtNb   = n => n.toLocaleString("fr-FR",{maximumFractionDigits:1});
+
+function dateISO(d){ return d.toISOString().slice(0,10); }
+function aujourdHui(){ const d = new Date(); d.setHours(12,0,0,0); return d; }
+
+function libelleDate(iso){
+  const d = new Date(iso + "T12:00:00");
+  return d.toLocaleDateString("fr-FR",{weekday:"short", day:"numeric", month:"short"});
+}
+
+function totalJour(e){ return (e.caPresta||0) + (e.caVentes||0); }
+
+// Entrées triées par date croissante
+function entreesTriees(){
+  return [...donnees.entrees].sort((a,b)=> a.date < b.date ? -1 : 1);
+}
+
+// Entrées comprises entre deux dates ISO incluses
+function entreesEntre(debISO, finISO){
+  return donnees.entrees.filter(e => e.date >= debISO && e.date <= finISO);
+}
+
+// Sommes sur une liste d'entrées
+function agreger(liste){
+  const a = {ca:0, presta:0, ventes:0, clientes:0, jours:liste.length};
+  liste.forEach(e=>{
+    a.presta   += e.caPresta || 0;
+    a.ventes   += e.caVentes || 0;
+    a.clientes += e.clientes || 0;
+  });
+  a.ca = a.presta + a.ventes;
+  a.panier = a.clientes > 0 ? a.ca / a.clientes : 0;
+  return a;
+}
+
+// N derniers jours calendaires (décalage = 0 → aujourd'hui inclus)
+function plage(nJours, decalage=0){
+  const fin = aujourdHui(); fin.setDate(fin.getDate() - decalage);
+  const deb = new Date(fin); deb.setDate(deb.getDate() - (nJours-1));
+  return entreesEntre(dateISO(deb), dateISO(fin));
+}
+
+function moisEnCours(){
+  const d = aujourdHui();
+  const deb = new Date(d.getFullYear(), d.getMonth(), 1, 12);
+  return entreesEntre(dateISO(deb), dateISO(d));
+}
+function moisPrecedent(){
+  const d = aujourdHui();
+  const deb = new Date(d.getFullYear(), d.getMonth()-1, 1, 12);
+  const fin = new Date(d.getFullYear(), d.getMonth(), 0, 12);
+  return entreesEntre(dateISO(deb), dateISO(fin));
+}
+
+// Cumul des prestations sur une liste d'entrées
+function cumulPrestations(liste){
+  const c = {};
+  liste.forEach(e=>{
+    Object.entries(e.prestations||{}).forEach(([nom,nb])=>{
+      if(nb>0) c[nom] = (c[nom]||0) + nb;
+    });
+  });
+  return c;
+}
+
+function variation(actuel, precedent){
+  if(precedent <= 0) return null;
+  return (actuel - precedent) / precedent * 100;
+}
+
+function htmlDelta(v, suffixe=" vs période précédente"){
+  if(v === null) return '<div class="kpi-delta delta-neutre">— pas encore de comparaison</div>';
+  const cls = v > 0.5 ? "delta-pos" : (v < -0.5 ? "delta-neg" : "delta-neutre");
+  const fleche = v > 0.5 ? "▲" : (v < -0.5 ? "▼" : "≈");
+  return `<div class="kpi-delta ${cls}">${fleche} ${v>0?"+":""}${v.toFixed(1)} %${suffixe}</div>`;
+}
+
+function afficherToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("visible");
+  clearTimeout(t._minuteur);
+  t._minuteur = setTimeout(()=> t.classList.remove("visible"), 2800);
+}
+
+/* ─────────── 4. NAVIGATION ─────────── */
+
+document.getElementById("nav").addEventListener("click", ev=>{
+  const btn = ev.target.closest("button[data-page]");
+  if(!btn) return;
+  document.querySelectorAll("nav button").forEach(b=> b.classList.toggle("actif", b===btn));
+  document.querySelectorAll("section.page").forEach(s=> s.classList.remove("visible"));
+  document.getElementById("page-" + btn.dataset.page).classList.add("visible");
+  toutRafraichir();
+  window.scrollTo({top:0, behavior:"smooth"});
+});
+
+/* ─────────── 5. SAISIE QUOTIDIENNE ─────────── */
+
+const compteursPresta = {};   // état temporaire du formulaire
+
+function initFormulaireSaisie(){
+  // Date par défaut : hier (on saisit les résultats de la veille)
+  const hier = aujourdHui(); hier.setDate(hier.getDate()-1);
+  document.getElementById("s-date").value = dateISO(hier);
+  // Chips de prestations avec compteur + / −
+  const zone = document.getElementById("s-prestations");
+  zone.innerHTML = "";
+  PRESTATIONS.forEach(nom=>{
+    compteursPresta[nom] = 0;
+    const chip = document.createElement("div");
+    chip.className = "chip-presta";
+    chip.innerHTML = `<span class="nom">${nom}</span>
+      <span class="compteur">
+        <button type="button" aria-label="Retirer ${nom}">−</button>
+        <span class="nb">0</span>
+        <button type="button" aria-label="Ajouter ${nom}">+</button>
+      </span>`;
+    const [moins, plus] = chip.querySelectorAll("button");
+    const nb = chip.querySelector(".nb");
+    const maj = delta=>{
+      compteursPresta[nom] = Math.max(0, compteursPresta[nom] + delta);
+      nb.textContent = compteursPresta[nom];
+      chip.classList.toggle("active", compteursPresta[nom] > 0);
+    };
+    moins.addEventListener("click", ()=> maj(-1));
+    plus.addEventListener("click", ()=> maj(+1));
+    zone.appendChild(chip);
+  });
+}
+
+document.getElementById("s-enregistrer").addEventListener("click", ()=>{
+  const date = document.getElementById("s-date").value;
+  if(!date){ afficherToast("⚠️ Choisis une date"); return; }
+  const entree = {
+    date,
+    caPresta: parseFloat(document.getElementById("s-ca-presta").value) || 0,
+    caVentes: parseFloat(document.getElementById("s-ca-ventes").value) || 0,
+    clientes: parseInt(document.getElementById("s-clientes").value) || 0,
+    prestations: Object.fromEntries(Object.entries(compteursPresta).filter(([,n])=> n>0)),
+    commentaire: document.getElementById("s-commentaire").value.trim()
+  };
+  const existant = donnees.entrees.findIndex(e=> e.date === date);
+  if(existant >= 0){
+    if(!confirm("Une saisie existe déjà pour cette date. La remplacer ?")) return;
+    donnees.entrees[existant] = entree;
+  }else{
+    donnees.entrees.push(entree);
+  }
+  sauvegarder();
+  // Réinitialisation du formulaire
+  ["s-ca-presta","s-ca-ventes","s-clientes","s-commentaire"].forEach(id=> document.getElementById(id).value = "");
+  initFormulaireSaisie();
+  toutRafraichir();
+  afficherToast("✓ Journée enregistrée, bravo !");
+});
+
+function rendreJournal(){
+  const zone = document.getElementById("s-journal");
+  const liste = entreesTriees().slice(-10).reverse();
+  if(liste.length === 0){
+    zone.innerHTML = `<div class="vide"><span class="ico">🌸</span>Aucune saisie pour l'instant.<br>La première journée enregistrée fera vivre tout le tableau de bord.</div>`;
+    return;
+  }
+  zone.innerHTML = liste.map(e=>{
+    const nbP = Object.values(e.prestations||{}).reduce((s,n)=>s+n,0);
+    return `<div class="entree-jour">
+      <span class="d">${libelleDate(e.date)}</span>
+      <span>👩 ${e.clientes}</span>
+      <span>💆 ${nbP} presta.</span>
+      <span>🛍️ ${fmtEuro(e.caVentes||0)}</span>
+      <span class="ca">${fmtEuro(totalJour(e))}</span>
+      <button type="button" data-suppr="${e.date}" aria-label="Supprimer la saisie">✕</button>
+    </div>`;
+  }).join("");
+  zone.querySelectorAll("[data-suppr]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      if(!confirm("Supprimer la saisie du " + libelleDate(b.dataset.suppr) + " ?")) return;
+      donnees.entrees = donnees.entrees.filter(e=> e.date !== b.dataset.suppr);
+      sauvegarder(); toutRafraichir();
+      afficherToast("Saisie supprimée");
+    });
+  });
+}
+
+/* ─────────── 6. TABLEAU DE BORD ─────────── */
+
+function rendreTableauDeBord(){
+  const auj = dateISO(aujourdHui());
+  const entreeJour = donnees.entrees.find(e=> e.date === auj);
+  const derniere = entreesTriees().slice(-1)[0] || null;
+
+  const mois   = agreger(moisEnCours());
+  const j7     = agreger(plage(7));
+  const j7prec = agreger(plage(7,7));
+  const j30    = agreger(plage(30));
+  const j30prec= agreger(plage(30,30));
+
+  document.getElementById("tb-date").textContent =
+    aujourdHui().toLocaleDateString("fr-FR",{weekday:"long", day:"numeric", month:"long", year:"numeric"});
+
+  const caJour = entreeJour ? totalJour(entreeJour)
+               : (derniere ? totalJour(derniere) : 0);
+  const libJour = entreeJour ? "CA du jour"
+                : (derniere ? "CA dernière journée (" + libelleDate(derniere.date) + ")" : "CA du jour");
+
+  document.getElementById("tb-kpi").innerHTML = `
+    <div class="carte"><div class="kpi-label">💶 ${libJour}</div>
+      <div class="kpi-valeur">${fmtEuro(caJour)}</div></div>
+    <div class="carte"><div class="kpi-label">📅 CA du mois</div>
+      <div class="kpi-valeur">${fmtEuro(mois.ca)}</div>
+      ${htmlDelta(variation(mois.ca, agreger(moisPrecedent()).ca), " vs mois précédent")}</div>
+    <div class="carte"><div class="kpi-label">👩 Clientes ce mois</div>
+      <div class="kpi-valeur">${mois.clientes}</div></div>
+    <div class="carte"><div class="kpi-label">🛍️ Panier moyen (mois)</div>
+      <div class="kpi-valeur">${fmtEuro(mois.panier)}</div></div>
+    <div class="carte"><div class="kpi-label">🧴 Ventes produits (mois)</div>
+      <div class="kpi-valeur">${fmtEuro(mois.ventes)}</div></div>
+    <div class="carte"><div class="kpi-label">🗓️ CA 7 derniers jours</div>
+      <div class="kpi-valeur">${fmtEuro(j7.ca)}</div>
+      ${htmlDelta(variation(j7.ca, j7prec.ca), " vs 7 j précédents")}</div>
+    <div class="carte"><div class="kpi-label">📈 CA 30 derniers jours</div>
+      <div class="kpi-valeur">${fmtEuro(j30.ca)}</div>
+      ${htmlDelta(variation(j30.ca, j30prec.ca), " vs 30 j précédents")}</div>`;
+
+  // Progression vers l'objectif
+  const obj = donnees.objectifs.ca || 0;
+  const zoneObj = document.getElementById("tb-objectif");
+  if(obj > 0){
+    const pct = Math.min(100, mois.ca / obj * 100);
+    const restant = Math.max(0, obj - mois.ca);
+    const d = aujourdHui();
+    const dernierJour = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    const joursRestants = Math.max(1, dernierJour - d.getDate() + 1);
+    zoneObj.innerHTML = `
+      <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px;">
+        <span><strong>${fmtEuro(mois.ca)}</strong> réalisés</span>
+        <span>Objectif : <strong>${fmtEuro(obj)}</strong></span>
+      </div>
+      <div class="barre-fond"><div class="barre-remplie" style="width:${pct}%"></div></div>
+      <div style="margin-top:10px;font-size:14px;">
+        ${restant > 0
+          ? `Il reste <strong>${fmtEuro(restant)}</strong> à réaliser, soit
+             <strong>${fmtEuro(restant/joursRestants)}</strong> par jour jusqu'à la fin du mois. 💪`
+          : `🎉 Objectif atteint ! Chaque euro supplémentaire est un bonus.`}
+      </div>`;
+  }else{
+    zoneObj.innerHTML = `<div class="vide"><span class="ico">🎯</span>Aucun objectif défini.
+      Rendez-vous dans l'onglet <strong>Objectifs</strong> pour fixer le cap du mois.</div>`;
+  }
+
+  // Graphiques : 30 derniers jours calendaires
+  const serie = serieQuotidienne(30);
+  dessinerLigne("g-ca",       serie.map(p=>({x:p.label, y:p.ca})),       "#C98A96", "€");
+  dessinerLigne("g-clientes", serie.map(p=>({x:p.label, y:p.clientes})), "#6E8567", "");
+  dessinerLigne("g-panier",   serie.map(p=>({x:p.label, y:p.panier})),   "#C9A96A", "€");
+  dessinerDonut("g-prestations", cumulPrestations(plage(30)));
+}
+
+// Série jour par jour sur n jours (les jours sans saisie valent 0)
+function serieQuotidienne(n){
+  const s = [];
+  const parDate = Object.fromEntries(donnees.entrees.map(e=>[e.date, e]));
+  for(let i = n-1; i >= 0; i--){
+    const d = aujourdHui(); d.setDate(d.getDate()-i);
+    const iso = dateISO(d);
+    const e = parDate[iso];
+    const ca = e ? totalJour(e) : 0;
+    s.push({
+      label: d.getDate() + "/" + (d.getMonth()+1),
+      ca,
+      clientes: e ? (e.clientes||0) : 0,
+      panier: e && e.clientes > 0 ? ca / e.clientes : 0
+    });
+  }
+  return s;
+}
+
+/* ── Graphique en ligne (SVG maison, sans librairie) ── */
+function dessinerLigne(idZone, points, couleur, unite){
+  const zone = document.getElementById(idZone);
+  if(points.every(p=> p.y === 0)){
+    zone.innerHTML = `<div class="vide"><span class="ico">📈</span>Les courbes apparaîtront dès les premières saisies.</div>`;
+    return;
+  }
+  const W=520, H=190, m={h:14, b:26, g:44, d:10};
+  const maxY = Math.max(...points.map(p=>p.y)) * 1.15 || 1;
+  const px = i => m.g + i * (W - m.g - m.d) / Math.max(1, points.length-1);
+  const py = v => H - m.b - v / maxY * (H - m.b - m.h);
+  const chemin = points.map((p,i)=> (i===0?"M":"L") + px(i).toFixed(1) + "," + py(p.y).toFixed(1)).join(" ");
+  const aire = chemin + ` L${px(points.length-1).toFixed(1)},${H-m.b} L${px(0).toFixed(1)},${H-m.b} Z`;
+  // Graduations Y (3 niveaux) et repères X (5 étiquettes max)
+  let grad = "";
+  for(let k=1; k<=3; k++){
+    const v = maxY/1.15 * k/3, y = py(v);
+    grad += `<line x1="${m.g}" y1="${y}" x2="${W-m.d}" y2="${y}" stroke="#EBDDE0" stroke-dasharray="3 4"/>
+             <text x="${m.g-6}" y="${y+4}" text-anchor="end" font-size="9.5" fill="#8C7F84">${Math.round(v)}${unite}</text>`;
+  }
+  let axes = "";
+  const pas = Math.ceil(points.length / 5);
+  points.forEach((p,i)=>{
+    if(i % pas === 0 || i === points.length-1)
+      axes += `<text x="${px(i)}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="#8C7F84">${p.x}</text>`;
+  });
+  const cercles = points.map((p,i)=> p.y > 0
+    ? `<circle cx="${px(i).toFixed(1)}" cy="${py(p.y).toFixed(1)}" r="3" fill="#fff" stroke="${couleur}" stroke-width="2"><title>${p.x} : ${fmtNb(p.y)}${unite}</title></circle>`
+    : "").join("");
+  zone.innerHTML = `<svg class="graphe" viewBox="0 0 ${W} ${H}" role="img" aria-label="Graphique d'évolution">
+    <defs><linearGradient id="dg-${idZone}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${couleur}" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="${couleur}" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${grad}
+    <path d="${aire}" fill="url(#dg-${idZone})"/>
+    <path d="${chemin}" fill="none" stroke="${couleur}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+    ${cercles}${axes}
+  </svg>`;
+}
+
+/* ── Graphique en anneau (répartition des prestations) ── */
+function dessinerDonut(idZone, cumul){
+  const zone = document.getElementById(idZone);
+  const entrees = Object.entries(cumul).sort((a,b)=> b[1]-a[1]);
+  const total = entrees.reduce((s,[,n])=> s+n, 0);
+  if(total === 0){
+    zone.innerHTML = `<div class="vide"><span class="ico">💆‍♀️</span>Coche les prestations dans la saisie quotidienne pour voir leur répartition ici.</div>`;
+    return;
+  }
+  const palette = ["#C98A96","#9CAF94","#C9A96A","#A9C4D4","#E8B4BC","#6E8567","#D9B8A5","#B8A9C9","#8C7F84","#DCC7B0","#94AFAF"];
+  const cx=95, cy=95, r=70, ep=26;
+  let angle = -Math.PI/2, arcs = "", legende = "";
+  entrees.forEach(([nom,nb],i)=>{
+    const part = nb/total, fin = angle + part * 2*Math.PI;
+    const grand = part > .5 ? 1 : 0;
+    const x1=cx+r*Math.cos(angle), y1=cy+r*Math.sin(angle);
+    const x2=cx+r*Math.cos(fin-0.015), y2=cy+r*Math.sin(fin-0.015);
+    arcs += `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${grand} 1 ${x2.toFixed(1)},${y2.toFixed(1)}"
+      fill="none" stroke="${palette[i%palette.length]}" stroke-width="${ep}">
+      <title>${nom} : ${nb} (${Math.round(part*100)} %)</title></path>`;
+    legende += `<span><i style="background:${palette[i%palette.length]}"></i>${nom} · <strong>${nb}</strong> (${Math.round(part*100)} %)</span>`;
+    angle = fin;
+  });
+  zone.innerHTML = `<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;">
+    <svg width="190" height="190" viewBox="0 0 190 190" role="img" aria-label="Répartition des prestations">
+      ${arcs}
+      <text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="22" font-weight="700" fill="#4A4145">${total}</text>
+      <text x="${cx}" y="${cy+15}" text-anchor="middle" font-size="10" fill="#8C7F84">prestations</text>
+    </svg>
+    <div class="legende" style="flex-direction:column;align-items:flex-start;">${legende}</div>
+  </div>`;
+}
+
+/* ─────────── 7. STATISTIQUES ─────────── */
+
+function rendreStatistiques(){
+  const toutes = entreesTriees();
+  const kpi = document.getElementById("st-kpi");
+  const rec = document.getElementById("st-records");
+  const pre = document.getElementById("st-prestations");
+
+  if(toutes.length === 0){
+    kpi.innerHTML = "";
+    rec.innerHTML = pre.innerHTML =
+      `<div class="vide"><span class="ico">📊</span>Les statistiques se calculeront automatiquement dès les premières saisies.</div>`;
+    return;
+  }
+
+  const global = agreger(toutes);
+  const semaine     = agreger(plage(7));
+  const semainePrec = agreger(plage(7,7));
+  const mois     = agreger(moisEnCours());
+  const moisPrec = agreger(moisPrecedent());
+  const pctVentes = global.ca > 0 ? global.ventes / global.ca * 100 : 0;
+
+  kpi.innerHTML = `
+    <div class="carte"><div class="kpi-label">💶 CA journalier moyen</div>
+      <div class="kpi-valeur">${fmtEuro(global.ca / global.jours)}</div>
+      <div class="kpi-delta delta-neutre">${global.jours} journées saisies</div></div>
+    <div class="carte"><div class="kpi-label">🗓️ CA hebdomadaire (7 j)</div>
+      <div class="kpi-valeur">${fmtEuro(semaine.ca)}</div>
+      ${htmlDelta(variation(semaine.ca, semainePrec.ca), " vs semaine précédente")}</div>
+    <div class="carte"><div class="kpi-label">📅 CA mensuel</div>
+      <div class="kpi-valeur">${fmtEuro(mois.ca)}</div>
+      ${htmlDelta(variation(mois.ca, moisPrec.ca), " vs mois précédent")}</div>
+    <div class="carte"><div class="kpi-label">🛍️ Panier moyen</div>
+      <div class="kpi-valeur">${fmtEuro(global.panier)}</div></div>
+    <div class="carte"><div class="kpi-label">👩 Clientes / jour (moyenne)</div>
+      <div class="kpi-valeur">${fmtNb(global.clientes / global.jours)}</div></div>
+    <div class="carte"><div class="kpi-label">🧴 Part des ventes produits</div>
+      <div class="kpi-valeur">${fmtNb(pctVentes)}<small> %</small></div>
+      <div class="kpi-delta ${pctVentes >= 12 ? "delta-pos" : "delta-neg"}">
+        ${pctVentes >= 12 ? "Belle dynamique de vente ✓" : "Objectif conseillé : 12 à 15 % du CA"}</div></div>`;
+
+  // Records & faits marquants
+  const record = toutes.reduce((max,e)=> totalJour(e) > totalJour(max) ? e : max, toutes[0]);
+  const cumul = cumulPrestations(toutes);
+  const classement = Object.entries(cumul).sort((a,b)=> b[1]-a[1]);
+  rec.innerHTML = `
+    <table>
+      <tr><td>🏆 Journée record</td>
+        <td class="num"><strong>${fmtEuro(totalJour(record))}</strong><br>
+        <span style="font-size:12px;color:var(--encre-doux)">${libelleDate(record.date)}</span></td></tr>
+      <tr><td>⭐ Prestation la plus vendue</td>
+        <td class="num">${classement.length ? `<span class="badge badge-sauge">${classement[0][0]} · ${classement[0][1]}</span>` : "—"}</td></tr>
+      <tr><td>💤 Prestation la moins vendue</td>
+        <td class="num">${classement.length > 1 ? `<span class="badge badge-rose">${classement[classement.length-1][0]} · ${classement[classement.length-1][1]}</span>` : "—"}</td></tr>
+      <tr><td>👩 Total clientes enregistrées</td><td class="num"><strong>${global.clientes}</strong></td></tr>
+      <tr><td>🧴 Total ventes produits</td><td class="num"><strong>${fmtEuro(global.ventes)}</strong></td></tr>
+    </table>`;
+
+  // Détail des prestations (30 jours)
+  const cumul30 = cumulPrestations(plage(30));
+  const tot30 = Object.values(cumul30).reduce((s,n)=>s+n,0);
+  pre.innerHTML = tot30 === 0
+    ? `<div class="vide"><span class="ico">💆‍♀️</span>Aucune prestation cochée sur les 30 derniers jours.</div>`
+    : `<table><tr><th>Prestation</th><th class="num">Nombre</th><th class="num">Part</th></tr>` +
+      Object.entries(cumul30).sort((a,b)=> b[1]-a[1]).map(([nom,nb])=>
+        `<tr><td>${nom}</td><td class="num">${nb}</td><td class="num">${Math.round(nb/tot30*100)} %</td></tr>`
+      ).join("") + `</table>`;
+}
+
+/* ─────────── 8. PLAN D'ACTIONS ─────────── */
+
+// Moteur de conseils : chaque règle observe les chiffres et propose une action concrète.
+function genererConseils(){
+  const conseils = [];
+  const toutes = entreesTriees();
+  const j14 = plage(14);
+  const a14 = agreger(j14);
+  const cumul14 = cumulPrestations(j14);
+  const totalP14 = Object.values(cumul14).reduce((s,n)=>s+n,0);
+
+  if(toutes.length === 0){
+    conseils.push({ico:"🌱", important:true,
+      titre:"Commence par saisir tes premières journées",
+      texte:"Dès 5 à 7 journées enregistrées, cette page analysera tes chiffres et te proposera des actions sur mesure. En attendant : relance dès aujourd'hui 3 clientes que tu n'as pas vues depuis plus d'un mois."});
+    return conseils;
+  }
+
+  const moyClientes = a14.jours > 0 ? a14.clientes / a14.jours : 0;
+  const moyCA = a14.jours > 0 ? a14.ca / a14.jours : 0;
+  const pctVentes = a14.ca > 0 ? a14.ventes / a14.ca * 100 : 0;
+
+  // Peu de clientes
+  if(moyClientes < 5){
+    conseils.push({ico:"📞", important:true,
+      titre:"Peu de clientes ces deux dernières semaines (" + fmtNb(moyClientes) + "/jour en moyenne)",
+      texte:"Relance les clientes absentes depuis plusieurs semaines : 5 appels ou SMS personnalisés aujourd'hui. « Bonjour [prénom], on ne vous a pas vue depuis un moment, votre peau mérite une pause ! » fonctionne toujours."});
+  }
+
+  // Peu de ventes produits
+  if(pctVentes < 10){
+    conseils.push({ico:"🧴", important:true,
+      titre:"Les ventes produits ne représentent que " + fmtNb(pctVentes) + " % du CA",
+      texte:"Propose un produit à CHAQUE prestation. Pas besoin de vendre : conseille. « Voici la crème que j'ai utilisée sur vous aujourd'hui, elle prolongera le résultat à la maison. »"});
+  }
+
+  // Peu de soins visage
+  const soinsVisage = cumul14["Soin visage"] || 0;
+  if(totalP14 >= 5 && soinsVisage / Math.max(1,totalP14) < 0.15){
+    conseils.push({ico:"📸",
+      titre:"Les soins visage se font rares (" + soinsVisage + " sur 14 jours)",
+      texte:"Publie une photo avant/après (avec accord de la cliente) sur Instagram et Facebook cette semaine. C'est la prestation la plus valorisante à montrer."});
+  }
+
+  // Journées creuses (CA du jour < 60 % de la moyenne)
+  const creuses = j14.filter(e=> totalJour(e) < moyCA * 0.6).length;
+  if(creuses >= 2){
+    conseils.push({ico:"🪑",
+      titre:creuses + " journées avec des créneaux visiblement libres sur 14 jours",
+      texte:"Occupe les creux : fais une story Instagram le matin même (« il reste 2 places aujourd'hui ! »), publie sur Facebook, et contacte directement 3 clientes fidèles pour leur proposer le créneau."});
+  }
+
+  // Plusieurs journées faibles consécutives → offre découverte
+  if(creuses >= 4){
+    conseils.push({ico:"🎁",
+      titre:"Plusieurs journées faibles : il faut créer un événement",
+      texte:"Lance une offre découverte limitée dans le temps (ex. : soin visage découverte à prix doux valable 15 jours). Annonce-la sur tous les canaux et par SMS aux clientes qui n'ont jamais testé cette prestation."});
+  }
+
+  // Beaucoup d'épilations → montée en gamme
+  const epilations = cumul14["Épilation"] || 0;
+  if(totalP14 >= 5 && epilations / totalP14 > 0.4){
+    conseils.push({ico:"✨",
+      titre:"L'épilation domine ton activité (" + Math.round(epilations/totalP14*100) + " % des prestations)",
+      texte:"Propose systématiquement un soin complémentaire à chaque épilation : gommage, hydratation, beauté des mains pendant la pose. C'est du CA immédiat sans cliente supplémentaire."});
+  }
+
+  // Panier moyen faible
+  if(a14.clientes >= 5 && a14.panier > 0 && a14.panier < 40){
+    conseils.push({ico:"🛍️",
+      titre:"Panier moyen à " + fmtEuro(a14.panier) + " sur 14 jours",
+      texte:"Travaille la montée en gamme : propose la version « + » de chaque soin (durée, options) et un produit d'entretien. Objectif : +5 € par cliente = plusieurs centaines d'euros par mois."});
+  }
+
+  // Objectif du mois en retard
+  const obj = donnees.objectifs.ca || 0;
+  if(obj > 0){
+    const d = aujourdHui();
+    const dernierJour = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    const attendu = obj * d.getDate() / dernierJour;
+    const mois = agreger(moisEnCours());
+    if(mois.ca < attendu * 0.85){
+      conseils.push({ico:"🚀", important:true,
+        titre:"L'objectif du mois est en retard (" + fmtEuro(mois.ca) + " réalisés pour " + fmtEuro(attendu) + " attendus à ce stade)",
+        texte:"Plan de rattrapage : 10 relances téléphoniques cette semaine, une publication par jour sur les réseaux, et une offre flash sur la prestation la plus demandée."});
+    }
+  }
+
+  // Si tout va bien : entretenir la dynamique
+  if(conseils.length === 0){
+    conseils.push({ico:"🌟",
+      titre:"Les chiffres sont bien orientés — on ne relâche rien",
+      texte:"C'est le meilleur moment pour semer : demande un avis Google à 2 clientes satisfaites, publie une story des coulisses du salon, et programme les relances anniversaires du mois prochain."});
+  }
+
+  // Toujours : rappel réseaux sociaux hebdomadaire
+  conseils.push({ico:"📅",
+    titre:"Rituel de la semaine",
+    texte:"As-tu fait cette semaine : 1 publication Facebook, 2 stories Instagram, 5 relances clientes ? Coche mentalement — ce rituel est le socle du développement."});
+
+  return conseils;
+}
+
+function rendrePlanActions(){
+  const zone = document.getElementById("a-conseils");
+  zone.innerHTML = genererConseils().map(c=>
+    `<div class="conseil ${c.important ? "important" : ""}">
+      <span class="ico">${c.ico}</span>
+      <span class="txt"><strong>${c.titre}</strong><span>${c.texte}</span></span>
+    </div>`).join("");
+  rendreRecommandations();
+}
+
+/* ── Validation de la responsable ── */
+document.getElementById("a-reco-ajouter").addEventListener("click", ()=>{
+  const champ = document.getElementById("a-reco-texte");
+  const texte = champ.value.trim();
+  if(!texte){ afficherToast("⚠️ Écris d'abord la recommandation"); return; }
+  donnees.recommandations.unshift({
+    id: Date.now(),
+    date: dateISO(aujourdHui()),
+    texte
+  });
+  champ.value = "";
+  sauvegarder();
+  rendreRecommandations();
+  afficherToast("✓ Recommandation enregistrée");
+});
+
+function rendreRecommandations(){
+  const zone = document.getElementById("a-reco-liste");
+  if(donnees.recommandations.length === 0){
+    zone.innerHTML = `<div class="vide" style="padding:20px;"><span class="ico">✒️</span>Aucune recommandation pour l'instant.</div>`;
+    return;
+  }
+  zone.innerHTML = donnees.recommandations.map(r=>
+    `<div class="reco-item">
+      <span class="date">${libelleDate(r.date)}</span>
+      <span class="texte">${r.texte.replace(/</g,"&lt;")}</span>
+      <button type="button" data-id="${r.id}" aria-label="Supprimer la recommandation">✕</button>
+    </div>`).join("");
+  zone.querySelectorAll("[data-id]").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      if(!confirm("Supprimer cette recommandation ?")) return;
+      donnees.recommandations = donnees.recommandations.filter(r=> r.id != b.dataset.id);
+      sauvegarder(); rendreRecommandations();
+    });
+  });
+}
+
+/* ─────────── 9. OBJECTIFS ─────────── */
+
+function chargerObjectifsFormulaire(){
+  document.getElementById("o-ca").value       = donnees.objectifs.ca || "";
+  document.getElementById("o-ventes").value   = donnees.objectifs.ventes || "";
+  document.getElementById("o-clientes").value = donnees.objectifs.clientes || "";
+}
+
+document.getElementById("o-enregistrer").addEventListener("click", ()=>{
+  donnees.objectifs = {
+    ca:       parseFloat(document.getElementById("o-ca").value) || 0,
+    ventes:   parseFloat(document.getElementById("o-ventes").value) || 0,
+    clientes: parseInt(document.getElementById("o-clientes").value) || 0
+  };
+  sauvegarder();
+  toutRafraichir();
+  afficherToast("✓ Objectifs enregistrés — au travail !");
+});
+
+function rendreSuiviObjectifs(){
+  const zone = document.getElementById("o-suivi");
+  const o = donnees.objectifs;
+  if(!o.ca && !o.ventes && !o.clientes){
+    zone.innerHTML = `<div class="carte"><div class="vide"><span class="ico">🏆</span>
+      Fixe au moins un objectif ci-dessus : un cap chiffré change la façon d'aborder chaque journée.</div></div>`;
+    return;
+  }
+  const mois = agreger(moisEnCours());
+  const d = aujourdHui();
+  const dernierJour = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+  const joursRestants = Math.max(1, dernierJour - d.getDate() + 1);
+
+  const bloc = (titre, realise, objectif, unite, rose)=>{
+    if(!objectif) return "";
+    const pct = Math.min(100, realise/objectif*100);
+    const restant = Math.max(0, objectif - realise);
+    const parJour = restant / joursRestants;
+    const estEuro = unite === "€";
+    return `<div class="carte" style="margin-bottom:14px;">
+      <div class="titre-carte">${titre}</div>
+      <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:6px;">
+        <span><strong>${estEuro ? fmtEuro(realise) : realise}</strong> réalisés</span>
+        <span>Objectif : <strong>${estEuro ? fmtEuro(objectif) : objectif}</strong></span>
+      </div>
+      <div class="barre-fond"><div class="barre-remplie ${rose ? "rose":""}" style="width:${pct}%"></div></div>
+      <div style="margin-top:10px;font-size:14px;">
+        ${restant > 0
+          ? `Il reste <strong>${estEuro ? fmtEuro(restant) : restant + " " + unite}</strong> à réaliser.<br>
+             Il faut réaliser <strong>${estEuro ? fmtEuro(parJour) : fmtNb(parJour) + " " + unite}</strong> par jour jusqu'à la fin du mois (${joursRestants} jours restants).`
+          : `🎉 Objectif atteint, bravo !`}
+      </div></div>`;
+  };
+
+  zone.innerHTML =
+    bloc("💶 Chiffre d'affaires du mois", mois.ca, o.ca, "€", false) +
+    bloc("🧴 Ventes produits du mois", mois.ventes, o.ventes, "€", true) +
+    bloc("👩 Clientes du mois", mois.clientes, o.clientes, "clientes", true);
+}
+
+/* ─────────── 10. SAUVEGARDE / EXPORT / IMPORT / RAZ ─────────── */
+
+document.getElementById("b-export").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(donnees, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "esthepilot_sauvegarde_" + dateISO(aujourdHui()) + ".json";
+  a.click();
+  URL.revokeObjectURL(url);
+  afficherToast("✓ Sauvegarde exportée");
+});
+
+document.getElementById("b-import").addEventListener("click", ()=> document.getElementById("b-fichier").click());
+document.getElementById("b-fichier").addEventListener("change", ev=>{
+  const fichier = ev.target.files[0];
+  if(!fichier) return;
+  const lecteur = new FileReader();
+  lecteur.onload = ()=>{
+    try{
+      const d = JSON.parse(lecteur.result);
+      if(!Array.isArray(d.entrees)) throw new Error("format");
+      if(!confirm("Remplacer toutes les données actuelles par cette sauvegarde ?")) return;
+      donnees = {
+        entrees: d.entrees,
+        objectifs: d.objectifs || {ca:0, ventes:0, clientes:0},
+        recommandations: d.recommandations || []
+      };
+      sauvegarder();
+      chargerObjectifsFormulaire();
+      toutRafraichir();
+      afficherToast("✓ Sauvegarde importée (" + donnees.entrees.length + " journées)");
+    }catch(e){
+      afficherToast("⚠️ Fichier illisible : n'est pas une sauvegarde EsthéPilot");
+    }
+  };
+  lecteur.readAsText(fichier);
+  ev.target.value = "";
+});
+
+document.getElementById("b-raz").addEventListener("click", ()=>{
+  if(!confirm("⚠️ Tout effacer définitivement ? Cette action est irréversible.")) return;
+  if(!confirm("Dernière confirmation : toutes les saisies, objectifs et recommandations seront supprimés.")) return;
+  donnees = {entrees:[], objectifs:{ca:0, ventes:0, clientes:0}, recommandations:[]};
+  localStorage.removeItem(CLE_STOCKAGE);
+  chargerObjectifsFormulaire();
+  toutRafraichir();
+  afficherToast("Données effacées — nouveau départ 🌱");
+});
+
+function rendreInfosSauvegarde(){
+  const zone = document.getElementById("b-infos");
+  const n = donnees.entrees.length;
+  if(n === 0){ zone.innerHTML = "Aucune donnée enregistrée pour l'instant."; return; }
+  const tri = entreesTriees();
+  zone.innerHTML = `<strong>${n}</strong> journées enregistrées, du
+    <strong>${libelleDate(tri[0].date)}</strong> au <strong>${libelleDate(tri[n-1].date)}</strong> ·
+    ${donnees.recommandations.length} recommandation(s) de la responsable.`;
+}
+
+/* ─────────── INITIALISATION ─────────── */
+
+function toutRafraichir(){
+  rendreTableauDeBord();
+  rendreJournal();
+  rendreStatistiques();
+  rendrePlanActions();
+  rendreSuiviObjectifs();
+  rendreInfosSauvegarde();
+}
+
+// Citation différente à chaque ouverture (rotation aléatoire)
+document.getElementById("motivation").textContent =
+  CITATIONS[Math.floor(Math.random() * CITATIONS.length)];
+
+initFormulaireSaisie();
+chargerObjectifsFormulaire();
+toutRafraichir();
+</script>
+</body>
+</html>
