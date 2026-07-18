@@ -197,39 +197,12 @@ table.tb{width:100%;border-collapse:collapse;font-size:13.5px}
 .seg button.on{background:#fff;color:var(--tx);box-shadow:var(--sh)}
 .check{width:16px;height:16px;accent-color:var(--orange)}
 
-/* ---------- Interventions : programmes, statuts, planning ---------- */
+/* ---------- Interventions ---------- */
 .stchip{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:700}
 .st-Prévue{background:var(--line-2);color:var(--tx-2)} .st-Àconfirmer{background:var(--amber-bg);color:#9A7100}
 .st-Commandée{background:#E3EEF6;color:var(--blue)} .st-Àréaliser{background:var(--orange-bg);color:var(--orange-d)}
 .st-Encours{background:#E3EEF6;color:var(--blue)} .st-Réalisée{background:var(--green-bg);color:var(--green)}
 .st-Annulée{background:var(--red-bg);color:var(--red);text-decoration:line-through}
-.period-h{display:flex;align-items:center;gap:10px;margin:22px 0 10px;font-size:16px;font-weight:800;letter-spacing:-.3px}
-.period-h .tag{font-weight:700}
-.pgcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
-.pgcard .p-hd{padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line-2)}
-.pgcard .p-hd b{font-size:14.5px}
-.pgcard .p-meta{font-size:12.5px;color:var(--tx-2)}
-.pgcard .p-act{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
-.pgcard .p-real{background:var(--green-bg);padding:9px 16px;font-size:12.5px;border-top:1px solid var(--line-2)}
-.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--line);
-  border-radius:var(--r);box-shadow:var(--sh);padding:10px 12px;margin-bottom:14px}
-.filters select{border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:#fff;font-size:13px;max-width:170px}
-.filters .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx-3);font-weight:700}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cal .dayh{font-size:11px;text-transform:uppercase;color:var(--tx-3);font-weight:700;text-align:center;padding:4px 0}
-.cal .day{min-height:82px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:5px 6px;font-size:12px}
-.cal .day.off{opacity:.4}
-.cal .dnum{font-weight:700;color:var(--tx-3);font-size:11px}
-.cal .ev{background:var(--orange-bg);border-left:3px solid var(--orange);border-radius:5px;padding:2px 5px;margin-top:3px;
-  font-size:11px;font-weight:600;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.alertbox {background:var(--amber-bg);border:1px solid #EAD489;border-radius:var(--r);padding:11px 15px;font-size:13px;margin-bottom:14px}
-.alertbox b{display:block;margin-bottom:4px}
-.alertbox ul{margin-left:18px}
-.miss{color:var(--red);font-weight:700;font-size:12px}
-.lines-ed .row{display:grid;grid-template-columns:1.4fr 1fr 78px 1fr 30px;gap:8px;margin-bottom:7px;align-items:center}
-.pk-list{max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:99px;padding:8px 10px;
-  display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:13px}
-.pk-list label{display:flex;gap:7px;align-items:center;cursor:pointer}
 
 /* ---------- Style Ajouté pour le Panel Assistant ---------- */
 .assistant-panel {
@@ -332,7 +305,7 @@ body::after{content:none}
     <div class="content" id="view">
       
       <!-- =====================================================================
-           BLOC ASSISTANT IA (Inséré en haut du contenu principal)
+           BLOC ASSISTANT IA (Toujours présent en haut)
            ===================================================================== -->
       <div class="assistant-panel no-print">
         <div class="assistant-header">
@@ -344,21 +317,13 @@ body::after{content:none}
         <div id="status-text" class="assistant-status"></div>
       </div>
 
-      <!-- Le reste du conteneur d'affichage dynamique géré par vos scripts -->
+      <!-- Conteneur d'affichage dynamique globalement nettoyé et corrigé -->
       <div id="page-content-area"></div>
       
     </div>
   </div>
 </div>
 <div id="modal-root"></div>
-
-<!-- ... Le reste des styles Leaflet inchangés ... -->
-<style>
-/* Vos styles Leaflet complets ici */
-.leaflet-pane, .leaflet-tile, .leaflet-marker-icon, .leaflet-marker-shadow, .leaflet-tile-container, .leaflet-pane > svg, .leaflet-pane > canvas, .leaflet-zoom-box, .leaflet-image-layer, .leaflet-layer { position: absolute; left: 0; top: 0; }
-.leaflet-container { overflow: hidden; }
-#map{height:calc(100vh - 300px);min-height:430px;border-radius:var(--r);border:1px solid var(--line);z-index:1}
-</style>
 
 <!-- =====================================================================
      SCRIPTS DE L'APPLICATION DYNAMIQUE HECTARIS
@@ -371,7 +336,7 @@ const DEFAULTS = {
     {id:"or", name:"Orge d'hiver", color:"#DAA520"},
     {id:"co", name:"Colza", color:"#FFD700"},
     {id:"pd", name:"Pomme de terre", color:"#CD853F"},
-    {id:"ma", name:"Maïs grain", color:#FF8C00},
+    {id:"ma", name:"Maïs grain", color:"#FF8C00"},
     {id:"ge", name:"Gel", color:"#94A3B8"}
   ],
   parcelles: [
@@ -421,9 +386,9 @@ const UI = {
     const nav = document.getElementById("nav");
     nav.innerHTML = `
       <div class="nav-sec">Navigation</div>
-      <a href="#" class="on" onclick="UI.setView('dash', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg> Tableau de bord</a>
-      <a href="#" onclick="UI.setView('asso', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg> Assolement</a>
-      <a href="#" onclick="UI.setView('marche', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Mise en marché</a>
+      <a href="#" class="on" onclick="UI.setView('dash', this); return false;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg> Tableau de bord</a>
+      <a href="#" onclick="UI.setView('asso', this); return false;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg> Assolement</a>
+      <a href="#" onclick="UI.setView('marche', this); return false;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Mise en marché</a>
     `;
     this.buildCampaignSelect();
     this.refresh();
@@ -447,7 +412,10 @@ const UI = {
       document.querySelectorAll(".nav a").forEach(a => a.classList.remove("on"));
       element.classList.add("on");
     }
-    const container = document.getElementById("page-content Area") || document.getElementById("page-content-area");
+    
+    // ID CORRIGÉ ICI : "page-content-area" au lieu de "page-content Area"
+    const container = document.getElementById("page-content-area");
+    if (!container) return;
     
     if(viewName === 'dash') {
       document.getElementById("crumb").innerText = "Tableau de bord";
@@ -475,6 +443,7 @@ const UI = {
     document.getElementById("foot-surf").innerText = totalSurf.toFixed(1) + " ha au total";
     
     const strip = document.getElementById("strip");
+    if (!strip) return;
     strip.innerHTML = Object.keys(totals).map(cid => {
       const c = camp.cultures.find(x => x.id === cid);
       const pct = (totals[cid] / totalSurf) * 100;
