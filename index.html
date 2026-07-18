@@ -1,568 +1,1902 @@
 <!DOCTYPE html>
+
 <!--
+
 =====================================================================
+
   HECTARIS — Assolement & Prévision de campagne
+
   © 2026 Renaud Vigneaux — EARL Vigneaux, 7 rue de l'Orval, 89150 Brannay (89), France
+
   Tous droits réservés.
 
+
+
   Ce logiciel, son code source, son interface, sa structure de données,
+
   ses calculs, sa marque « Hectaris » et ses éléments graphiques sont la
+
   propriété exclusive de Renaud Vigneaux. Toute reproduction, diffusion,
+
   modification, adaptation, décompilation ou exploitation commerciale,
+
   totale ou partielle, sans autorisation écrite préalable, est interdite
+
   (Code de la propriété intellectuelle, art. L.111-1 et suivants,
+
   L.122-4, L.335-2 et suivants).
+
   Contact : Renaud Vigneaux — EARL Vigneaux
+
             7 rue de l'Orval, 89150 Brannay, France
+
             Tél. 06 62 35 60 54 · rvigneaux@gmail.com
+
 =====================================================================
+
 -->
+
 <html lang="fr">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Hectaris — Assolement & Prévision de campagne</title>
+
 <style>
+
 /* =====================================================================
+
    HECTARIS — Assolement & Prévision de campagne
+
    Design tokens
+
    ===================================================================== */
+
 :root{
+
   --ink:#20272C; --ink-2:#2A333B; --ink-3:#39434C;
+
   --paper:#F3F4F1; --card:#FFFFFF; --line:#E3E6E0; --line-2:#EEF0EC;
+
   --tx:#242B31; --tx-2:#5C6670; --tx-3:#8B949C;
+
   --orange:#F57C00; --orange-d:#D96C00; --orange-bg:#FDF1E3;
+
   --green:#2E7D32; --green-bg:#E8F3E9;
+
   --amber:#E6A700; --amber-bg:#FBF3DB;
+
   --red:#C62828; --red-bg:#FBE9E9;
+
   --blue:#2C6E9E;
+
   --r:14px; --r-s:9px;
+
   --sh:0 1px 2px rgba(24,30,36,.05),0 4px 14px rgba(24,30,36,.05);
+
   --sh-2:0 8px 30px rgba(24,30,36,.14);
+
   --sb:236px;
+
   font-size:15px;
+
 }
+
 *{margin:0;padding:0;box-sizing:border-box}
+
 html,body{height:100%}
+
 body{
+
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+
   background:var(--paper); color:var(--tx); -webkit-font-smoothing:antialiased;
+
 }
+
 button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
 input,select,textarea{font:inherit;color:inherit}
+
 ::selection{background:#F5CFA6}
 
+
+
 /* ---------- Shell ---------- */
+
 #app{display:flex;min-height:100vh}
+
 .sidebar{
+
   width:var(--sb);background:var(--ink);color:#C6CDD3;position:fixed;inset:0 auto 0 0;
+
   display:flex;flex-direction:column;z-index:40;transition:transform .25s ease;
+
 }
+
 .logo{display:flex;align-items:center;gap:11px;padding:20px 18px 16px}
+
 .logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--orange),#FFA040);
+
   display:grid;place-items:center;color:#fff;font-weight:800;font-size:17px;letter-spacing:-.5px}
+
 .logo b{color:#fff;font-size:16.5px;letter-spacing:-.2px;display:block;line-height:1.1}
+
 .logo span{font-size:11px;color:#7E8890;letter-spacing:.4px}
+
 .nav{flex:1;padding:6px 10px;overflow-y:auto}
+
 .nav-sec{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:#67717A;padding:16px 10px 6px}
+
 .nav a{display:flex;align-items:center;gap:11px;padding:8.5px 10px;border-radius:8px;color:#C6CDD3;
+
   text-decoration:none;font-size:14px;font-weight:500;margin:1px 0;transition:background .15s,color .15s}
+
 .nav a svg{width:17px;height:17px;flex:none;opacity:.75}
+
 .nav a:hover{background:var(--ink-2);color:#fff}
+
 .nav a.on{background:var(--ink-3);color:#fff;box-shadow:inset 3px 0 0 var(--orange)}
+
 .nav a.on svg{opacity:1;color:var(--orange)}
+
 .side-foot{padding:12px 16px;border-top:1px solid #333D45;font-size:11.5px;color:#7E8890}
+
 .side-foot b{color:#AEB7BE}
 
+
+
 .main{flex:1;margin-left:var(--sb);display:flex;flex-direction:column;min-width:0}
+
 .topbar{
+
   position:sticky;top:0;z-index:30;background:rgba(243,244,241,.86);backdrop-filter:blur(10px);
+
   border-bottom:1px solid var(--line);padding:12px 28px;display:flex;align-items:center;gap:14px;
+
 }
+
 .burger{display:none;width:36px;height:36px;border-radius:8px;align-items:center;justify-content:center}
+
 .burger:hover{background:var(--line-2)}
+
 .crumb{font-size:19px;font-weight:750;letter-spacing:-.4px}
+
 .topbar .grow{flex:1}
+
 .camp-pill{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+
   border-radius:99px;padding:5px 6px 5px 14px;box-shadow:var(--sh);font-weight:600;font-size:13.5px}
+
 .camp-pill select{border:none;background:var(--ink);color:#fff;border-radius:99px;padding:4px 10px;font-weight:700;outline:none}
+
 .save-dot{font-size:12px;color:var(--tx-3);display:flex;align-items:center;gap:6px}
+
 .save-dot i{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block}
 
+
+
 /* ruban d'assolement — signature */
+
 .strip{height:7px;display:flex;overflow:hidden}
+
 .strip i{height:100%;transition:width .5s ease}
 
+
+
 .content{padding:26px 28px 60px;max-width:1340px;width:100%;margin:0 auto;animation:pop .25s ease}
+
 @keyframes pop{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
+
+
 /* ---------- Composants ---------- */
+
 .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+
 .page-head h1{font-size:24px;font-weight:800;letter-spacing:-.6px}
+
 .page-head p{color:var(--tx-2);font-size:13.5px;margin-top:4px;max-width:640px}
+
 .actions{display:flex;gap:9px;flex-wrap:wrap}
+
 .btn{display:inline-flex;align-items:center;gap:7px;border-radius:9px;padding:8px 14px;font-weight:650;font-size:13.5px;
+
   background:var(--card);border:1px solid var(--line);box-shadow:var(--sh);transition:transform .12s,box-shadow .12s}
+
 .btn:hover{transform:translateY(-1px);box-shadow:var(--sh-2)}
+
 .btn:active{transform:none}
+
 .btn svg{width:15px;height:15px}
+
 .btn.pri{background:var(--orange);border-color:var(--orange);color:#fff}
+
 .btn.pri:hover{background:var(--orange-d)}
+
 .btn.grn{background:var(--green);border-color:var(--green);color:#fff}
+
 .btn.ghost{box-shadow:none;background:transparent}
+
 .btn.danger{color:var(--red)}
+
 .btn.sm{padding:4px 9px;font-size:12.5px;border-radius:7px}
 
+
+
 .grid{display:grid;gap:16px}
+
 .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+
 @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+
 @media(max-width:640px){.g4,.g3,.g2{grid-template-columns:1fr}}
 
+
+
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+
 .card .hd{padding:15px 18px 0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+
 .card .hd h2{font-size:15px;font-weight:750;letter-spacing:-.2px}
+
 .card .hd .sub{font-size:12px;color:var(--tx-3)}
+
 .card .bd{padding:16px 18px 18px}
 
+
+
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:15px 17px;
+
   position:relative;overflow:hidden}
+
 .kpi::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--k,var(--orange))}
+
 .kpi .l{font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:var(--tx-3);font-weight:700}
+
 .kpi .v{font-size:25px;font-weight:800;letter-spacing:-.8px;margin-top:5px;font-variant-numeric:tabular-nums}
+
 .kpi .s{font-size:12px;color:var(--tx-2);margin-top:3px}
 
+
+
 table.tb{width:100%;border-collapse:collapse;font-size:13.5px}
+
 .tb th{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx-3);font-weight:700;
+
   text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);background:#FAFBF9;white-space:nowrap}
+
 .tb td{padding:8px 10px;border-bottom:1px solid var(--line-2);vertical-align:middle;font-variant-numeric:tabular-nums}
+
 .tb tr:hover td{background:#FAFAF7}
+
 .tb .num{text-align:right}
+
 .tb th.num{text-align:right}
+
 .tb .tot td{font-weight:750;background:#F5F6F2;border-top:2px solid var(--line)}
+
 .tb-wrap{overflow-x:auto;border-radius:0 0 var(--r) var(--r)}
+
 .tb input,.tb select{border:1px solid transparent;background:transparent;border-radius:6px;padding:4px 6px;width:100%;
+
   min-width:52px;outline:none;transition:border .15s,background .15s;font-variant-numeric:tabular-nums}
+
 .tb input:hover,.tb select:hover{border-color:var(--line)}
+
 .tb input:focus,.tb select:focus{border-color:var(--orange);background:#FFF;box-shadow:0 0 0 3px rgba(245,124,0,.12)}
+
 .tb input.num{text-align:right}
+
 .tb input.ed,.tb select.ed{color:var(--blue);font-weight:600}
+
 .calc{color:var(--tx);font-weight:600}
+
 .muted{color:var(--tx-3)}
 
+
+
 .chip{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:2.5px 10px;font-size:12px;font-weight:700}
+
 .chip i{width:8px;height:8px;border-radius:50%;background:currentColor}
+
 .sig-g{background:var(--green-bg);color:var(--green)} .sig-a{background:var(--amber-bg);color:#9A7100}
+
 .sig-r{background:var(--red-bg);color:var(--red)} .sig-n{background:var(--line-2);color:var(--tx-2)}
+
 .tag{display:inline-block;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:700;background:var(--line-2);color:var(--tx-2)}
 
+
+
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+
 .field label{font-size:12px;font-weight:700;color:var(--tx-2)}
+
 .field input,.field select,.field textarea{border:1px solid var(--line);border-radius:8px;padding:8px 11px;background:#fff;outline:none}
+
 .field input:focus,.field select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(245,124,0,.12)}
+
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
 @media(max-width:560px){.frow{grid-template-columns:1fr}}
 
+
+
 /* modal */
+
 .overlay{position:fixed;inset:0;background:rgba(24,30,36,.45);z-index:80;display:grid;place-items:center;padding:20px;
+
   animation:fade .18s ease}
+
 @keyframes fade{from{opacity:0}to{opacity:1}}
+
 .modal{background:#fff;border-radius:16px;box-shadow:var(--sh-2);width:min(560px,100%);max-height:90vh;overflow:auto;
+
   animation:pop .22s ease}
+
 .modal .m-hd{padding:18px 20px 4px;display:flex;justify-content:space-between;align-items:center}
+
 .modal .m-hd h3{font-size:17px;font-weight:800;letter-spacing:-.3px}
+
 .modal .m-bd{padding:14px 20px 4px}
+
 .modal .m-ft{padding:12px 20px 18px;display:flex;justify-content:flex-end;gap:9px}
+
 .x{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--tx-3)}
+
 .x:hover{background:var(--line-2);color:var(--tx)}
 
+
+
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
+
   padding:10px 18px;border-radius:99px;font-size:13.5px;font-weight:600;z-index:99;box-shadow:var(--sh-2);
+
   animation:toast 2.6s ease forwards}
+
 @keyframes toast{0%{opacity:0;transform:translate(-50%,10px)}10%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
 
+
+
 .empty{padding:40px;text-align:center;color:var(--tx-3)}
+
 .empty b{display:block;color:var(--tx-2);font-size:15px;margin-bottom:5px}
+
 .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--tx-2)}
+
 .legend span{display:inline-flex;align-items:center;gap:6px}
+
 .legend i{width:10px;height:10px;border-radius:3px}
+
 .bar-row{display:grid;grid-template-columns:130px 1fr 92px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
+
 .bar-row .tr{height:9px;border-radius:99px;background:var(--line-2);overflow:hidden}
+
 .bar-row .tr i{display:block;height:100%;border-radius:99px;transition:width .5s ease}
+
 .bar-row .vv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+
 .hint{font-size:12.5px;color:var(--tx-3);margin-top:9px}
+
 .hint b{color:var(--tx-2)}
-.seg{display:inline-flex;background:var(--line-2);border-radius:99px;padding:3px;gap:2px}
+
+.seg{display:inline-flex;background:var(--line-2);border-radius:9px;padding:3px;gap:2px}
+
 .seg button{padding:5px 13px;border-radius:7px;font-size:13px;font-weight:650;color:var(--tx-2)}
+
 .seg button.on{background:#fff;color:var(--tx);box-shadow:var(--sh)}
+
 .check{width:16px;height:16px;accent-color:var(--orange)}
 
-/* ---------- Interventions ---------- */
+
+
+/* ---------- Interventions : programmes, statuts, planning ---------- */
+
 .stchip{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:700}
+
 .st-Prévue{background:var(--line-2);color:var(--tx-2)} .st-Àconfirmer{background:var(--amber-bg);color:#9A7100}
+
 .st-Commandée{background:#E3EEF6;color:var(--blue)} .st-Àréaliser{background:var(--orange-bg);color:var(--orange-d)}
+
 .st-Encours{background:#E3EEF6;color:var(--blue)} .st-Réalisée{background:var(--green-bg);color:var(--green)}
+
 .st-Annulée{background:var(--red-bg);color:var(--red);text-decoration:line-through}
 
-/* ---------- Style Ajouté pour le Panel Assistant ---------- */
-.assistant-panel {
-  background: linear-gradient(135deg, var(--green-bg) 0%, #d8ebd9 100%);
-  border: 1px solid var(--line);
-  border-left: 5px solid var(--green);
-  border-radius: var(--r);
-  padding: 20px;
-  margin-bottom: 24px;
-  box-shadow: var(--sh);
-}
-.assistant-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-.assistant-header h3 {
-  font-size: 15px;
-  font-weight: 750;
-  color: var(--ink);
-}
-.assistant-panel p {
-  color: var(--tx-2);
-  font-size: 13.5px;
-  margin-bottom: 16px;
-  line-height: 1.4;
-}
-.jarvis-btn {
-  background-color: var(--green);
-  color: #fff;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-weight: 650;
-  font-size: 13.5px;
-  box-shadow: var(--sh);
-  transition: background .15s, transform .12s;
-}
-.jarvis-btn:hover {
-  background-color: #1b5e20;
-  transform: translateY(-1px);
-}
-.jarvis-btn:disabled {
-  background-color: var(--tx-3);
-  cursor: not-allowed;
-  transform: none;
-}
-.assistant-status {
-  display: inline-block;
-  margin-left: 14px;
-  font-size: 13px;
-  font-style: italic;
-  color: var(--tx-2);
-  vertical-align: middle;
-}
+.period-h{display:flex;align-items:center;gap:10px;margin:22px 0 10px;font-size:16px;font-weight:800;letter-spacing:-.3px}
+
+.period-h .tag{font-weight:700}
+
+.pgcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
+
+.pgcard .p-hd{padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line-2)}
+
+.pgcard .p-hd b{font-size:14.5px}
+
+.pgcard .p-meta{font-size:12.5px;color:var(--tx-2)}
+
+.pgcard .p-act{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+
+.pgcard .p-real{background:var(--green-bg);padding:9px 16px;font-size:12.5px;border-top:1px solid var(--line-2)}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--line);
+
+  border-radius:var(--r);box-shadow:var(--sh);padding:10px 12px;margin-bottom:14px}
+
+.filters select{border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:#fff;font-size:13px;max-width:170px}
+
+.filters .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx-3);font-weight:700}
+
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+
+.cal .dayh{font-size:11px;text-transform:uppercase;color:var(--tx-3);font-weight:700;text-align:center;padding:4px 0}
+
+.cal .day{min-height:82px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:5px 6px;font-size:12px}
+
+.cal .day.off{opacity:.4}
+
+.cal .dnum{font-weight:700;color:var(--tx-3);font-size:11px}
+
+.cal .ev{background:var(--orange-bg);border-left:3px solid var(--orange);border-radius:5px;padding:2px 5px;margin-top:3px;
+
+  font-size:11px;font-weight:600;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+
+.alertbox{background:var(--amber-bg);border:1px solid #EAD489;border-radius:var(--r);padding:11px 15px;font-size:13px;margin-bottom:14px}
+
+.alertbox b{display:block;margin-bottom:4px}
+
+.alertbox ul{margin-left:18px}
+
+.miss{color:var(--red);font-weight:700;font-size:12px}
+
+.lines-ed .row{display:grid;grid-template-columns:1.4fr 1fr 78px 1fr 30px;gap:8px;margin-bottom:7px;align-items:center}
+
+.pk-list{max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:9px;padding:8px 10px;
+
+  display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:13px}
+
+.pk-list label{display:flex;gap:7px;align-items:center;cursor:pointer}
 
 @media(max-width:920px){
+
   .sidebar{transform:translateX(-100%)}
+
   .sidebar.open{transform:none;box-shadow:var(--sh-2)}
+
   .main{margin-left:0}
+
   .burger{display:inline-flex}
+
   .content{padding:18px 14px 60px}
+
   .crumb{font-size:16px}
+
 }
+
 body::after{content:none}
+
 @media print{
+
   body::after{content:"© 2026 Renaud Vigneaux — EARL Vigneaux · Hectaris — Tous droits réservés · Reproduction interdite sans autorisation";
+
     display:block;position:fixed;bottom:6px;left:0;right:0;text-align:center;font-size:9px;color:#8B949C}
+
   .sidebar,.topbar,.actions,.no-print{display:none!important}
+
   .main{margin:0} .content{max-width:none;padding:0}
+
   .card{box-shadow:none;break-inside:avoid;margin-bottom:14px}
+
   body{background:#fff}
+
 }
+
 </style>
+
 </head>
+
 <body>
+
 <div id="app">
+
   <aside class="sidebar" id="sidebar">
+
     <div class="logo">
+
       <div class="logo-mark">H</div>
+
       <div><b>Hectaris</b><span>ASSOLEMENT & PRÉVISION</span></div>
+
     </div>
+
     <nav class="nav" id="nav"></nav>
+
     <div class="side-foot">Campagne <b id="foot-camp"></b><br><span id="foot-surf"></span><br><span style="font-size:10px;opacity:.75">© 2026 Renaud Vigneaux — Tous droits réservés<br>Données stockées localement dans votre navigateur.<br>Hectaris ne transmet aucune donnée à GitHub.</span></div>
+
   </aside>
+
   <div class="main">
+
     <div class="topbar">
+
       <button class="burger" onclick="UI.toggleSidebar()" aria-label="Menu">
+
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+
       </button>
+
       <div class="crumb" id="crumb">Tableau de bord</div>
+
       <div class="grow"></div>
+
       <div class="save-dot no-print"><i></i><span id="save-txt">Enregistré</span></div>
+
       <div class="camp-pill no-print">
+
         Campagne <select id="camp-sel" onchange="Store.switchCampaign(this.value)"></select>
+
         <button class="btn sm ghost" title="Nouvelle campagne" onclick="UI.newCampaign()">＋</button>
-      </div>
-    </div>
-    <div class="strip" id="strip"></div>
-    <div class="content" id="view">
-      
-      <!-- =====================================================================
-           BLOC ASSISTANT IA (Toujours présent en haut)
-           ===================================================================== -->
-      <div class="assistant-panel no-print">
-        <div class="assistant-header">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 19v4M8 23h8"/></svg>
-          <h3>Assistant Vocal Jarvis</h3>
-        </div>
-        <p>Cliquez sur le bouton pour lancer le briefing stratégique et le point de marché du jour.</p>
-        <button id="ai-btn" class="jarvis-btn" onclick="lancerBriefing()">🎙️ Lancer le briefing</button>
-        <div id="status-text" class="assistant-status"></div>
+
       </div>
 
-      <!-- Conteneur d'affichage dynamique globalement nettoyé et corrigé -->
-      <div id="page-content-area"></div>
-      
     </div>
+
+    <div class="strip" id="strip"></div>
+
+    <div class="content" id="view"></div>
+
   </div>
+
 </div>
+
 <div id="modal-root"></div>
 
-<!-- =====================================================================
-     SCRIPTS DE L'APPLICATION DYNAMIQUE HECTARIS
-     ===================================================================== -->
-<script>
-// --- Données et Modèles par défaut ---
-const DEFAULTS = {
-  cultures: [
-    {id:"bl", name:"Blé tendre", color:"#E6A700"},
-    {id:"or", name:"Orge d'hiver", color:"#DAA520"},
-    {id:"co", name:"Colza", color:"#FFD700"},
-    {id:"pd", name:"Pomme de terre", color:"#CD853F"},
-    {id:"ma", name:"Maïs grain", color:"#FF8C00"},
-    {id:"ge", name:"Gel", color:"#94A3B8"}
-  ],
-  parcelles: [
-    {id:"p1", name:"Les Noues", surf:12.4},
-    {id:"p2", name:"Le Grand Champ", surf:24.8},
-    {id:"p3", name:"La Couture", surf:18.1}
-  ]
-};
+<style>/* Leaflet 1.9.4 — BSD-2-Clause — (c) Vladimir Agafonkin */
 
-// --- Moteur de Stockage local (Store) ---
-const Store = {
-  state: { currentCampaign: "2026", campaigns: {} },
-  init() {
-    const local = localStorage.getItem("hectaris_data");
-    if(local) {
-      this.state = JSON.parse(local);
-    } else {
-      this.createCampaign("2026");
-    }
-    this.save();
-  },
-  createCampaign(year) {
-    this.state.campaigns[year] = {
-      year: year,
-      parcelles: JSON.parse(JSON.stringify(DEFAULTS.parcelles)).map(p => ({...p, cultureId: ""})),
-      cultures: JSON.parse(JSON.stringify(DEFAULTS.cultures)).map(c => ({...c, rdt: 0, px: 0}))
-    };
-    this.state.currentCampaign = year;
-    this.save();
-  },
-  switchCampaign(year) {
-    this.state.currentCampaign = year;
-    this.save();
-    UI.refresh();
-  },
-  save() {
-    localStorage.setItem("hectaris_data", JSON.stringify(this.state));
-    document.getElementById("save-txt").innerText = "Enregistré";
-  },
-  getCampaign() { return this.state.campaigns[this.state.currentCampaign]; }
-};
+/* required styles */
 
-// --- Gestionnaire d'Interface Utilisateur (UI) ---
-const UI = {
-  init() {
-    // Rendu de la barre latérale de navigation
-    const nav = document.getElementById("nav");
-    nav.innerHTML = `
-      <div class="nav-sec">Navigation</div>
-      <a href="#" class="on" onclick="UI.setView('dash', this); return false;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg> Tableau de bord</a>
-      <a href="#" onclick="UI.setView('asso', this); return false;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg> Assolement</a>
-      <a href="#" onclick="UI.setView('marche', this); return false;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Mise en marché</a>
-    `;
-    this.buildCampaignSelect();
-    this.refresh();
-  },
-  buildCampaignSelect() {
-    const sel = document.getElementById("camp-sel");
-    sel.innerHTML = Object.keys(Store.state.campaigns).map(y => `<option value="${y}" ${y===Store.state.currentCampaign?'selected':''}>${y}</option>`).join('');
-    document.getElementById("foot-camp").innerText = Store.state.currentCampaign;
-  },
-  toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); },
-  newCampaign() {
-    const year = prompt("Entrez l'année de la nouvelle campagne :");
-    if(year && !Store.state.campaigns[year]) {
-      Store.createCampaign(year);
-      this.buildCampaignSelect();
-      this.refresh();
-    }
-  },
-  setView(viewName, element) {
-    if(element) {
-      document.querySelectorAll(".nav a").forEach(a => a.classList.remove("on"));
-      element.classList.add("on");
-    }
-    
-    // ID CORRIGÉ ICI : "page-content-area" au lieu de "page-content Area"
-    const container = document.getElementById("page-content-area");
-    if (!container) return;
-    
-    if(viewName === 'dash') {
-      document.getElementById("crumb").innerText = "Tableau de bord";
-      this.renderDashboard(container);
-    } else if(viewName === 'asso') {
-      document.getElementById("crumb").innerText = "Assolement";
-      this.renderAssolement(container);
-    } else if(viewName === 'marche') {
-      document.getElementById("crumb").innerText = "Mise en marché";
-      container.innerHTML = `<div class="card"><div class="bd"><p class="empty"><b>Suivi des marchés et contrats</b>Vue d'ensemble et couverture de prix à venir.</p></div></div>`;
-    }
-    this.drawStrip();
-  },
-  refresh() {
-    this.setView('dash');
-  },
-  drawStrip() {
-    const camp = Store.getCampaign();
-    const totals = {};
-    let totalSurf = 0;
-    camp.parcelles.forEach(p => {
-      totalSurf += p.surf;
-      if(p.cultureId) totals[p.cultureId] = (totals[p.cultureId] || 0) + p.surf;
-    });
-    document.getElementById("foot-surf").innerText = totalSurf.toFixed(1) + " ha au total";
-    
-    const strip = document.getElementById("strip");
-    if (!strip) return;
-    strip.innerHTML = Object.keys(totals).map(cid => {
-      const c = camp.cultures.find(x => x.id === cid);
-      const pct = (totals[cid] / totalSurf) * 100;
-      return `<i style="width:${pct}%; background:${c ? c.color : '#ccc'}" title="${c ? c.name : 'Inconnu'}: ${totals[cid].toFixed(1)} ha"></i>`;
-    }).join('');
-  },
-  renderDashboard(target) {
-    const camp = Store.getCampaign();
-    let totalSurf = camp.parcelles.reduce((acc, p) => acc + p.surf, 0);
-    let assignedSurf = camp.parcelles.reduce((acc, p) => acc + (p.cultureId ? p.surf : 0), 0);
 
-    target.innerHTML = `
-      <div class="page-head">
-        <div>
-          <h1>Campagne Agricole ${camp.year}</h1>
-          <p>Suivi de l'assolement de l'exploitation, répartition des surfaces et indicateurs clés.</p>
-        </div>
-      </div>
-      <div class="grid g3" style="margin-bottom:16px">
-        <div class="kpi">
-          <div class="l">Surface Totale</div>
-          <div class="v">${totalSurf.toFixed(1)} ha</div>
-          <div class="s">Parcellaire enregistré</div>
-        </div>
-        <div class="kpi" style="--k:var(--green)">
-          <div class="l">Surface Assolement</div>
-          <div class="v">${assignedSurf.toFixed(1)} ha</div>
-          <div class="s">${((assignedSurf/totalSurf)*100 || 0).toFixed(0)}% du total affecté</div>
-        </div>
-        <div class="kpi" style="--k:var(--amber)">
-          <div class="l">Reste à Affecter</div>
-          <div class="v">${(totalSurf - assignedSurf).toFixed(1)} ha</div>
-          <div class="s">Parcelles en attente de choix</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="hd"><h2>État d'avancement des cultures</h2></div>
-        <div class="bd">
-          <p class="muted" style="margin-bottom:12px; font-size:13.5px;">Sélectionnez l'onglet Assolement pour lier vos parcelles à vos cultures de campagne.</p>
-        </div>
-      </div>
-    `;
-  },
-  renderAssolement(target) {
-    const camp = Store.getCampaign();
-    target.innerHTML = `
-      <div class="card">
-        <div class="hd"><h2>Distribution par parcelles</h2></div>
-        <div class="tb-wrap">
-          <table class="tb">
-            <thead>
-              <tr><th>Nom Parcelle</th><th>Surface (ha)</th><th>Culture Affectée</th></tr>
-            </thead>
-            <tbody>
-              ${camp.parcelles.map((p, idx) => `
-                <tr>
-                  <td><b>${p.name}</b></td>
-                  <td>${p.surf.toFixed(2)} ha</td>
-                  <td>
-                    <select onchange="UI.updateParcelleCulture(${idx}, this.value)">
-                      <option value="">-- Choisir une culture --</option>
-                      ${camp.cultures.map(c => `<option value="${c.id}" ${c.id === p.cultureId ? 'selected':''}>${c.name}</option>`).join('')}
-                    </select>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  },
-  updateParcelleCulture(idx, value) {
-    const camp = Store.getCampaign();
-    camp.parcelles[idx].cultureId = value;
-    Store.save();
-    this.drawStrip();
-  }
-};
 
-// Lancement au chargement complet
-window.addEventListener("DOMContentLoaded", () => {
-  Store.init();
-  UI.init();
-});
-</script>
+.leaflet-pane,
 
-<!-- =====================================================================
-     MOTEUR DE SYNTHÈSE VOCALE JARVIS
-     ===================================================================== -->
-<script>
-    const texteBriefing = `Bonjour Renaud, j'espère que tu vas bien. Aujourd'hui samedi 18 juillet, la météo est ensoleillée avec des températures qui remontent très fortement. Il y a un risque d'orage sur Brannay et Fouchères en fin de journée. Les cours des céréales sont très haussiers depuis une semaine, hier le blé a augmenté de 12€. Je vois que tes contrats ne couvrent pas l'intégralité de ta récolte. On peut regarder en détail dans la partie Mise en marché si tu veux. Mon conseil du jour : Tu dois finaliser ton assolement et tes commandes d'engrais. Tu devrais également analyser le marché des céréales pour prendre une position. Que veux-tu faire ?`;
+.leaflet-tile,
 
-    function lancerBriefing() {
-        const btn = document.getElementById('ai-btn');
-        const status = document.getElementById('status-text');
-        
-        btn.disabled = true;
-        status.innerText = "🎙️ Jarvis est en train de parler...";
+.leaflet-marker-icon,
 
-        const parole = new SpeechSynthesisUtterance(texteBriefing);
-        parole.lang = 'fr-FR';
-        parole.rate = 1.05; 
-        parole.pitch = 1;
+.leaflet-marker-shadow,
 
-        parole.onend = function() {
-            status.innerText = "✅ Briefing terminé.";
-            btn.disabled = false;
-        };
+.leaflet-tile-container,
 
-        parole.onerror = function(event) {
-            console.error("Erreur de synthèse vocale : ", event);
-            status.innerText = "⚠️ Échec de la lecture.";
-            btn.disabled = false;
-        };
+.leaflet-pane > svg,
 
-        window.speechSynthesis.speak(parole);
-    }
-</script>
+.leaflet-pane > canvas,
 
-</body>
-</html>
+.leaflet-zoom-box,
+
+.leaflet-image-layer,
+
+.leaflet-layer {
+
+position: absolute;
+
+left: 0;
+
+top: 0;
+
+}
+
+.leaflet-container {
+
+overflow: hidden;
+
+}
+
+.leaflet-tile,
+
+.leaflet-marker-icon,
+
+.leaflet-marker-shadow {
+
+-webkit-user-select: none;
+
+   -moz-user-select: none;
+
+        user-select: none;
+
+  -webkit-user-drag: none;
+
+}
+
+/* Prevents IE11 from highlighting tiles in blue */
+
+.leaflet-tile::selection {
+
+background: transparent;
+
+}
+
+/* Safari renders non-retina tile on retina better with this, but Chrome is worse */
+
+.leaflet-safari .leaflet-tile {
+
+image-rendering: -webkit-optimize-contrast;
+
+}
+
+/* hack that prevents hw layers "stretching" when loading new tiles */
+
+.leaflet-safari .leaflet-tile-container {
+
+width: 1600px;
+
+height: 1600px;
+
+-webkit-transform-origin: 0 0;
+
+}
+
+.leaflet-marker-icon,
+
+.leaflet-marker-shadow {
+
+display: block;
+
+}
+
+/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
+
+/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
+
+.leaflet-container .leaflet-overlay-pane svg {
+
+max-width: none !important;
+
+max-height: none !important;
+
+}
+
+.leaflet-container .leaflet-marker-pane img,
+
+.leaflet-container .leaflet-shadow-pane img,
+
+.leaflet-container .leaflet-tile-pane img,
+
+.leaflet-container img.leaflet-image-layer,
+
+.leaflet-container .leaflet-tile {
+
+max-width: none !important;
+
+max-height: none !important;
+
+width: auto;
+
+padding: 0;
+
+}
+
+
+
+.leaflet-container img.leaflet-tile {
+
+/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
+
+mix-blend-mode: plus-lighter;
+
+}
+
+
+
+.leaflet-container.leaflet-touch-zoom {
+
+-ms-touch-action: pan-x pan-y;
+
+touch-action: pan-x pan-y;
+
+}
+
+.leaflet-container.leaflet-touch-drag {
+
+-ms-touch-action: pinch-zoom;
+
+/* Fallback for FF which doesn't support pinch-zoom */
+
+touch-action: none;
+
+touch-action: pinch-zoom;
+
+}
+
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+
+-ms-touch-action: none;
+
+touch-action: none;
+
+}
+
+.leaflet-container {
+
+-webkit-tap-highlight-color: transparent;
+
+}
+
+.leaflet-container a {
+
+-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+
+}
+
+.leaflet-tile {
+
+filter: inherit;
+
+visibility: hidden;
+
+}
+
+.leaflet-tile-loaded {
+
+visibility: inherit;
+
+}
+
+.leaflet-zoom-box {
+
+width: 0;
+
+height: 0;
+
+-moz-box-sizing: border-box;
+
+     box-sizing: border-box;
+
+z-index: 800;
+
+}
+
+/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
+
+.leaflet-overlay-pane svg {
+
+-moz-user-select: none;
+
+}
+
+
+
+.leaflet-pane         { z-index: 400; }
+
+
+
+.leaflet-tile-pane    { z-index: 200; }
+
+.leaflet-overlay-pane { z-index: 400; }
+
+.leaflet-shadow-pane  { z-index: 500; }
+
+.leaflet-marker-pane  { z-index: 600; }
+
+.leaflet-tooltip-pane   { z-index: 650; }
+
+.leaflet-popup-pane   { z-index: 700; }
+
+
+
+.leaflet-map-pane canvas { z-index: 100; }
+
+.leaflet-map-pane svg    { z-index: 200; }
+
+
+
+.leaflet-vml-shape {
+
+width: 1px;
+
+height: 1px;
+
+}
+
+.lvml {
+
+behavior: url(#default#VML);
+
+display: inline-block;
+
+position: absolute;
+
+}
+
+
+
+
+
+/* control positioning */
+
+
+
+.leaflet-control {
+
+position: relative;
+
+z-index: 800;
+
+pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+
+pointer-events: auto;
+
+}
+
+.leaflet-top,
+
+.leaflet-bottom {
+
+position: absolute;
+
+z-index: 1000;
+
+pointer-events: none;
+
+}
+
+.leaflet-top {
+
+top: 0;
+
+}
+
+.leaflet-right {
+
+right: 0;
+
+}
+
+.leaflet-bottom {
+
+bottom: 0;
+
+}
+
+.leaflet-left {
+
+left: 0;
+
+}
+
+.leaflet-control {
+
+float: left;
+
+clear: both;
+
+}
+
+.leaflet-right .leaflet-control {
+
+float: right;
+
+}
+
+.leaflet-top .leaflet-control {
+
+margin-top: 10px;
+
+}
+
+.leaflet-bottom .leaflet-control {
+
+margin-bottom: 10px;
+
+}
+
+.leaflet-left .leaflet-control {
+
+margin-left: 10px;
+
+}
+
+.leaflet-right .leaflet-control {
+
+margin-right: 10px;
+
+}
+
+
+
+
+
+/* zoom and fade animations */
+
+
+
+.leaflet-fade-anim .leaflet-popup {
+
+opacity: 0;
+
+-webkit-transition: opacity 0.2s linear;
+
+   -moz-transition: opacity 0.2s linear;
+
+        transition: opacity 0.2s linear;
+
+}
+
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+
+opacity: 1;
+
+}
+
+.leaflet-zoom-animated {
+
+-webkit-transform-origin: 0 0;
+
+    -ms-transform-origin: 0 0;
+
+        transform-origin: 0 0;
+
+}
+
+svg.leaflet-zoom-animated {
+
+will-change: transform;
+
+}
+
+
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+
+-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+
+   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+
+        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+
+}
+
+.leaflet-zoom-anim .leaflet-tile,
+
+.leaflet-pan-anim .leaflet-tile {
+
+-webkit-transition: none;
+
+   -moz-transition: none;
+
+        transition: none;
+
+}
+
+
+
+.leaflet-zoom-anim .leaflet-zoom-hide {
+
+visibility: hidden;
+
+}
+
+
+
+
+
+/* cursors */
+
+
+
+.leaflet-interactive {
+
+cursor: pointer;
+
+}
+
+.leaflet-grab {
+
+cursor: -webkit-grab;
+
+cursor:    -moz-grab;
+
+cursor:         grab;
+
+}
+
+.leaflet-crosshair,
+
+.leaflet-crosshair .leaflet-interactive {
+
+cursor: crosshair;
+
+}
+
+.leaflet-popup-pane,
+
+.leaflet-control {
+
+cursor: auto;
+
+}
+
+.leaflet-dragging .leaflet-grab,
+
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+
+.leaflet-dragging .leaflet-marker-draggable {
+
+cursor: move;
+
+cursor: -webkit-grabbing;
+
+cursor:    -moz-grabbing;
+
+cursor:         grabbing;
+
+}
+
+
+
+/* marker & overlays interactivity */
+
+.leaflet-marker-icon,
+
+.leaflet-marker-shadow,
+
+.leaflet-image-layer,
+
+.leaflet-pane > svg path,
+
+.leaflet-tile-container {
+
+pointer-events: none;
+
+}
+
+
+
+.leaflet-marker-icon.leaflet-interactive,
+
+.leaflet-image-layer.leaflet-interactive,
+
+.leaflet-pane > svg path.leaflet-interactive,
+
+svg.leaflet-image-layer.leaflet-interactive path {
+
+pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+
+pointer-events: auto;
+
+}
+
+
+
+/* visual tweaks */
+
+
+
+.leaflet-container {
+
+background: #ddd;
+
+outline-offset: 1px;
+
+}
+
+.leaflet-container a {
+
+color: #0078A8;
+
+}
+
+.leaflet-zoom-box {
+
+border: 2px dotted #38f;
+
+background: rgba(255,255,255,0.5);
+
+}
+
+
+
+
+
+/* general typography */
+
+.leaflet-container {
+
+font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+
+font-size: 12px;
+
+font-size: 0.75rem;
+
+line-height: 1.5;
+
+}
+
+
+
+
+
+/* general toolbar styles */
+
+
+
+.leaflet-bar {
+
+box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+
+border-radius: 4px;
+
+}
+
+.leaflet-bar a {
+
+background-color: #fff;
+
+border-bottom: 1px solid #ccc;
+
+width: 26px;
+
+height: 26px;
+
+line-height: 26px;
+
+display: block;
+
+text-align: center;
+
+text-decoration: none;
+
+color: black;
+
+}
+
+.leaflet-bar a,
+
+.leaflet-control-layers-toggle {
+
+background-position: 50% 50%;
+
+background-repeat: no-repeat;
+
+display: block;
+
+}
+
+.leaflet-bar a:hover,
+
+.leaflet-bar a:focus {
+
+background-color: #f4f4f4;
+
+}
+
+.leaflet-bar a:first-child {
+
+border-top-left-radius: 4px;
+
+border-top-right-radius: 4px;
+
+}
+
+.leaflet-bar a:last-child {
+
+border-bottom-left-radius: 4px;
+
+border-bottom-right-radius: 4px;
+
+border-bottom: none;
+
+}
+
+.leaflet-bar a.leaflet-disabled {
+
+cursor: default;
+
+background-color: #f4f4f4;
+
+color: #bbb;
+
+}
+
+
+
+.leaflet-touch .leaflet-bar a {
+
+width: 30px;
+
+height: 30px;
+
+line-height: 30px;
+
+}
+
+.leaflet-touch .leaflet-bar a:first-child {
+
+border-top-left-radius: 2px;
+
+border-top-right-radius: 2px;
+
+}
+
+.leaflet-touch .leaflet-bar a:last-child {
+
+border-bottom-left-radius: 2px;
+
+border-bottom-right-radius: 2px;
+
+}
+
+
+
+/* zoom control */
+
+
+
+.leaflet-control-zoom-in,
+
+.leaflet-control-zoom-out {
+
+font: bold 18px 'Lucida Console', Monaco, monospace;
+
+text-indent: 1px;
+
+}
+
+
+
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+
+font-size: 22px;
+
+}
+
+
+
+
+
+/* layers control */
+
+
+
+.leaflet-control-layers {
+
+box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+
+background: #fff;
+
+border-radius: 5px;
+
+}
+
+.leaflet-control-layers-toggle {
+
+background-image: url(images/layers.png);
+
+width: 36px;
+
+height: 36px;
+
+}
+
+.leaflet-retina .leaflet-control-layers-toggle {
+
+background-image: url(images/layers-2x.png);
+
+background-size: 26px 26px;
+
+}
+
+.leaflet-touch .leaflet-control-layers-toggle {
+
+width: 44px;
+
+height: 44px;
+
+}
+
+.leaflet-control-layers .leaflet-control-layers-list,
+
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+
+display: none;
+
+}
+
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+
+display: block;
+
+position: relative;
+
+}
+
+.leaflet-control-layers-expanded {
+
+padding: 6px 10px 6px 6px;
+
+color: #333;
+
+background: #fff;
+
+}
+
+.leaflet-control-layers-scrollbar {
+
+overflow-y: scroll;
+
+overflow-x: hidden;
+
+padding-right: 5px;
+
+}
+
+.leaflet-control-layers-selector {
+
+margin-top: 2px;
+
+position: relative;
+
+top: 1px;
+
+}
+
+.leaflet-control-layers label {
+
+display: block;
+
+font-size: 13px;
+
+font-size: 1.08333em;
+
+}
+
+.leaflet-control-layers-separator {
+
+height: 0;
+
+border-top: 1px solid #ddd;
+
+margin: 5px -10px 5px -6px;
+
+}
+
+
+
+/* Default icon URLs */
+
+.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
+
+background-image: url(images/marker-icon.png);
+
+}
+
+
+
+
+
+/* attribution and scale controls */
+
+
+
+.leaflet-container .leaflet-control-attribution {
+
+background: #fff;
+
+background: rgba(255, 255, 255, 0.8);
+
+margin: 0;
+
+}
+
+.leaflet-control-attribution,
+
+.leaflet-control-scale-line {
+
+padding: 0 5px;
+
+color: #333;
+
+line-height: 1.4;
+
+}
+
+.leaflet-control-attribution a {
+
+text-decoration: none;
+
+}
+
+.leaflet-control-attribution a:hover,
+
+.leaflet-control-attribution a:focus {
+
+text-decoration: underline;
+
+}
+
+.leaflet-attribution-flag {
+
+display: inline !important;
+
+vertical-align: baseline !important;
+
+width: 1em;
+
+height: 0.6669em;
+
+}
+
+.leaflet-left .leaflet-control-scale {
+
+margin-left: 5px;
+
+}
+
+.leaflet-bottom .leaflet-control-scale {
+
+margin-bottom: 5px;
+
+}
+
+.leaflet-control-scale-line {
+
+border: 2px solid #777;
+
+border-top: none;
+
+line-height: 1.1;
+
+padding: 2px 5px 1px;
+
+white-space: nowrap;
+
+-moz-box-sizing: border-box;
+
+     box-sizing: border-box;
+
+background: rgba(255, 255, 255, 0.8);
+
+text-shadow: 1px 1px #fff;
+
+}
+
+.leaflet-control-scale-line:not(:first-child) {
+
+border-top: 2px solid #777;
+
+border-bottom: none;
+
+margin-top: -2px;
+
+}
+
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+
+border-bottom: 2px solid #777;
+
+}
+
+
+
+.leaflet-touch .leaflet-control-attribution,
+
+.leaflet-touch .leaflet-control-layers,
+
+.leaflet-touch .leaflet-bar {
+
+box-shadow: none;
+
+}
+
+.leaflet-touch .leaflet-control-layers,
+
+.leaflet-touch .leaflet-bar {
+
+border: 2px solid rgba(0,0,0,0.2);
+
+background-clip: padding-box;
+
+}
+
+
+
+
+
+/* popup */
+
+
+
+.leaflet-popup {
+
+position: absolute;
+
+text-align: center;
+
+margin-bottom: 20px;
+
+}
+
+.leaflet-popup-content-wrapper {
+
+padding: 1px;
+
+text-align: left;
+
+border-radius: 12px;
+
+}
+
+.leaflet-popup-content {
+
+margin: 13px 24px 13px 20px;
+
+line-height: 1.3;
+
+font-size: 13px;
+
+font-size: 1.08333em;
+
+min-height: 1px;
+
+}
+
+.leaflet-popup-content p {
+
+margin: 17px 0;
+
+margin: 1.3em 0;
+
+}
+
+.leaflet-popup-tip-container {
+
+width: 40px;
+
+height: 20px;
+
+position: absolute;
+
+left: 50%;
+
+margin-top: -1px;
+
+margin-left: -20px;
+
+overflow: hidden;
+
+pointer-events: none;
+
+}
+
+.leaflet-popup-tip {
+
+width: 17px;
+
+height: 17px;
+
+padding: 1px;
+
+
+
+margin: -10px auto 0;
+
+pointer-events: auto;
+
+
+
+-webkit-transform: rotate(45deg);
+
+   -moz-transform: rotate(45deg);
+
+    -ms-transform: rotate(45deg);
+
+        transform: rotate(45deg);
+
+}
+
+.leaflet-popup-content-wrapper,
+
+.leaflet-popup-tip {
+
+background: white;
+
+color: #333;
+
+box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+
+position: absolute;
+
+top: 0;
+
+right: 0;
+
+border: none;
+
+text-align: center;
+
+width: 24px;
+
+height: 24px;
+
+font: 16px/24px Tahoma, Verdana, sans-serif;
+
+color: #757575;
+
+text-decoration: none;
+
+background: transparent;
+
+}
+
+.leaflet-container a.leaflet-popup-close-button:hover,
+
+.leaflet-container a.leaflet-popup-close-button:focus {
+
+color: #585858;
+
+}
+
+.leaflet-popup-scrolled {
+
+overflow: auto;
+
+}
+
+
+
+.leaflet-oldie .leaflet-popup-content-wrapper {
+
+-ms-zoom: 1;
+
+}
+
+.leaflet-oldie .leaflet-popup-tip {
+
+width: 24px;
+
+margin: 0 auto;
+
+
+
+-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+
+filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+
+}
+
+
+
+.leaflet-oldie .leaflet-control-zoom,
+
+.leaflet-oldie .leaflet-control-layers,
+
+.leaflet-oldie .leaflet-popup-content-wrapper,
+
+.leaflet-oldie .leaflet-popup-tip {
+
+border: 1px solid #999;
+
+}
+
+
+
+
+
+/* div icon */
+
+
+
+.leaflet-div-icon {
+
+background: #fff;
+
+border: 1px solid #666;
+
+}
+
+
+
+
+
+/* Tooltip */
+
+/* Base styles for the element that has a tooltip */
+
+.leaflet-tooltip {
+
+position: absolute;
+
+padding: 6px;
+
+background-color: #fff;
+
+border: 1px solid #fff;
+
+border-radius: 3px;
+
+color: #222;
+
+white-space: nowrap;
+
+-webkit-user-select: none;
+
+-moz-user-select: none;
+
+-ms-user-select: none;
+
+user-select: none;
+
+pointer-events: none;
+
+box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+
+}
+
+.leaflet-tooltip.leaflet-interactive {
+
+cursor: pointer;
+
+pointer-events: auto;
+
+}
+
+.leaflet-tooltip-top:before,
+
+.leaflet-tooltip-bottom:before,
+
+.leaflet-tooltip-left:before,
+
+.leaflet-tooltip-right:before {
+
+position: absolute;
+
+pointer-events: none;
+
+border: 6px solid transparent;
+
+background: transparent;
+
+content: "";
+
+}
+
+
+
+/* Directions */
+
+
+
+.leaflet-tooltip-bottom {
+
+margin-top: 6px;
+
+}
+
+.leaflet-tooltip-top {
+
+margin-top: -6px;
+
+}
+
+.leaflet-tooltip-bottom:before,
+
+.leaflet-tooltip-top:before {
+
+left: 50%;
+
+margin-left: -6px;
+
+}
+
+.leaflet-tooltip-top:before {
+
+bottom: 0;
+
+margin-bottom: -12px;
+
+border-top-color: #fff;
+
+}
+
+.leaflet-tooltip-bottom:before {
+
+top: 0;
+
+margin-top: -12px;
+
+margin-left: -6px;
+
+border-bottom-color: #fff;
+
+}
+
+.leaflet-tooltip-left {
+
+margin-left: -6px;
+
+}
+
+.leaflet-tooltip-right {
+
+margin-left: 6px;
+
+}
+
+.leaflet-tooltip-left:before,
+
+.leaflet-tooltip-right:before {
+
+top: 50%;
+
+margin-top: -6px;
+
+}
+
+.leaflet-tooltip-left:before {
+
+right: 0;
+
+margin-right: -12px;
+
+border-left-color: #fff;
+
+}
+
+.leaflet-tooltip-right:before {
+
+left: 0;
+
+margin-left: -12px;
+
+border-right-color: #fff;
+
+}
+
+
+
+/* Printing */
+
+
+
+@media print {
+
+/* Prevent printers from removing background-images of controls. */
+
+.leaflet-control {
+
+-webkit-print-color-adjust: exact;
+
+print-color-adjust: exact;
+
+}
+
+}
+
+
+
+/* ---- Hectaris carto ---- */
+
+#map{height:calc(100vh - 300px);min-height:430px;border-radius:var(--r);border:1px solid var(--line);z-index:1}
+
+.carto-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+
+.borne{width:16px;height:16px;border-radius:50%;background:#F57C00;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5);cursor:grab}
+
+.borne.b2{background:#2C6E9E}
+
+.vtx{width:12px;height:12px;border-radius:50%;background:#fff;border:2.5px solid #F57C00;box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:grab}
+
+.carto-read{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;margin-top:10px}
+
+.carto-read b{font-size:16px}
+
+.leaflet-container{font:inhe 
+
