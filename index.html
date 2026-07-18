@@ -197,6 +197,31 @@ table.tb{width:100%;border-collapse:collapse;font-size:13.5px}
 .seg button.on{background:#fff;color:var(--tx);box-shadow:var(--sh)}
 .check{width:16px;height:16px;accent-color:var(--orange)}
 
+/* ---------- Assistant vocal Hectaris ---------- */
+.ai-brief{position:relative;overflow:hidden;margin-bottom:20px;border:1px solid #3B444B;border-radius:18px;
+  background:linear-gradient(135deg,#20272C 0%,#2B343B 62%,#354047 100%);color:#fff;box-shadow:0 12px 32px rgba(24,30,36,.18)}
+.ai-brief::after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:-110px;top:-150px;
+  background:radial-gradient(circle,rgba(245,124,0,.30),rgba(245,124,0,0) 70%);pointer-events:none}
+.ai-inner{position:relative;z-index:1;display:grid;grid-template-columns:64px 1fr auto;gap:18px;align-items:center;padding:20px 22px}
+.ai-orb{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:rgba(245,124,0,.13);
+  border:1px solid rgba(255,160,64,.42);box-shadow:inset 0 0 22px rgba(245,124,0,.12),0 0 0 7px rgba(255,255,255,.035)}
+.ai-orb svg{width:27px;height:27px;color:#FFA040}
+.ai-copy .eyebrow{font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#FFA040;font-weight:800;margin-bottom:4px}
+.ai-copy h2{font-size:20px;letter-spacing:-.35px;margin-bottom:4px}.ai-copy p{color:#BBC3C8;font-size:13px;line-height:1.45}
+.ai-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.ai-play{display:inline-flex;align-items:center;gap:9px;border-radius:99px;padding:11px 18px;background:var(--orange);color:#fff;
+  font-weight:750;box-shadow:0 7px 18px rgba(245,124,0,.28);transition:transform .15s,background .15s}
+.ai-play:hover{background:#FF8B14;transform:translateY(-1px)}.ai-play svg{width:16px;height:16px;fill:currentColor}
+.ai-mini{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;border:1px solid #525D65;color:#D6DCE0;background:rgba(255,255,255,.04)}
+.ai-mini:hover{background:rgba(255,255,255,.1);color:#fff}.ai-mini svg{width:15px;height:15px;fill:currentColor}
+.ai-mini:disabled{opacity:.35;cursor:default;background:transparent}
+.ai-progress{height:3px;background:rgba(255,255,255,.09)}.ai-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--orange),#FFB45D);transition:width .2s linear}
+.ai-status{display:flex;align-items:center;gap:7px;margin-top:7px;font-size:11.5px;color:#929DA4}
+.ai-status b{color:#E5E9EB;font-weight:650}.ai-live{display:none;gap:3px;height:12px;align-items:center}.ai-live i{width:3px;border-radius:5px;background:#FFA040;animation:aiwave .8s ease-in-out infinite}
+.ai-live i:nth-child(1){height:5px}.ai-live i:nth-child(2){height:11px;animation-delay:.12s}.ai-live i:nth-child(3){height:7px;animation-delay:.24s}.ai-live i:nth-child(4){height:10px;animation-delay:.36s}
+.ai-brief.playing .ai-live{display:flex}@keyframes aiwave{50%{height:3px;opacity:.55}}
+@media(max-width:760px){.ai-inner{grid-template-columns:52px 1fr;padding:17px 16px;gap:13px}.ai-orb{width:48px;height:48px}.ai-actions{grid-column:1/-1;justify-content:flex-start}.ai-play{flex:1;justify-content:center}}
+
 /* ---------- Interventions : programmes, statuts, planning ---------- */
 .stchip{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:700}
 .st-Prévue{background:var(--line-2);color:var(--tx-2)} .st-Àconfirmer{background:var(--amber-bg);color:#9A7100}
@@ -943,6 +968,45 @@ const PAGES = [
 const place = (c,k) => k ? ((c.storageNames||{})[k] || {bran:"Site 1",fouch:"Site 2"}[k] || "—") : "—";
 const stchip = s => `<span class="stchip st-${(s||"").replace(/ /g,"")}">${s||"—"}</span>`;
 
+const HectarisAssistant = {
+  audio:null,
+  getAudio(){
+    if(this.audio) return this.audio;
+    this.audio=new Audio("briefing-hectaris.mp3");
+    this.audio.preload="auto";
+    this.audio.addEventListener("timeupdate",()=>this.sync());
+    this.audio.addEventListener("play",()=>this.sync());
+    this.audio.addEventListener("pause",()=>this.sync());
+    this.audio.addEventListener("ended",()=>{ this.audio.currentTime=0; this.sync(); });
+    this.audio.addEventListener("error",()=>this.error());
+    return this.audio;
+  },
+  toggle(){
+    const a=this.getAudio();
+    if(a.paused) a.play().catch(()=>this.error()); else a.pause();
+  },
+  stop(){ const a=this.getAudio(); a.pause(); a.currentTime=0; this.sync(); },
+  sync(){
+    const a=this.audio, box=document.getElementById("ai-brief"); if(!a||!box) return;
+    const playing=!a.paused&&!a.ended;
+    box.classList.toggle("playing",playing);
+    const label=document.getElementById("ai-play-label");
+    if(label) label.textContent=playing?"Mettre en pause":a.currentTime>0?"Reprendre le briefing":"Lancer mon briefing";
+    const icon=document.getElementById("ai-play-icon");
+    if(icon) icon.innerHTML=playing?'<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>':'<path d="M8 5v14l11-7z"/>';
+    const status=document.getElementById("ai-status-text");
+    if(status) status.textContent=playing?"Briefing personnalisé en cours":a.currentTime>0?"Briefing en pause":"Votre synthèse stratégique est prête";
+    const progress=document.getElementById("ai-progress-bar");
+    if(progress) progress.style.width=(a.duration?Math.min(100,a.currentTime/a.duration*100):0)+"%";
+    const stop=document.getElementById("ai-stop"); if(stop) stop.disabled=!a.currentTime;
+  },
+  error(){
+    const status=document.getElementById("ai-status-text");
+    if(status) status.textContent="Audio introuvable — placez briefing-hectaris.mp3 à côté de index.html";
+    document.getElementById("ai-brief")?.classList.remove("playing");
+  }
+};
+
 const UI = {
   page:"dash",
   toggleSidebar(){ document.getElementById("sidebar").classList.toggle("open"); },
@@ -1110,6 +1174,26 @@ const UI = {
     const fertBars=fv.filter(x=>x.needCost.ok&&x.needCost.cost>0)
       .map(x=>({label:x.f.name,value:Math.round(x.needCost.cost),color:x.f.cat==="azote"?"#2C6E9E":"#6D9E4F"}));
     return `
+    <section class="ai-brief no-print" id="ai-brief" aria-label="Assistant vocal Hectaris">
+      <div class="ai-inner">
+        <div class="ai-orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M8.5 21h7"/></svg></div>
+        <div class="ai-copy">
+          <div class="eyebrow">Assistant stratégique Hectaris</div>
+          <h2>Bonjour Renaud, votre briefing est prêt.</h2>
+          <p>Météo, marchés et décisions prioritaires de l'exploitation.</p>
+          <div class="ai-status"><span class="ai-live"><i></i><i></i><i></i><i></i></span><b id="ai-status-text">Votre synthèse stratégique est prête</b><span>· 1 min 26</span></div>
+        </div>
+        <div class="ai-actions">
+          <button class="ai-play" onclick="HectarisAssistant.toggle()" aria-label="Lire ou mettre en pause le briefing">
+            <svg id="ai-play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span id="ai-play-label">Lancer mon briefing</span>
+          </button>
+          <button class="ai-mini" id="ai-stop" onclick="HectarisAssistant.stop()" title="Arrêter et revenir au début" aria-label="Arrêter le briefing" disabled>
+            <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="ai-progress"><i id="ai-progress-bar"></i></div>
+    </section>
     <div class="page-head"><div><h1>Tableau de bord</h1>
       <p>Campagne ${Store.data.active} — vision instantanée. Toutes les valeurs proviennent des autres pages, sans double saisie.</p></div>
       <div class="actions"><button class="btn" onclick="EXPORTS.pdf()">Exporter en PDF</button></div></div>
