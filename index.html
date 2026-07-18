@@ -1,1902 +1,2177 @@
 <!DOCTYPE html>
-
 <!--
-
 =====================================================================
-
   HECTARIS — Assolement & Prévision de campagne
-
   © 2026 Renaud Vigneaux — EARL Vigneaux, 7 rue de l'Orval, 89150 Brannay (89), France
-
   Tous droits réservés.
 
-
-
   Ce logiciel, son code source, son interface, sa structure de données,
-
   ses calculs, sa marque « Hectaris » et ses éléments graphiques sont la
-
   propriété exclusive de Renaud Vigneaux. Toute reproduction, diffusion,
-
   modification, adaptation, décompilation ou exploitation commerciale,
-
   totale ou partielle, sans autorisation écrite préalable, est interdite
-
   (Code de la propriété intellectuelle, art. L.111-1 et suivants,
-
   L.122-4, L.335-2 et suivants).
-
   Contact : Renaud Vigneaux — EARL Vigneaux
-
             7 rue de l'Orval, 89150 Brannay, France
-
             Tél. 06 62 35 60 54 · rvigneaux@gmail.com
-
 =====================================================================
-
 -->
-
 <html lang="fr">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Hectaris — Assolement & Prévision de campagne</title>
-
 <style>
-
 /* =====================================================================
-
    HECTARIS — Assolement & Prévision de campagne
-
    Design tokens
-
    ===================================================================== */
-
 :root{
-
   --ink:#20272C; --ink-2:#2A333B; --ink-3:#39434C;
-
   --paper:#F3F4F1; --card:#FFFFFF; --line:#E3E6E0; --line-2:#EEF0EC;
-
   --tx:#242B31; --tx-2:#5C6670; --tx-3:#8B949C;
-
   --orange:#F57C00; --orange-d:#D96C00; --orange-bg:#FDF1E3;
-
   --green:#2E7D32; --green-bg:#E8F3E9;
-
   --amber:#E6A700; --amber-bg:#FBF3DB;
-
   --red:#C62828; --red-bg:#FBE9E9;
-
   --blue:#2C6E9E;
-
   --r:14px; --r-s:9px;
-
   --sh:0 1px 2px rgba(24,30,36,.05),0 4px 14px rgba(24,30,36,.05);
-
   --sh-2:0 8px 30px rgba(24,30,36,.14);
-
   --sb:236px;
-
   font-size:15px;
-
 }
-
 *{margin:0;padding:0;box-sizing:border-box}
-
 html,body{height:100%}
-
 body{
-
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-
   background:var(--paper); color:var(--tx); -webkit-font-smoothing:antialiased;
-
 }
-
 button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
-
 input,select,textarea{font:inherit;color:inherit}
-
 ::selection{background:#F5CFA6}
 
-
-
 /* ---------- Shell ---------- */
-
 #app{display:flex;min-height:100vh}
-
 .sidebar{
-
   width:var(--sb);background:var(--ink);color:#C6CDD3;position:fixed;inset:0 auto 0 0;
-
   display:flex;flex-direction:column;z-index:40;transition:transform .25s ease;
-
 }
-
 .logo{display:flex;align-items:center;gap:11px;padding:20px 18px 16px}
-
 .logo-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--orange),#FFA040);
-
   display:grid;place-items:center;color:#fff;font-weight:800;font-size:17px;letter-spacing:-.5px}
-
 .logo b{color:#fff;font-size:16.5px;letter-spacing:-.2px;display:block;line-height:1.1}
-
 .logo span{font-size:11px;color:#7E8890;letter-spacing:.4px}
-
 .nav{flex:1;padding:6px 10px;overflow-y:auto}
-
 .nav-sec{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:#67717A;padding:16px 10px 6px}
-
 .nav a{display:flex;align-items:center;gap:11px;padding:8.5px 10px;border-radius:8px;color:#C6CDD3;
-
   text-decoration:none;font-size:14px;font-weight:500;margin:1px 0;transition:background .15s,color .15s}
-
 .nav a svg{width:17px;height:17px;flex:none;opacity:.75}
-
 .nav a:hover{background:var(--ink-2);color:#fff}
-
 .nav a.on{background:var(--ink-3);color:#fff;box-shadow:inset 3px 0 0 var(--orange)}
-
 .nav a.on svg{opacity:1;color:var(--orange)}
-
 .side-foot{padding:12px 16px;border-top:1px solid #333D45;font-size:11.5px;color:#7E8890}
-
 .side-foot b{color:#AEB7BE}
 
-
-
 .main{flex:1;margin-left:var(--sb);display:flex;flex-direction:column;min-width:0}
-
 .topbar{
-
   position:sticky;top:0;z-index:30;background:rgba(243,244,241,.86);backdrop-filter:blur(10px);
-
   border-bottom:1px solid var(--line);padding:12px 28px;display:flex;align-items:center;gap:14px;
-
 }
-
 .burger{display:none;width:36px;height:36px;border-radius:8px;align-items:center;justify-content:center}
-
 .burger:hover{background:var(--line-2)}
-
 .crumb{font-size:19px;font-weight:750;letter-spacing:-.4px}
-
 .topbar .grow{flex:1}
-
 .camp-pill{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
-
   border-radius:99px;padding:5px 6px 5px 14px;box-shadow:var(--sh);font-weight:600;font-size:13.5px}
-
 .camp-pill select{border:none;background:var(--ink);color:#fff;border-radius:99px;padding:4px 10px;font-weight:700;outline:none}
-
 .save-dot{font-size:12px;color:var(--tx-3);display:flex;align-items:center;gap:6px}
-
 .save-dot i{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block}
 
-
-
 /* ruban d'assolement — signature */
-
 .strip{height:7px;display:flex;overflow:hidden}
-
 .strip i{height:100%;transition:width .5s ease}
 
-
-
 .content{padding:26px 28px 60px;max-width:1340px;width:100%;margin:0 auto;animation:pop .25s ease}
-
 @keyframes pop{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-
-
 /* ---------- Composants ---------- */
-
 .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
-
 .page-head h1{font-size:24px;font-weight:800;letter-spacing:-.6px}
-
 .page-head p{color:var(--tx-2);font-size:13.5px;margin-top:4px;max-width:640px}
-
 .actions{display:flex;gap:9px;flex-wrap:wrap}
-
 .btn{display:inline-flex;align-items:center;gap:7px;border-radius:9px;padding:8px 14px;font-weight:650;font-size:13.5px;
-
   background:var(--card);border:1px solid var(--line);box-shadow:var(--sh);transition:transform .12s,box-shadow .12s}
-
 .btn:hover{transform:translateY(-1px);box-shadow:var(--sh-2)}
-
 .btn:active{transform:none}
-
 .btn svg{width:15px;height:15px}
-
 .btn.pri{background:var(--orange);border-color:var(--orange);color:#fff}
-
 .btn.pri:hover{background:var(--orange-d)}
-
 .btn.grn{background:var(--green);border-color:var(--green);color:#fff}
-
 .btn.ghost{box-shadow:none;background:transparent}
-
 .btn.danger{color:var(--red)}
-
 .btn.sm{padding:4px 9px;font-size:12.5px;border-radius:7px}
 
-
-
 .grid{display:grid;gap:16px}
-
 .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
-
 @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
-
 @media(max-width:640px){.g4,.g3,.g2{grid-template-columns:1fr}}
 
-
-
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
-
 .card .hd{padding:15px 18px 0;display:flex;align-items:center;justify-content:space-between;gap:10px}
-
 .card .hd h2{font-size:15px;font-weight:750;letter-spacing:-.2px}
-
 .card .hd .sub{font-size:12px;color:var(--tx-3)}
-
 .card .bd{padding:16px 18px 18px}
 
-
-
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:15px 17px;
-
   position:relative;overflow:hidden}
-
 .kpi::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--k,var(--orange))}
-
 .kpi .l{font-size:11px;letter-spacing:.9px;text-transform:uppercase;color:var(--tx-3);font-weight:700}
-
 .kpi .v{font-size:25px;font-weight:800;letter-spacing:-.8px;margin-top:5px;font-variant-numeric:tabular-nums}
-
 .kpi .s{font-size:12px;color:var(--tx-2);margin-top:3px}
 
-
-
 table.tb{width:100%;border-collapse:collapse;font-size:13.5px}
-
 .tb th{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx-3);font-weight:700;
-
   text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);background:#FAFBF9;white-space:nowrap}
-
 .tb td{padding:8px 10px;border-bottom:1px solid var(--line-2);vertical-align:middle;font-variant-numeric:tabular-nums}
-
 .tb tr:hover td{background:#FAFAF7}
-
 .tb .num{text-align:right}
-
 .tb th.num{text-align:right}
-
 .tb .tot td{font-weight:750;background:#F5F6F2;border-top:2px solid var(--line)}
-
 .tb-wrap{overflow-x:auto;border-radius:0 0 var(--r) var(--r)}
-
 .tb input,.tb select{border:1px solid transparent;background:transparent;border-radius:6px;padding:4px 6px;width:100%;
-
   min-width:52px;outline:none;transition:border .15s,background .15s;font-variant-numeric:tabular-nums}
-
 .tb input:hover,.tb select:hover{border-color:var(--line)}
-
 .tb input:focus,.tb select:focus{border-color:var(--orange);background:#FFF;box-shadow:0 0 0 3px rgba(245,124,0,.12)}
-
 .tb input.num{text-align:right}
-
 .tb input.ed,.tb select.ed{color:var(--blue);font-weight:600}
-
 .calc{color:var(--tx);font-weight:600}
-
 .muted{color:var(--tx-3)}
 
-
-
 .chip{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:2.5px 10px;font-size:12px;font-weight:700}
-
 .chip i{width:8px;height:8px;border-radius:50%;background:currentColor}
-
 .sig-g{background:var(--green-bg);color:var(--green)} .sig-a{background:var(--amber-bg);color:#9A7100}
-
 .sig-r{background:var(--red-bg);color:var(--red)} .sig-n{background:var(--line-2);color:var(--tx-2)}
-
 .tag{display:inline-block;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:700;background:var(--line-2);color:var(--tx-2)}
 
-
-
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
-
 .field label{font-size:12px;font-weight:700;color:var(--tx-2)}
-
 .field input,.field select,.field textarea{border:1px solid var(--line);border-radius:8px;padding:8px 11px;background:#fff;outline:none}
-
 .field input:focus,.field select:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(245,124,0,.12)}
-
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-
 @media(max-width:560px){.frow{grid-template-columns:1fr}}
 
-
-
 /* modal */
-
 .overlay{position:fixed;inset:0;background:rgba(24,30,36,.45);z-index:80;display:grid;place-items:center;padding:20px;
-
   animation:fade .18s ease}
-
 @keyframes fade{from{opacity:0}to{opacity:1}}
-
 .modal{background:#fff;border-radius:16px;box-shadow:var(--sh-2);width:min(560px,100%);max-height:90vh;overflow:auto;
-
   animation:pop .22s ease}
-
 .modal .m-hd{padding:18px 20px 4px;display:flex;justify-content:space-between;align-items:center}
-
 .modal .m-hd h3{font-size:17px;font-weight:800;letter-spacing:-.3px}
-
 .modal .m-bd{padding:14px 20px 4px}
-
 .modal .m-ft{padding:12px 20px 18px;display:flex;justify-content:flex-end;gap:9px}
-
 .x{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--tx-3)}
-
 .x:hover{background:var(--line-2);color:var(--tx)}
 
-
-
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
-
   padding:10px 18px;border-radius:99px;font-size:13.5px;font-weight:600;z-index:99;box-shadow:var(--sh-2);
-
   animation:toast 2.6s ease forwards}
-
 @keyframes toast{0%{opacity:0;transform:translate(-50%,10px)}10%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
 
-
-
 .empty{padding:40px;text-align:center;color:var(--tx-3)}
-
 .empty b{display:block;color:var(--tx-2);font-size:15px;margin-bottom:5px}
-
 .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--tx-2)}
-
 .legend span{display:inline-flex;align-items:center;gap:6px}
-
 .legend i{width:10px;height:10px;border-radius:3px}
-
 .bar-row{display:grid;grid-template-columns:130px 1fr 92px;align-items:center;gap:10px;margin:7px 0;font-size:13px}
-
 .bar-row .tr{height:9px;border-radius:99px;background:var(--line-2);overflow:hidden}
-
 .bar-row .tr i{display:block;height:100%;border-radius:99px;transition:width .5s ease}
-
 .bar-row .vv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
-
 .hint{font-size:12.5px;color:var(--tx-3);margin-top:9px}
-
 .hint b{color:var(--tx-2)}
-
 .seg{display:inline-flex;background:var(--line-2);border-radius:9px;padding:3px;gap:2px}
-
 .seg button{padding:5px 13px;border-radius:7px;font-size:13px;font-weight:650;color:var(--tx-2)}
-
 .seg button.on{background:#fff;color:var(--tx);box-shadow:var(--sh)}
-
 .check{width:16px;height:16px;accent-color:var(--orange)}
 
-
-
 /* ---------- Interventions : programmes, statuts, planning ---------- */
-
 .stchip{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:700}
-
 .st-Prévue{background:var(--line-2);color:var(--tx-2)} .st-Àconfirmer{background:var(--amber-bg);color:#9A7100}
-
 .st-Commandée{background:#E3EEF6;color:var(--blue)} .st-Àréaliser{background:var(--orange-bg);color:var(--orange-d)}
-
 .st-Encours{background:#E3EEF6;color:var(--blue)} .st-Réalisée{background:var(--green-bg);color:var(--green)}
-
 .st-Annulée{background:var(--red-bg);color:var(--red);text-decoration:line-through}
-
 .period-h{display:flex;align-items:center;gap:10px;margin:22px 0 10px;font-size:16px;font-weight:800;letter-spacing:-.3px}
-
 .period-h .tag{font-weight:700}
-
 .pgcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden}
-
 .pgcard .p-hd{padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line-2)}
-
 .pgcard .p-hd b{font-size:14.5px}
-
 .pgcard .p-meta{font-size:12.5px;color:var(--tx-2)}
-
 .pgcard .p-act{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
-
 .pgcard .p-real{background:var(--green-bg);padding:9px 16px;font-size:12.5px;border-top:1px solid var(--line-2)}
-
 .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--line);
-
   border-radius:var(--r);box-shadow:var(--sh);padding:10px 12px;margin-bottom:14px}
-
 .filters select{border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:#fff;font-size:13px;max-width:170px}
-
 .filters .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx-3);font-weight:700}
-
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-
 .cal .dayh{font-size:11px;text-transform:uppercase;color:var(--tx-3);font-weight:700;text-align:center;padding:4px 0}
-
 .cal .day{min-height:82px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:5px 6px;font-size:12px}
-
 .cal .day.off{opacity:.4}
-
 .cal .dnum{font-weight:700;color:var(--tx-3);font-size:11px}
-
 .cal .ev{background:var(--orange-bg);border-left:3px solid var(--orange);border-radius:5px;padding:2px 5px;margin-top:3px;
-
   font-size:11px;font-weight:600;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-
 .alertbox{background:var(--amber-bg);border:1px solid #EAD489;border-radius:var(--r);padding:11px 15px;font-size:13px;margin-bottom:14px}
-
 .alertbox b{display:block;margin-bottom:4px}
-
 .alertbox ul{margin-left:18px}
-
 .miss{color:var(--red);font-weight:700;font-size:12px}
-
 .lines-ed .row{display:grid;grid-template-columns:1.4fr 1fr 78px 1fr 30px;gap:8px;margin-bottom:7px;align-items:center}
-
 .pk-list{max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:9px;padding:8px 10px;
-
   display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:13px}
-
 .pk-list label{display:flex;gap:7px;align-items:center;cursor:pointer}
-
 @media(max-width:920px){
-
   .sidebar{transform:translateX(-100%)}
-
   .sidebar.open{transform:none;box-shadow:var(--sh-2)}
-
   .main{margin-left:0}
-
   .burger{display:inline-flex}
-
   .content{padding:18px 14px 60px}
-
   .crumb{font-size:16px}
-
 }
-
 body::after{content:none}
-
 @media print{
-
   body::after{content:"© 2026 Renaud Vigneaux — EARL Vigneaux · Hectaris — Tous droits réservés · Reproduction interdite sans autorisation";
-
     display:block;position:fixed;bottom:6px;left:0;right:0;text-align:center;font-size:9px;color:#8B949C}
-
   .sidebar,.topbar,.actions,.no-print{display:none!important}
-
   .main{margin:0} .content{max-width:none;padding:0}
-
   .card{box-shadow:none;break-inside:avoid;margin-bottom:14px}
-
   body{background:#fff}
-
 }
-
 </style>
-
 </head>
-
 <body>
-
 <div id="app">
-
   <aside class="sidebar" id="sidebar">
-
     <div class="logo">
-
       <div class="logo-mark">H</div>
-
       <div><b>Hectaris</b><span>ASSOLEMENT & PRÉVISION</span></div>
-
     </div>
-
     <nav class="nav" id="nav"></nav>
-
     <div class="side-foot">Campagne <b id="foot-camp"></b><br><span id="foot-surf"></span><br><span style="font-size:10px;opacity:.75">© 2026 Renaud Vigneaux — Tous droits réservés<br>Données stockées localement dans votre navigateur.<br>Hectaris ne transmet aucune donnée à GitHub.</span></div>
-
   </aside>
-
   <div class="main">
-
     <div class="topbar">
-
       <button class="burger" onclick="UI.toggleSidebar()" aria-label="Menu">
-
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-
       </button>
-
       <div class="crumb" id="crumb">Tableau de bord</div>
-
       <div class="grow"></div>
-
       <div class="save-dot no-print"><i></i><span id="save-txt">Enregistré</span></div>
-
       <div class="camp-pill no-print">
-
         Campagne <select id="camp-sel" onchange="Store.switchCampaign(this.value)"></select>
-
         <button class="btn sm ghost" title="Nouvelle campagne" onclick="UI.newCampaign()">＋</button>
-
       </div>
-
     </div>
-
     <div class="strip" id="strip"></div>
-
     <div class="content" id="view"></div>
-
   </div>
-
 </div>
-
 <div id="modal-root"></div>
-
-<style>/* Leaflet 1.9.4 — BSD-2-Clause — (c) Vladimir Agafonkin */
-
-/* required styles */
-
-
-
-.leaflet-pane,
-
-.leaflet-tile,
-
-.leaflet-marker-icon,
-
-.leaflet-marker-shadow,
-
-.leaflet-tile-container,
-
-.leaflet-pane > svg,
-
-.leaflet-pane > canvas,
-
-.leaflet-zoom-box,
-
-.leaflet-image-layer,
-
-.leaflet-layer {
-
-position: absolute;
-
-left: 0;
-
-top: 0;
-
-}
-
-.leaflet-container {
-
-overflow: hidden;
-
-}
-
-.leaflet-tile,
-
-.leaflet-marker-icon,
-
-.leaflet-marker-shadow {
-
--webkit-user-select: none;
-
-   -moz-user-select: none;
-
-        user-select: none;
-
-  -webkit-user-drag: none;
-
-}
-
-/* Prevents IE11 from highlighting tiles in blue */
-
-.leaflet-tile::selection {
-
-background: transparent;
-
-}
-
-/* Safari renders non-retina tile on retina better with this, but Chrome is worse */
-
-.leaflet-safari .leaflet-tile {
-
-image-rendering: -webkit-optimize-contrast;
-
-}
-
-/* hack that prevents hw layers "stretching" when loading new tiles */
-
-.leaflet-safari .leaflet-tile-container {
-
-width: 1600px;
-
-height: 1600px;
-
--webkit-transform-origin: 0 0;
-
-}
-
-.leaflet-marker-icon,
-
-.leaflet-marker-shadow {
-
-display: block;
-
-}
-
-/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
-
-/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
-
-.leaflet-container .leaflet-overlay-pane svg {
-
-max-width: none !important;
-
-max-height: none !important;
-
-}
-
-.leaflet-container .leaflet-marker-pane img,
-
-.leaflet-container .leaflet-shadow-pane img,
-
-.leaflet-container .leaflet-tile-pane img,
-
-.leaflet-container img.leaflet-image-layer,
-
-.leaflet-container .leaflet-tile {
-
-max-width: none !important;
-
-max-height: none !important;
-
-width: auto;
-
-padding: 0;
-
-}
-
-
-
-.leaflet-container img.leaflet-tile {
-
-/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
-
-mix-blend-mode: plus-lighter;
-
-}
-
-
-
-.leaflet-container.leaflet-touch-zoom {
-
--ms-touch-action: pan-x pan-y;
-
-touch-action: pan-x pan-y;
-
-}
-
-.leaflet-container.leaflet-touch-drag {
-
--ms-touch-action: pinch-zoom;
-
-/* Fallback for FF which doesn't support pinch-zoom */
-
-touch-action: none;
-
-touch-action: pinch-zoom;
-
-}
-
-.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
-
--ms-touch-action: none;
-
-touch-action: none;
-
-}
-
-.leaflet-container {
-
--webkit-tap-highlight-color: transparent;
-
-}
-
-.leaflet-container a {
-
--webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
-
-}
-
-.leaflet-tile {
-
-filter: inherit;
-
-visibility: hidden;
-
-}
-
-.leaflet-tile-loaded {
-
-visibility: inherit;
-
-}
-
-.leaflet-zoom-box {
-
-width: 0;
-
-height: 0;
-
--moz-box-sizing: border-box;
-
-     box-sizing: border-box;
-
-z-index: 800;
-
-}
-
-/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
-
-.leaflet-overlay-pane svg {
-
--moz-user-select: none;
-
-}
-
-
-
-.leaflet-pane         { z-index: 400; }
-
-
-
-.leaflet-tile-pane    { z-index: 200; }
-
-.leaflet-overlay-pane { z-index: 400; }
-
-.leaflet-shadow-pane  { z-index: 500; }
-
-.leaflet-marker-pane  { z-index: 600; }
-
-.leaflet-tooltip-pane   { z-index: 650; }
-
-.leaflet-popup-pane   { z-index: 700; }
-
-
-
-.leaflet-map-pane canvas { z-index: 100; }
-
-.leaflet-map-pane svg    { z-index: 200; }
-
-
-
-.leaflet-vml-shape {
-
-width: 1px;
-
-height: 1px;
-
-}
-
-.lvml {
-
-behavior: url(#default#VML);
-
-display: inline-block;
-
-position: absolute;
-
-}
-
-
-
-
-
-/* control positioning */
-
-
-
-.leaflet-control {
-
-position: relative;
-
-z-index: 800;
-
-pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
-
-pointer-events: auto;
-
-}
-
-.leaflet-top,
-
-.leaflet-bottom {
-
-position: absolute;
-
-z-index: 1000;
-
-pointer-events: none;
-
-}
-
-.leaflet-top {
-
-top: 0;
-
-}
-
-.leaflet-right {
-
-right: 0;
-
-}
-
-.leaflet-bottom {
-
-bottom: 0;
-
-}
-
-.leaflet-left {
-
-left: 0;
-
-}
-
-.leaflet-control {
-
-float: left;
-
-clear: both;
-
-}
-
-.leaflet-right .leaflet-control {
-
-float: right;
-
-}
-
-.leaflet-top .leaflet-control {
-
-margin-top: 10px;
-
-}
-
-.leaflet-bottom .leaflet-control {
-
-margin-bottom: 10px;
-
-}
-
-.leaflet-left .leaflet-control {
-
-margin-left: 10px;
-
-}
-
-.leaflet-right .leaflet-control {
-
-margin-right: 10px;
-
-}
-
-
-
-
-
-/* zoom and fade animations */
-
-
-
-.leaflet-fade-anim .leaflet-popup {
-
-opacity: 0;
-
--webkit-transition: opacity 0.2s linear;
-
-   -moz-transition: opacity 0.2s linear;
-
-        transition: opacity 0.2s linear;
-
-}
-
-.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
-
-opacity: 1;
-
-}
-
-.leaflet-zoom-animated {
-
--webkit-transform-origin: 0 0;
-
-    -ms-transform-origin: 0 0;
-
-        transform-origin: 0 0;
-
-}
-
-svg.leaflet-zoom-animated {
-
-will-change: transform;
-
-}
-
-
-
-.leaflet-zoom-anim .leaflet-zoom-animated {
-
--webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
-
-   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
-
-        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
-
-}
-
-.leaflet-zoom-anim .leaflet-tile,
-
-.leaflet-pan-anim .leaflet-tile {
-
--webkit-transition: none;
-
-   -moz-transition: none;
-
-        transition: none;
-
-}
-
-
-
-.leaflet-zoom-anim .leaflet-zoom-hide {
-
-visibility: hidden;
-
-}
-
-
-
-
-
-/* cursors */
-
-
-
-.leaflet-interactive {
-
-cursor: pointer;
-
-}
-
-.leaflet-grab {
-
-cursor: -webkit-grab;
-
-cursor:    -moz-grab;
-
-cursor:         grab;
-
-}
-
-.leaflet-crosshair,
-
-.leaflet-crosshair .leaflet-interactive {
-
-cursor: crosshair;
-
-}
-
-.leaflet-popup-pane,
-
-.leaflet-control {
-
-cursor: auto;
-
-}
-
-.leaflet-dragging .leaflet-grab,
-
-.leaflet-dragging .leaflet-grab .leaflet-interactive,
-
-.leaflet-dragging .leaflet-marker-draggable {
-
-cursor: move;
-
-cursor: -webkit-grabbing;
-
-cursor:    -moz-grabbing;
-
-cursor:         grabbing;
-
-}
-
-
-
-/* marker & overlays interactivity */
-
-.leaflet-marker-icon,
-
-.leaflet-marker-shadow,
-
-.leaflet-image-layer,
-
-.leaflet-pane > svg path,
-
-.leaflet-tile-container {
-
-pointer-events: none;
-
-}
-
-
-
-.leaflet-marker-icon.leaflet-interactive,
-
-.leaflet-image-layer.leaflet-interactive,
-
-.leaflet-pane > svg path.leaflet-interactive,
-
-svg.leaflet-image-layer.leaflet-interactive path {
-
-pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
-
-pointer-events: auto;
-
-}
-
-
-
-/* visual tweaks */
-
-
-
-.leaflet-container {
-
-background: #ddd;
-
-outline-offset: 1px;
-
-}
-
-.leaflet-container a {
-
-color: #0078A8;
-
-}
-
-.leaflet-zoom-box {
-
-border: 2px dotted #38f;
-
-background: rgba(255,255,255,0.5);
-
-}
-
-
-
-
-
-/* general typography */
-
-.leaflet-container {
-
-font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
-
-font-size: 12px;
-
-font-size: 0.75rem;
-
-line-height: 1.5;
-
-}
-
-
-
-
-
-/* general toolbar styles */
-
-
-
-.leaflet-bar {
-
-box-shadow: 0 1px 5px rgba(0,0,0,0.65);
-
-border-radius: 4px;
-
-}
-
-.leaflet-bar a {
-
-background-color: #fff;
-
-border-bottom: 1px solid #ccc;
-
-width: 26px;
-
-height: 26px;
-
-line-height: 26px;
-
-display: block;
-
-text-align: center;
-
-text-decoration: none;
-
-color: black;
-
-}
-
-.leaflet-bar a,
-
-.leaflet-control-layers-toggle {
-
-background-position: 50% 50%;
-
-background-repeat: no-repeat;
-
-display: block;
-
-}
-
-.leaflet-bar a:hover,
-
-.leaflet-bar a:focus {
-
-background-color: #f4f4f4;
-
-}
-
-.leaflet-bar a:first-child {
-
-border-top-left-radius: 4px;
-
-border-top-right-radius: 4px;
-
-}
-
-.leaflet-bar a:last-child {
-
-border-bottom-left-radius: 4px;
-
-border-bottom-right-radius: 4px;
-
-border-bottom: none;
-
-}
-
-.leaflet-bar a.leaflet-disabled {
-
-cursor: default;
-
-background-color: #f4f4f4;
-
-color: #bbb;
-
-}
-
-
-
-.leaflet-touch .leaflet-bar a {
-
-width: 30px;
-
-height: 30px;
-
-line-height: 30px;
-
-}
-
-.leaflet-touch .leaflet-bar a:first-child {
-
-border-top-left-radius: 2px;
-
-border-top-right-radius: 2px;
-
-}
-
-.leaflet-touch .leaflet-bar a:last-child {
-
-border-bottom-left-radius: 2px;
-
-border-bottom-right-radius: 2px;
-
-}
-
-
-
-/* zoom control */
-
-
-
-.leaflet-control-zoom-in,
-
-.leaflet-control-zoom-out {
-
-font: bold 18px 'Lucida Console', Monaco, monospace;
-
-text-indent: 1px;
-
-}
-
-
-
-.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
-
-font-size: 22px;
-
-}
-
-
-
-
-
-/* layers control */
-
-
-
-.leaflet-control-layers {
-
-box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-
-background: #fff;
-
-border-radius: 5px;
-
-}
-
-.leaflet-control-layers-toggle {
-
-background-image: url(images/layers.png);
-
-width: 36px;
-
-height: 36px;
-
-}
-
-.leaflet-retina .leaflet-control-layers-toggle {
-
-background-image: url(images/layers-2x.png);
-
-background-size: 26px 26px;
-
-}
-
-.leaflet-touch .leaflet-control-layers-toggle {
-
-width: 44px;
-
-height: 44px;
-
-}
-
-.leaflet-control-layers .leaflet-control-layers-list,
-
-.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
-
-display: none;
-
-}
-
-.leaflet-control-layers-expanded .leaflet-control-layers-list {
-
-display: block;
-
-position: relative;
-
-}
-
-.leaflet-control-layers-expanded {
-
-padding: 6px 10px 6px 6px;
-
-color: #333;
-
-background: #fff;
-
-}
-
-.leaflet-control-layers-scrollbar {
-
-overflow-y: scroll;
-
-overflow-x: hidden;
-
-padding-right: 5px;
-
-}
-
-.leaflet-control-layers-selector {
-
-margin-top: 2px;
-
-position: relative;
-
-top: 1px;
-
-}
-
-.leaflet-control-layers label {
-
-display: block;
-
-font-size: 13px;
-
-font-size: 1.08333em;
-
-}
-
-.leaflet-control-layers-separator {
-
-height: 0;
-
-border-top: 1px solid #ddd;
-
-margin: 5px -10px 5px -6px;
-
-}
-
-
-
-/* Default icon URLs */
-
-.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
-
-background-image: url(images/marker-icon.png);
-
-}
-
-
-
-
-
-/* attribution and scale controls */
-
-
-
-.leaflet-container .leaflet-control-attribution {
-
-background: #fff;
-
-background: rgba(255, 255, 255, 0.8);
-
-margin: 0;
-
-}
-
-.leaflet-control-attribution,
-
-.leaflet-control-scale-line {
-
-padding: 0 5px;
-
-color: #333;
-
-line-height: 1.4;
-
-}
-
-.leaflet-control-attribution a {
-
-text-decoration: none;
-
-}
-
-.leaflet-control-attribution a:hover,
-
-.leaflet-control-attribution a:focus {
-
-text-decoration: underline;
-
-}
-
-.leaflet-attribution-flag {
-
-display: inline !important;
-
-vertical-align: baseline !important;
-
-width: 1em;
-
-height: 0.6669em;
-
-}
-
-.leaflet-left .leaflet-control-scale {
-
-margin-left: 5px;
-
-}
-
-.leaflet-bottom .leaflet-control-scale {
-
-margin-bottom: 5px;
-
-}
-
-.leaflet-control-scale-line {
-
-border: 2px solid #777;
-
-border-top: none;
-
-line-height: 1.1;
-
-padding: 2px 5px 1px;
-
-white-space: nowrap;
-
--moz-box-sizing: border-box;
-
-     box-sizing: border-box;
-
-background: rgba(255, 255, 255, 0.8);
-
-text-shadow: 1px 1px #fff;
-
-}
-
-.leaflet-control-scale-line:not(:first-child) {
-
-border-top: 2px solid #777;
-
-border-bottom: none;
-
-margin-top: -2px;
-
-}
-
-.leaflet-control-scale-line:not(:first-child):not(:last-child) {
-
-border-bottom: 2px solid #777;
-
-}
-
-
-
-.leaflet-touch .leaflet-control-attribution,
-
-.leaflet-touch .leaflet-control-layers,
-
-.leaflet-touch .leaflet-bar {
-
-box-shadow: none;
-
-}
-
-.leaflet-touch .leaflet-control-layers,
-
-.leaflet-touch .leaflet-bar {
-
-border: 2px solid rgba(0,0,0,0.2);
-
-background-clip: padding-box;
-
-}
-
-
-
-
-
-/* popup */
-
-
-
-.leaflet-popup {
-
-position: absolute;
-
-text-align: center;
-
-margin-bottom: 20px;
-
-}
-
-.leaflet-popup-content-wrapper {
-
-padding: 1px;
-
-text-align: left;
-
-border-radius: 12px;
-
-}
-
-.leaflet-popup-content {
-
-margin: 13px 24px 13px 20px;
-
-line-height: 1.3;
-
-font-size: 13px;
-
-font-size: 1.08333em;
-
-min-height: 1px;
-
-}
-
-.leaflet-popup-content p {
-
-margin: 17px 0;
-
-margin: 1.3em 0;
-
-}
-
-.leaflet-popup-tip-container {
-
-width: 40px;
-
-height: 20px;
-
-position: absolute;
-
-left: 50%;
-
-margin-top: -1px;
-
-margin-left: -20px;
-
-overflow: hidden;
-
-pointer-events: none;
-
-}
-
-.leaflet-popup-tip {
-
-width: 17px;
-
-height: 17px;
-
-padding: 1px;
-
-
-
-margin: -10px auto 0;
-
-pointer-events: auto;
-
-
-
--webkit-transform: rotate(45deg);
-
-   -moz-transform: rotate(45deg);
-
-    -ms-transform: rotate(45deg);
-
-        transform: rotate(45deg);
-
-}
-
-.leaflet-popup-content-wrapper,
-
-.leaflet-popup-tip {
-
-background: white;
-
-color: #333;
-
-box-shadow: 0 3px 14px rgba(0,0,0,0.4);
-
-}
-
-.leaflet-container a.leaflet-popup-close-button {
-
-position: absolute;
-
-top: 0;
-
-right: 0;
-
-border: none;
-
-text-align: center;
-
-width: 24px;
-
-height: 24px;
-
-font: 16px/24px Tahoma, Verdana, sans-serif;
-
-color: #757575;
-
-text-decoration: none;
-
-background: transparent;
-
-}
-
-.leaflet-container a.leaflet-popup-close-button:hover,
-
-.leaflet-container a.leaflet-popup-close-button:focus {
-
-color: #585858;
-
-}
-
-.leaflet-popup-scrolled {
-
-overflow: auto;
-
-}
-
-
-
-.leaflet-oldie .leaflet-popup-content-wrapper {
-
--ms-zoom: 1;
-
-}
-
-.leaflet-oldie .leaflet-popup-tip {
-
-width: 24px;
-
-margin: 0 auto;
-
-
-
--ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
-
-filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
-
-}
-
-
-
-.leaflet-oldie .leaflet-control-zoom,
-
-.leaflet-oldie .leaflet-control-layers,
-
-.leaflet-oldie .leaflet-popup-content-wrapper,
-
-.leaflet-oldie .leaflet-popup-tip {
-
-border: 1px solid #999;
-
-}
-
-
-
-
-
-/* div icon */
-
-
-
-.leaflet-div-icon {
-
-background: #fff;
-
-border: 1px solid #666;
-
-}
-
-
-
-
-
-/* Tooltip */
-
-/* Base styles for the element that has a tooltip */
-
-.leaflet-tooltip {
-
-position: absolute;
-
-padding: 6px;
-
-background-color: #fff;
-
-border: 1px solid #fff;
-
-border-radius: 3px;
-
-color: #222;
-
-white-space: nowrap;
-
--webkit-user-select: none;
-
--moz-user-select: none;
-
--ms-user-select: none;
-
-user-select: none;
-
-pointer-events: none;
-
-box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-
-}
-
-.leaflet-tooltip.leaflet-interactive {
-
-cursor: pointer;
-
-pointer-events: auto;
-
-}
-
-.leaflet-tooltip-top:before,
-
-.leaflet-tooltip-bottom:before,
-
-.leaflet-tooltip-left:before,
-
-.leaflet-tooltip-right:before {
-
-position: absolute;
-
-pointer-events: none;
-
-border: 6px solid transparent;
-
-background: transparent;
-
-content: "";
-
-}
-
-
-
-/* Directions */
-
-
-
-.leaflet-tooltip-bottom {
-
-margin-top: 6px;
-
-}
-
-.leaflet-tooltip-top {
-
-margin-top: -6px;
-
-}
-
-.leaflet-tooltip-bottom:before,
-
-.leaflet-tooltip-top:before {
-
-left: 50%;
-
-margin-left: -6px;
-
-}
-
-.leaflet-tooltip-top:before {
-
-bottom: 0;
-
-margin-bottom: -12px;
-
-border-top-color: #fff;
-
-}
-
-.leaflet-tooltip-bottom:before {
-
-top: 0;
-
-margin-top: -12px;
-
-margin-left: -6px;
-
-border-bottom-color: #fff;
-
-}
-
-.leaflet-tooltip-left {
-
-margin-left: -6px;
-
-}
-
-.leaflet-tooltip-right {
-
-margin-left: 6px;
-
-}
-
-.leaflet-tooltip-left:before,
-
-.leaflet-tooltip-right:before {
-
-top: 50%;
-
-margin-top: -6px;
-
-}
-
-.leaflet-tooltip-left:before {
-
-right: 0;
-
-margin-right: -12px;
-
-border-left-color: #fff;
-
-}
-
-.leaflet-tooltip-right:before {
-
-left: 0;
-
-margin-left: -12px;
-
-border-right-color: #fff;
-
-}
-
-
-
-/* Printing */
-
-
-
-@media print {
-
-/* Prevent printers from removing background-images of controls. */
-
-.leaflet-control {
-
--webkit-print-color-adjust: exact;
-
-print-color-adjust: exact;
-
-}
-
-}
-
-
-
-/* ---- Hectaris carto ---- */
-
-#map{height:calc(100vh - 300px);min-height:430px;border-radius:var(--r);border:1px solid var(--line);z-index:1}
-
-.carto-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-
-.borne{width:16px;height:16px;border-radius:50%;background:#F57C00;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5);cursor:grab}
-
-.borne.b2{background:#2C6E9E}
-
-.vtx{width:12px;height:12px;border-radius:50%;background:#fff;border:2.5px solid #F57C00;box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:grab}
-
-.carto-read{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;margin-top:10px}
-
-.carto-read b{font-size:16px}
-
-.leaflet-container{font:inhe 
-
+<script>
+"use strict";
+const LEGAL = {
+  short: "© 2026 Renaud Vigneaux — EARL Vigneaux · Tous droits réservés",
+  owner: "Renaud Vigneaux — EARL Vigneaux, 7 rue de l'Orval, 89150 Brannay, France",
+  contact: "Renaud Vigneaux — EARL Vigneaux, 7 rue de l'Orval, 89150 Brannay · Tél. 06 62 35 60 54 · rvigneaux@gmail.com",
+  contactHtml: 'Renaud Vigneaux — EARL Vigneaux<br>7 rue de l\'Orval, 89150 Brannay, France<br>'
+    + 'Tél. <a href="tel:+33662356054" style="color:var(--orange);font-weight:650;text-decoration:none">06 62 35 60 54</a> · '
+    + '<a href="mailto:rvigneaux@gmail.com" style="color:var(--orange);font-weight:650;text-decoration:none">rvigneaux@gmail.com</a>',
+};
+/* =====================================================================
+   MODULE 1 — DB : base de données, campagnes, persistance, MIGRATION
+   ===================================================================== */
+const DB_KEY = "hectaris_assolement_v1";
+const uid = () => Math.random().toString(36).slice(2, 9);
+const today = () => new Date().toISOString().slice(0,10);
+
+const Storage = (() => {
+  try {
+    const t="__hx__"; window.localStorage.setItem(t,"1"); window.localStorage.removeItem(t);
+    return { ok:true, get:k=>localStorage.getItem(k), set:(k,v)=>localStorage.setItem(k,v), del:k=>localStorage.removeItem(k) };
+  } catch(e){ const m={}; return { ok:false, get:k=>m[k]??null, set:(k,v)=>{m[k]=v;}, del:k=>{delete m[k];} }; }
+})();
+
+/* Unités : application (dose) et commerciale (prix) */
+const APP_UNITS = { "kg/ha":"kg", "t/ha":"t", "l/ha":"L", "u/ha":"u", "dose/ha":"doses" };
+const PRICE_UNITS = { t:"€/t", kg:"€/kg", L:"€/L", dose:"€/dose", u:"€/unité", forfait:"forfait €" };
+const STATUSES = ["Prévue","À confirmer","Commandée","À réaliser","En cours","Réalisée","Annulée"];
+const DEFAULT_PERIODS = [
+  "Semis","Prélevée","Postlevée","Automne","Désherbage automne","Sortie hiver","Tallage",
+  "Reprise de végétation","Désherbage printemps","T0","T1","T2","T3",
+  "Charançon de la tige","Méligèthes","Boutons accolés","2 à 4 feuilles","6 à 8 feuilles",
+  "Épiaison","Floraison","Sclérotinia","Avant récolte","Période non renseignée",
+];
+
+function defaultCampaign() {
+  /* Base VIERGE : uniquement des référentiels techniques génériques.
+     Aucune parcelle, aucun programme, aucun prix, aucune donnée d'exploitation. */
+  const CU = (id,name,color) => ({ id, name, color,
+    n:{a1:0,a2:0,a3:0,a4:0,f3:"sol39",f4:"sol39"}, fond:{}, eco:{rdt:0,prix:0,autres:0} });
+  const cultures = [
+    CU("colza","Colza","#F2C230"), CU("ble","Blé tendre","#C98A3D"),
+    CU("oh","Orge hiver","#6D9E4F"), CU("op","Orge printemps","#A3C168"),
+    CU("tour","Tournesol","#E8862E"), CU("jach","Jachère","#9AA79B"),
+  ];
+  const FZ = (id,name,cat,appUnit,extra) => Object.assign({
+    id, name, cat, appUnit, priceUnit:"t", price:null, density:null, tenor:null,
+    supplier:"", composition:"", comment:"", active:true, priceUpdated:"", history:[],
+    cur:null, tgt:null, low:null, high:null, stock:0, decision:"Surveiller", pct:0 }, extra||{});
+  const fertilizers = [
+    FZ("sol39","Solution azotée 39","azote","l/ha",{ density:1.30, tenor:0.39, comment:"« 39 » = 39 kg N / 100 L" }),
+    FZ("n33","Azote solide 33,5","azote","kg/ha",{ tenor:0.335 }),
+    FZ("kz","Kiezerite","fond","kg/ha"),
+    FZ("pk","Engrais PK","fond","kg/ha"),
+    FZ("cp","Compost","fond","t/ha"),
+  ];
+  return {
+    parcels:[], varieties:[], products:[], programs:[], purchases:[],
+    cultures, fertilizers,
+    periods: DEFAULT_PERIODS.map(n=>({ id:uid(), name:n, archived:false })),
+    seedOrders:{},
+    storageNames:{ bran:"Site 1", fouch:"Site 2" },
+    params:{ tenor39:0.39, tenor33:0.335, density:1.30, pmgDiv:100, tva:20 },
+  };
+}
+
+function demoCampaign() {
+  /* Ferme de DÉMONSTRATION : données entièrement fictives. */
+  const c = defaultCampaign();
+  c.demo = true;
+  c.storageNames = { bran:"Hangar", fouch:"Plateforme" };
+  const setCu=(id,n,fond,eco)=>{ const cu=c.cultures.find(x=>x.id===id); Object.assign(cu.n,n); Object.assign(cu.fond,fond); Object.assign(cu.eco,eco); };
+  setCu("colza",{a1:60,a2:80},{kz:150},{rdt:3.4,prix:440,autres:400});
+  setCu("ble",{a1:60,a2:80,a3:40,f3:"n33"},{pk:200},{rdt:7.0,prix:200,autres:400});
+  setCu("oh",{a1:70,a2:70},{pk:200},{rdt:6.5,prix:180,autres:400});
+  c.varieties = [
+    { id:"dv1", cult:"colza", name:"Variété démo colza", pmg:null, grains:null, dose:1.0, prixKg:null, prixDose:60, comment:"Donnée fictive" },
+    { id:"dv2", cult:"ble",  name:"Variété démo blé",   pmg:45, grains:320, dose:null, prixKg:0.50, prixDose:null, comment:"Donnée fictive" },
+    { id:"dv3", cult:"oh",   name:"Variété démo orge",  pmg:45, grains:300, dose:null, prixKg:0.50, prixDose:null, comment:"Donnée fictive" },
+  ];
+  c.parcels = [
+    { id:uid(), num:1, name:"Parcelle Nord",     commune:"Commune fictive", storage:"bran", area:8.50,  cult:"colza", vari:"dv1", prev:"",           comment:"Démonstration", archived:false, nOv:{}, fOv:{} },
+    { id:uid(), num:2, name:"Parcelle du Moulin",commune:"Commune fictive", storage:"bran", area:5.20,  cult:"ble",   vari:"dv2", prev:"Colza",      comment:"Démonstration", archived:false, nOv:{}, fOv:{} },
+    { id:uid(), num:3, name:"Grand Champ",       commune:"Commune fictive", storage:"fouch", area:12.40, cult:"oh",   vari:"dv3", prev:"Blé tendre", comment:"Démonstration", archived:false, nOv:{}, fOv:{} },
+  ];
+  c.products = [
+    { id:"dp1", name:"Fongicide générique",  type:"Fongicide",  unit:"L", price:30, cults:"", comment:"Produit fictif", stock:0, ordered:0 },
+    { id:"dp2", name:"Herbicide générique",  type:"Désherbage", unit:"L", price:20, cults:"", comment:"Produit fictif", stock:0, ordered:0 },
+    { id:"dp3", name:"Insecticide générique",type:"Insecticide",unit:"L", price:25, cults:"", comment:"Produit fictif", stock:0, ordered:0 },
+  ];
+  c.programs = [
+    { id:uid(), period:"Désherbage automne", status:"Prévue", type:"Désherbage", cult:"ble", vari:"", parcels:null,
+      datePlan:"", objective:"Exemple de programme", trigger:"", note:"Données fictives", real:null,
+      lines:[{ id:uid(), prod:"dp2", dose:2.0, type:"Désherbage", note:"" }] },
+    { id:uid(), period:"T1", status:"Prévue", type:"Fongicide", cult:"ble", vari:"", parcels:null,
+      datePlan:"", objective:"Exemple de programme", trigger:"", note:"Données fictives", real:null,
+      lines:[{ id:uid(), prod:"dp1", dose:0.8, type:"Fongicide", note:"" }] },
+  ];
+  const H=(f,p)=>{ f.price=p; f.priceUpdated=today();
+    f.history=[{ id:uid(), date:today(), supplier:"Démo", price:p, unit:"t", qty:"", comment:"Prix de démonstration", retained:true }]; };
+  H(c.fertilizers[0],240); c.fertilizers[0].cur=250; c.fertilizers[0].tgt=220; c.fertilizers[0].low=210; c.fertilizers[0].high=290;
+  H(c.fertilizers[1],420); c.fertilizers[1].cur=430; c.fertilizers[1].tgt=390; c.fertilizers[1].low=370; c.fertilizers[1].high=500;
+  H(c.fertilizers[2],300); H(c.fertilizers[3],450); H(c.fertilizers[4],12);
+  return c;
+}
+
+/* ---- MIGRATION : anciennes sauvegardes → modèle v2, sans perte ---- */
+function migrateCampaign(c) {
+  if (!c.periods) c.periods = DEFAULT_PERIODS.map(n=>({ id:uid(), name:n, archived:false }));
+  if (!c.programs) c.programs = [];
+  (c.products||[]).forEach(p=>{ if(p.stock==null) p.stock=0; if(p.ordered==null) p.ordered=0; });
+  // Engrais v1 → v2
+  (c.fertilizers||[]).forEach(f=>{
+    if (f.appUnit) return;
+    f.cat = (f.id==="sol39"||f.id==="n33") ? "azote" : "fond";
+    f.appUnit = f.id==="cp" ? "t/ha" : f.id==="sol39" ? "l/ha" : "kg/ha";
+    f.priceUnit = "t";
+    f.price = f.ref!=null ? f.ref : 0;                    // ancien prix de référence €/t
+    if (f.id==="sol39") { f.density = c.params?.density ?? 1.33; f.tenor = c.params?.tenor39 ?? 0.39; }
+    if (f.id==="n33")   { f.tenor = c.params?.tenor33 ?? 0.335; }
+    f.supplier = f.supplier ?? ""; f.composition=""; f.active = true;
+    f.priceUpdated = f.priceUpdated ?? today();
+    f.history = f.history ?? [{ id:uid(), date:f.priceUpdated, supplier:f.supplier, price:f.price, unit:"t", qty:"", comment:"Migration", retained:true }];
+  });
+  // Interventions v1 → programmes (regroupées par période + culture + parcelle)
+  if (c.interventions && c.interventions.length) {
+    const groups = {};
+    c.interventions.forEach(iv=>{
+      const period = iv.period || "Période non renseignée";
+      if (!c.periods.some(p=>p.name===period)) c.periods.push({ id:uid(), name:period, archived:false });
+      const key = period+"|"+(iv.cult||"")+"|"+(iv.parcel||"");
+      const g = groups[key] || (groups[key] = { id:uid(), period, status:"Prévue", type:iv.type,
+        cult:iv.cult||"", vari:"", parcels: iv.parcel?[iv.parcel]:null, datePlan:"", objective:"",
+        trigger:"", note:"", real:null, lines:[] });
+      g.lines.push({ id:uid(), prod:iv.prod, dose:iv.dose, type:iv.type, note:iv.comment||"" });
+    });
+    c.programs.push(...Object.values(groups));
+    delete c.interventions;
+  }
+  // périodes utilisées mais absentes du référentiel
+  c.programs.forEach(pg=>{
+    if (pg.period && !c.periods.some(p=>p.name===pg.period))
+      c.periods.push({ id:uid(), name:pg.period, archived:false });
+    pg.lines.forEach(l=>{ if(l.type==null) l.type=pg.type||"Autre"; });
+  });
+  // Engrais azote indispensables aux calculs : les créer s'ils manquent
+  const ensureFert=(id,name,appUnit,tenor,density)=>{
+    if(!c.fertilizers.some(f=>f.id===id))
+      c.fertilizers.push({ id, name, cat:"azote", appUnit, priceUnit:"t", price:null, density:density??null,
+        tenor, supplier:"", composition:"", comment:"", active:true, priceUpdated:"", history:[],
+        cur:null, tgt:null, low:null, high:null, stock:0, decision:"Surveiller", pct:0 });
+  };
+  ensureFert("sol39","Solution azotée 39","l/ha", c.params?.tenor39 ?? 0.39, c.params?.density ?? 1.30);
+  ensureFert("n33","Azote solide 33,5","kg/ha", c.params?.tenor33 ?? 0.335);
+  if (!c.seedOrders) c.seedOrders = {};
+  if (!c.storageNames) c.storageNames = { bran:"Cuve 1", fouch:"Cuve 2" };
+  (c.parcels||[]).forEach(p=>{ if(p.prev==null) p.prev=""; });
+  return c;
+}
+
+const Store = {
+  data:null,
+  firstRun:false,
+  load() {
+    try {
+      const raw = Storage.get(DB_KEY);
+      if (raw) { this.data = JSON.parse(raw);
+        Object.values(this.data.campaigns).forEach(migrateCampaign); this.persist(); return; }
+    } catch(e){ console.warn("Lecture locale impossible :", e); }
+    // Aucune sauvegarde locale : base vierge en mémoire, assistant affiché, RIEN n'est écrit
+    // tant que l'utilisateur n'a pas choisi (les données existantes ne sont jamais remplacées).
+    const y = String(new Date().getFullYear());
+    this.data = { version:2, active:y, campaigns:{ [y]: defaultCampaign() } };
+    this.firstRun = true;
+  },
+  persist() {
+    try {
+      Storage.set(DB_KEY, JSON.stringify(this.data));
+      const el=document.getElementById("save-txt");
+      if (el) el.textContent = Storage.ok
+        ? "Enregistré "+new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})
+        : "⚠ Non sauvegardé (mode aperçu)";
+    } catch(e){ UI.toast("⚠ Sauvegarde locale impossible"); }
+  },
+  get camp(){ return this.data.campaigns[this.data.active]; },
+  mutate(fn, silent){ fn(this.camp); this.persist(); if(!silent) UI.render(); },
+  switchCampaign(n){ this.data.active=n; this.persist(); UI.renderShell(); UI.render(); },
+  createCampaign(n, mode){
+    if(this.data.campaigns[n]){ UI.toast("Cette campagne existe déjà"); return; }
+    const src=this.camp, copy=JSON.parse(JSON.stringify(src));
+    if(mode!=="full"){
+      // Rotation : cultures actuelles → précédents culturaux ; interventions & achats non copiés
+      copy.parcels.forEach(p=>{ const cu=copy.cultures.find(x=>x.id===p.cult);
+        p.prev = cu ? cu.name : (p.prev||""); p.cult=""; p.vari=""; p.nOv={}; p.fOv={}; });
+      copy.programs=[]; copy.purchases=[]; copy.seedOrders={}; delete copy.demo;
+    }
+    this.data.campaigns[n]=copy;
+    this.data.active=n; this.persist(); UI.renderShell(); UI.render();
+    UI.toast("Campagne "+n+" créée"+(mode!=="full"?" — cultures transférées en précédents":" (copie complète)"));
+  },
+  deleteCampaign(n){
+    if(Object.keys(this.data.campaigns).length<=1){ UI.toast("Impossible : dernière campagne"); return; }
+    delete this.data.campaigns[n];
+    if(this.data.active===n) this.data.active=Object.keys(this.data.campaigns)[0];
+    this.persist(); UI.renderShell(); UI.render();
+  },
+};
+/* =====================================================================
+   MODULE 2 — FERT : moteur de conversion générique des engrais
+   Choisit automatiquement la formule selon unité d'application × unité commerciale.
+   Retourne toujours { ok, cost|null, reason } — jamais un faux « 0 € ».
+   ===================================================================== */
+const FERT = {
+  needsDensity(f){ return f.appUnit==="l/ha" && (f.priceUnit==="t" || f.priceUnit==="kg"); },
+  /** quantité totale (en unité d'application) → tonnes ; null si non convertible */
+  toTons(f, qty) {
+    if (!f || qty==null) return null;
+    if (f.appUnit==="kg/ha") return qty/1000;
+    if (f.appUnit==="t/ha")  return qty;
+    if (f.appUnit==="l/ha")  return f.density>0 ? qty*f.density/1000 : null;
+    return null;   // u/ha, dose/ha : pas d'équivalent tonnes
+  },
+  /** prix converti vers l'unité d'application (ex. €/t → €/L) ; {ok, val, label, reason} */
+  unitPrice(f) {
+    if(!f) return { ok:false, reason:"Engrais introuvable" };
+    const px=+f.price;
+    if (!(px>0)) return { ok:false, reason:"Prix à renseigner" };
+    if (px<0)    return { ok:false, reason:"Prix négatif" };
+    const u=f.appUnit, pu=f.priceUnit;
+    if (pu==="forfait") return { ok:true, val:null, label:"forfait "+fmt(px)+" €", flat:px };
+    if (pu==="t") {
+      if (u==="kg/ha") return { ok:true, val:px/1000, label:fmt(px/1000,3)+" €/kg" };
+      if (u==="t/ha")  return { ok:true, val:px, label:fmt(px,2)+" €/t" };
+      if (u==="l/ha")  return f.density>0
+        ? { ok:true, val:px*f.density/1000, label:fmt(px*f.density/1000,3)+" €/L" }
+        : { ok:false, reason:"Densité requise" };
+      return { ok:false, reason:"Unités incompatibles ("+PRICE_UNITS[pu]+" ↔ "+u+")" };
+    }
+    if (pu==="kg") {
+      if (u==="kg/ha") return { ok:true, val:px, label:fmt(px,3)+" €/kg" };
+      if (u==="t/ha")  return { ok:true, val:px*1000, label:fmt(px*1000)+" €/t" };
+      if (u==="l/ha")  return f.density>0
+        ? { ok:true, val:px*f.density, label:fmt(px*f.density,3)+" €/L" }
+        : { ok:false, reason:"Densité requise" };
+      return { ok:false, reason:"Unités incompatibles" };
+    }
+    if (pu==="L")    return u==="l/ha"    ? { ok:true, val:px, label:fmt(px,3)+" €/L" }    : { ok:false, reason:"Unités incompatibles" };
+    if (pu==="dose") return u==="dose/ha" ? { ok:true, val:px, label:fmt(px,2)+" €/dose" } : { ok:false, reason:"Unités incompatibles" };
+    if (pu==="u")    return u==="u/ha"    ? { ok:true, val:px, label:fmt(px,2)+" €/u" }    : { ok:false, reason:"Unités incompatibles" };
+    return { ok:false, reason:"Unité commerciale inconnue" };
+  },
+  /** coût d'une quantité totale exprimée dans l'unité d'application */
+  cost(f, qty) {
+    const up=this.unitPrice(f);
+    if (!up.ok) return { ok:false, cost:null, reason:up.reason };
+    if (up.flat!=null) return { ok:true, cost: qty>0 ? up.flat : 0 };
+    return { ok:true, cost: Math.round(qty*up.val*100)/100 };
+  },
+  /** coût pour un prix €/t donné (scénarios du prévisionnel) — engrais tarifés à la tonne */
+  costAtTon(f, qty, pricePerTon) {
+    const t=this.toTons(f, qty);
+    return t==null ? null : Math.round(t*pricePerTon);
+  },
+  histStats(f) {
+    const h=(f.history||[]).filter(x=>+x.price>0).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+    if (!h.length) return null;
+    const prices=h.map(x=>+x.price);
+    const last=h[h.length-1], prev=h.length>1?h[h.length-2]:null;
+    return { last:+last.price, lastDate:last.date, best:Math.min(...prices),
+      avg:Math.round(prices.reduce((s,p)=>s+p,0)/prices.length*10)/10,
+      delta: prev? +last.price-+prev.price : null, count:h.length };
+  },
+};
+
+/* =====================================================================
+   MODULE 3 — CALC : moteur de calcul métier
+   ===================================================================== */
+const fmt  = (n,d=0) => (n==null||isNaN(n)) ? "—" : n.toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const eur  = (n,d=0) => (n==null||isNaN(n)) ? "—" : fmt(n,d)+" €";
+const eurHa= n => (n==null||isNaN(n)) ? "—" : fmt(n)+" €/ha";
+const MISS = '<span class="miss">Prix à renseigner</span>';
+const CALC = {
+  cult(c,id){ return c.cultures.find(x=>x.id===id); },
+  vari(c,id){ return c.varieties.find(x=>x.id===id); },
+  prod(c,id){ return c.products.find(x=>x.id===id); },
+  fert(c,id){ return c.fertilizers.find(x=>x.id===id); },
+  fondFerts(c){ return c.fertilizers.filter(f=>f.cat==="fond" && f.active!==false); },
+  active(c){ return c.parcels.filter(p=>!p.archived); },
+  surfTot(c){ return this.active(c).reduce((s,p)=>s+(+p.area||0),0); },
+  surfByCult(c){ const m={}; this.active(c).forEach(p=>{ m[p.cult]=(m[p.cult]||0)+(+p.area||0); }); return m; },
+
+  /* ---- SEMENCES (inchangé) ---- */
+  seedRow(c,p) {
+    const v=this.vari(c,p.vari); if(!v) return null;
+    const r={ parcel:p, v };
+    if (v.pmg && v.grains) {
+      r.kgHa=Math.round(v.pmg*v.grains/c.params.pmgDiv); r.kg=Math.round(r.kgHa*p.area);
+      r.price=v.prixKg||0; r.costHa=r.kgHa*r.price; r.cost=Math.round(r.kg*r.price);
+    } else if (v.dose) {
+      r.doseHa=v.dose; r.doses=Math.round(v.dose*p.area*10)/10;
+      r.price=v.prixDose||0; r.costHa=v.dose*r.price; r.cost=Math.round(r.doses*r.price);
+    }
+    return r;
+  },
+  seeds(c) {
+    const rows=this.active(c).map(p=>this.seedRow(c,p)).filter(Boolean);
+    const byVar={};
+    rows.forEach(r=>{ const b=byVar[r.v.id]||(byVar[r.v.id]={v:r.v,kg:0,doses:0,cost:0});
+      b.kg+=r.kg||0; b.doses+=r.doses||0; b.cost+=r.cost||0; });
+    Object.values(byVar).forEach(b=>{ const so=c.seedOrders[b.v.id]||{};
+      b.stock=so.stock||0; b.ordered=so.ordered||0; b.need=b.kg||b.doses;
+      b.left=Math.max(0,Math.round((b.need-b.stock-b.ordered)*10)/10); });
+    return { rows, byVar, totKg:rows.reduce((s,r)=>s+(r.kg||0),0),
+      totDoses:Math.round(rows.reduce((s,r)=>s+(r.doses||0),0)*10)/10,
+      totCost:rows.reduce((s,r)=>s+(r.cost||0),0) };
+  },
+
+  /* ---- AZOTE : teneurs & densité portées par l'engrais ---- */
+  nRow(c,p) {
+    const cu=this.cult(c,p.cult); if(!cu) return null;
+    const f39=this.fert(c,"sol39"), f33=this.fert(c,"n33");
+    const T39=f39?.tenor||c.params.tenor39, T33=f33?.tenor||c.params.tenor33;
+    const ov=p.nOv||{};
+    const r={ parcel:p, cu, apports:[], sol39:0, n33:0 };
+    [["a1","sol39"],["a2","sol39"],["a3",cu.n.f3],["a4",cu.n.f4]].forEach(([k,defForm],i)=>{
+      const uN = ov[k]!=null&&ov[k]!==""?+ov[k]:(cu.n[k]||0);
+      const form = (i>=2 && ov["f"+(i+1)])?ov["f"+(i+1)]:defForm;
+      if(!uN){ r.apports.push(null); return; }
+      const perHa = form==="n33"?uN/T33:uN/T39;
+      const tot=Math.round(perHa*p.area);
+      r.apports.push({ uN, form, perHa:Math.round(perHa), tot });
+      if(form==="n33") r.n33+=tot; else r.sol39+=tot;
+    });
+    const c39=FERT.cost(f39,r.sol39), c33=FERT.cost(f33,r.n33);
+    r.priced = c39.ok && c33.ok;
+    r.cost = Math.round((c39.cost||0)+(c33.cost||0));
+    r.costHa = p.area? r.cost/p.area : 0;
+    return r;
+  },
+  nitrogen(c) {
+    const rows=this.active(c).map(p=>this.nRow(c,p)).filter(Boolean);
+    const byCult={}, byPlace={ bran:{sol39:0,n33:0}, fouch:{sol39:0,n33:0} };
+    rows.forEach(r=>{
+      const b=byCult[r.cu.id]||(byCult[r.cu.id]={sol39:0,n33:0,cost:0,area:0});
+      b.sol39+=r.sol39; b.n33+=r.n33; b.cost+=r.cost; b.area+=+r.parcel.area||0;
+      const pl=byPlace[r.parcel.storage]; if(pl){ pl.sol39+=r.sol39; pl.n33+=r.n33; }
+    });
+    return { rows, byCult, byPlace,
+      sol39:rows.reduce((s,r)=>s+r.sol39,0), n33:rows.reduce((s,r)=>s+r.n33,0),
+      cost:rows.reduce((s,r)=>s+r.cost,0), priced:rows.every(r=>r.priced) };
+  },
+
+  /* ---- ENGRAIS DE FOND : dynamique, tous engrais cat "fond" ---- */
+  fondRow(c,p) {
+    const cu=this.cult(c,p.cult); if(!cu) return null;
+    const ov=p.fOv||{};
+    const items = this.fondFerts(c).map(f=>{
+      const dose = ov[f.id]!=null&&ov[f.id]!==""?+ov[f.id]:(cu.fond?.[f.id]||0);
+      const qty = f.appUnit==="t/ha" ? Math.round(dose*p.area*10)/10 : Math.round(dose*p.area*100)/100;
+      const cc = dose>0 ? FERT.cost(f,qty) : { ok:true, cost:0 };
+      return { f, dose, qty, tons:FERT.toTons(f,qty), cost:cc.ok?Math.round(cc.cost):null, ok:cc.ok, reason:cc.reason };
+    });
+    const priced = items.every(i=>i.ok);
+    const cost = items.reduce((s,i)=>s+(i.cost||0),0);
+    return { parcel:p, cu, items, cost, priced, costHa: p.area?cost/p.area:0, hasOv:Object.keys(ov).length>0 };
+  },
+  fond(c) {
+    const rows=this.active(c).map(p=>this.fondRow(c,p)).filter(Boolean);
+    const byFert={}, byCult={};
+    this.fondFerts(c).forEach(f=>byFert[f.id]={ f, qty:0, tons:0, cost:0, ok:true });
+    rows.forEach(r=>{
+      const bc=byCult[r.cu.id]||(byCult[r.cu.id]={cost:0,perFert:{}});
+      bc.cost+=r.cost;
+      r.items.forEach(i=>{
+        const bf=byFert[i.f.id]; if(!bf) return;
+        bf.qty+=i.qty; if(i.tons!=null) bf.tons+=i.tons; bf.cost+=(i.cost||0); if(!i.ok) bf.ok=false;
+        bc.perFert[i.f.id]=(bc.perFert[i.f.id]||0)+i.qty;
+      });
+    });
+    Object.values(byFert).forEach(b=>{ b.qty=Math.round(b.qty*10)/10; b.tons=Math.round(b.tons*100)/100; });
+    return { rows, byFert, byCult, cost:rows.reduce((s,r)=>s+r.cost,0), priced:rows.every(r=>r.priced) };
+  },
+
+  /* ---- PROGRAMMES D'INTERVENTIONS ---- */
+  progParcels(c,pg) {
+    let ps=this.active(c);
+    if (pg.parcels && pg.parcels.length) return ps.filter(p=>pg.parcels.includes(p.id));
+    return ps.filter(p=>(!pg.cult||p.cult===pg.cult)&&(!pg.vari||p.vari===pg.vari));
+  },
+  progView(c,pg) {
+    const parcels=this.progParcels(c,pg);
+    const area=Math.round(parcels.reduce((s,p)=>s+(+p.area||0),0)*100)/100;
+    const lines=pg.lines.map(l=>{
+      const prod=this.prod(c,l.prod);
+      const qty=l.dose!=null&&area?Math.round(l.dose*area*100)/100:null;
+      const priced=prod&&+prod.price>0;
+      const cost=qty!=null&&priced?Math.round(qty*prod.price):null;
+      return { l, prod, qty, cost, priced, costHa: cost!=null&&area?cost/area:null };
+    });
+    const cost=lines.reduce((s,x)=>s+(x.cost||0),0);
+    const priced=lines.every(x=>x.priced||x.l.dose==null);
+    // écarts si réalisé
+    let realCost=null, gap=null;
+    if (pg.real) {
+      realCost=(pg.real.lines||[]).reduce((s,rl)=>{
+        const prod=this.prod(c,rl.prod); const a=pg.real.area??area;
+        return s+Math.round((rl.dose||0)*a*(prod?.price||0));
+      },0);
+      gap=realCost-cost;
+    }
+    return { pg, parcels, area, lines, cost, priced, costHa:area?cost/area:0, realCost, gap };
+  },
+  programs(c, filt={}) {
+    return c.programs
+      .map(pg=>this.progView(c,pg))
+      .filter(v=>{
+        const pg=v.pg;
+        if (filt.period && pg.period!==filt.period) return false;
+        if (filt.status && pg.status!==filt.status) return false;
+        if (filt.cult && pg.cult!==filt.cult) return false;
+        if (filt.vari && pg.vari!==filt.vari) return false;
+        if (filt.type && !pg.lines.some(l=>l.type===filt.type)) return false;
+        if (filt.prod && !pg.lines.some(l=>l.prod===filt.prod)) return false;
+        if (filt.parcel && !v.parcels.some(p=>p.id===filt.parcel)) return false;
+        return true;
+      });
+  },
+  periodOrder(c){ const o={}; c.periods.forEach((p,i)=>o[p.name]=i); return o; },
+  /* coûts phyto prévisionnels (hors annulées) et réalisés — pour dashboard & marges */
+  phyto(c) {
+    const views=this.programs(c).filter(v=>v.pg.status!=="Annulée");
+    const byType={}, byCult={};
+    views.forEach(v=>{
+      if(v.pg.cult) byCult[v.pg.cult]=(byCult[v.pg.cult]||0)+v.cost;
+      v.lines.forEach(x=>{ byType[x.l.type]=(byType[x.l.type]||0)+(x.cost||0); });
+    });
+    const done=views.filter(v=>v.pg.status==="Réalisée");
+    return { views, byType, byCult,
+      cost:views.reduce((s,v)=>s+v.cost,0),
+      realCost:done.reduce((s,v)=>s+(v.realCost??v.cost),0),
+      counts:{ total:views.length,
+        todo:views.filter(v=>["Prévue","À confirmer","Commandée","À réaliser","En cours"].includes(v.pg.status)).length,
+        done:done.length },
+      areaTodo:Math.round(views.filter(v=>!["Réalisée","Annulée"].includes(v.pg.status)).reduce((s,v)=>s+v.area,0)*10)/10 };
+  },
+  /** synthèse produits (besoin/stock/commandé/reste) sur un ensemble filtré */
+  productNeeds(c, views) {
+    const m={};
+    views.filter(v=>!["Réalisée","Annulée"].includes(v.pg.status)).forEach(v=>v.lines.forEach(x=>{
+      if(!x.prod||x.qty==null) return;
+      const b=m[x.prod.id]||(m[x.prod.id]={ prod:x.prod, qty:0 });
+      b.qty+=x.qty;
+    }));
+    return Object.values(m).map(b=>{
+      b.qty=Math.round(b.qty*100)/100;
+      b.stock=+b.prod.stock||0; b.ordered=+b.prod.ordered||0;
+      b.left=Math.max(0,Math.round((b.qty-b.stock-b.ordered)*100)/100);
+      return b;
+    }).sort((a,b)=>b.left-a.left);
+  },
+  progAlerts(c) {
+    const out=[];
+    const views=this.programs(c);
+    views.forEach(v=>{ const pg=v.pg, name=(pg.period||"?")+" · "+(this.cult(c,pg.cult)?.name||"?");
+      if(!pg.period) out.push("Programme sans période : "+name);
+      if(!pg.lines.length) out.push("Aucun produit dans le programme "+name);
+      if(!v.parcels.length && pg.status!=="Annulée") out.push("Aucune parcelle ne correspond : "+name);
+      if(pg.lines.some(l=>l.dose==null||l.dose==="")) out.push("Dose manquante : "+name);
+      if(v.lines.some(x=>!x.priced)) out.push("Prix produit manquant : "+name);
+      if(pg.status==="Réalisée" && !(pg.real&&pg.real.date)) out.push("Réalisée sans date réelle : "+name);
+    });
+    this.productNeeds(c,views).forEach(b=>{
+      if(b.qty>0 && b.stock>0 && b.qty>b.stock+b.ordered)
+        out.push("Stock insuffisant : "+b.prod.name+" (besoin "+fmt(b.qty,1)+" "+b.prod.unit+", dispo "+fmt(b.stock+b.ordered,1)+")");
+    });
+    const seen={};
+    views.forEach(v=>v.lines.forEach(x=>{ if(!x.prod)return;
+      const k=v.pg.period+"|"+v.pg.cult+"|"+x.prod.id;
+      if(seen[k]&&seen[k]!==v.pg.id) out.push("Doublon possible : "+x.prod.name+" deux fois en "+v.pg.period+" ("+(this.cult(c,v.pg.cult)?.name||"")+")");
+      seen[k]=v.pg.id; }));
+    return [...new Set(out)];
+  },
+
+  /* ---- PRÉVISIONNEL ENGRAIS ---- */
+  fertNeeds(c) {
+    const nit=this.nitrogen(c), fd=this.fond(c);
+    const m={ sol39:nit.sol39, n33:nit.n33 };
+    Object.values(fd.byFert).forEach(b=>m[b.f.id]=b.qty);
+    return m;
+  },
+  fertView(c) {
+    const needs=this.fertNeeds(c);
+    return c.fertilizers.filter(f=>f.active!==false).map(f=>{
+      const need=needs[f.id]||0;
+      const tons=FERT.toTons(f,need);
+      const buys=c.purchases.filter(b=>b.fert===f.id);
+      const secured=Math.round(buys.reduce((s,b)=>s+(+b.qty||0),0)*10)/10;
+      const spent=buys.reduce((s,b)=>s+(+b.qty||0)*(+b.price||0),0);
+      const pmp=secured?Math.round(spent/secured*10)/10:0;
+      const left=tons!=null?Math.max(0,Math.round((tons-(+f.stock||0)-secured)*10)/10):null;
+      const cover=tons?((+f.stock||0)+secured)/tons:null;
+      const up=FERT.unitPrice(f);
+      const needCost=FERT.cost(f,need);
+      const refPx=pmp>0?Math.min(f.tgt||Infinity,pmp):(f.tgt||null);
+      const signal=!(+f.cur>0)?"n":!refPx?"n":f.cur<=refPx?"g":f.cur<=refPx*1.1?"a":"r";
+      const scn = f.priceUnit==="t" && tons!=null ? {
+        low:  f.low!=null ? Math.round(secured*pmp+(left??0)*f.low):null,
+        mid:  Math.round(secured*pmp+(left??0)*f.price),
+        high: f.high!=null? Math.round(secured*pmp+(left??0)*f.high):null,
+      } : null;
+      return { f, need, tons:tons!=null?Math.round(tons*10)/10:null, secured, pmp, spent,
+        left, cover, up, needCost, signal, scn,
+        remainCost: left!=null && f.priceUnit==="t" ? Math.round(left*(+f.cur||+f.price||0)) : null,
+        ecoDone: secured&&+f.cur>0?Math.round((f.cur-pmp)*secured):0,
+        ecoPot:  left!=null&&+f.cur>0&&+f.tgt>0?Math.round((f.cur-f.tgt)*left):0,
+        hist:FERT.histStats(f) };
+    });
+  },
+  /** marges par culture ; prices = surcharge €/t {fertId:px} pour scénarios (sinon prix engrais) */
+  margins(c, tonPrices) {
+    const nit=this.nitrogen(c), fd=this.fond(c), ph=this.phyto(c), sd=this.seeds(c), surf=this.surfByCult(c);
+    const seedByCult={};
+    sd.rows.forEach(r=>{ seedByCult[r.parcel.cult]=(seedByCult[r.parcel.cult]||0)+(r.cost||0); });
+    const fertCultCost = cu => {
+      let sum=0;
+      const n=nit.byCult[cu.id]||{sol39:0,n33:0};
+      [["sol39",n.sol39],["n33",n.n33]].forEach(([id,qty])=>{
+        const f=this.fert(c,id); if(!f) return;
+        if(tonPrices&&tonPrices[id]!=null){ const cc=FERT.costAtTon(f,qty,tonPrices[id]); sum+=cc||0; }
+        else { const cc=FERT.cost(f,qty); sum+=cc.cost||0; }
+      });
+      const bc=fd.byCult[cu.id];
+      if(bc) Object.entries(bc.perFert).forEach(([id,qty])=>{
+        const f=this.fert(c,id); if(!f) return;
+        if(tonPrices&&tonPrices[id]!=null&&f.priceUnit==="t"){ const cc=FERT.costAtTon(f,qty,tonPrices[id]); sum+=cc||0; }
+        else { const cc=FERT.cost(f,qty); sum+=cc.cost||0; }
+      });
+      return sum;
+    };
+    return c.cultures.filter(cu=>cu.id!=="jach"&&(surf[cu.id]||0)>0).map(cu=>{
+      const a=surf[cu.id];
+      const fertHa=fertCultCost(cu)/a;
+      const seedHa=(seedByCult[cu.id]||0)/a;
+      const phytoHa=(ph.byCult[cu.id]||0)/a;
+      const pb=(cu.eco.rdt||0)*(cu.eco.prix||0);
+      const margin=pb-seedHa-phytoHa-(cu.eco.autres||0)-fertHa;
+      const seuil=cu.eco.rdt?(seedHa+phytoHa+(cu.eco.autres||0)+fertHa)/cu.eco.rdt:null;
+      return { cu, area:a, pb, seedHa, phytoHa, autres:cu.eco.autres||0, fertHa, margin, seuil };
+    });
+  },
+  scenarioPrices(c,key){ const o={}; c.fertilizers.forEach(f=>{
+    if(f.priceUnit==="t") o[f.id]= key==="ref"?f.price:(f[key]!=null?f[key]:f.price); }); return o; },
+  totals(c) {
+    const nit=this.nitrogen(c), fd=this.fond(c), ph=this.phyto(c), sd=this.seeds(c);
+    const surf=this.surfTot(c);
+    const intr=nit.cost+fd.cost+ph.cost+sd.totCost;
+    return { surf, nit, fd, ph, sd, intr, intrHa:surf?intr/surf:0 };
+  },
+};
+/* =====================================================================
+   MODULE 4 — CHARTS (SVG maison)  &  MODULE 5 — EXPORTS
+   ===================================================================== */
+const CHARTS = {
+  donut(items,size=190){
+    const tot=items.reduce((s,i)=>s+i.value,0)||1;
+    const R=size/2,r=R-26,C=2*Math.PI*r; let off=0;
+    const segs=items.filter(i=>i.value>0).map(i=>{ const dash=i.value/tot*C;
+      const s=`<circle r="${r}" cx="${R}" cy="${R}" fill="none" stroke="${i.color}" stroke-width="24" stroke-dasharray="${dash} ${C-dash}" stroke-dashoffset="${-off}" transform="rotate(-90 ${R} ${R})"/>`;
+      off+=dash; return s; }).join("");
+    return `<svg viewBox="0 0 ${size} ${size}" style="max-width:${size}px;width:100%">${segs}
+      <text x="${R}" y="${R-4}" text-anchor="middle" font-size="21" font-weight="800" fill="#242B31">${fmt(tot,1)}</text>
+      <text x="${R}" y="${R+15}" text-anchor="middle" font-size="10.5" fill="#8B949C" letter-spacing="1">HECTARES</text></svg>`;
+  },
+  bars(items,unit="€"){
+    const max=Math.max(...items.map(i=>Math.abs(i.value)),1);
+    return items.map(i=>`
+      <div class="bar-row"><span title="${i.label}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.label}</span>
+        <div class="tr"><i style="width:${Math.abs(i.value)/max*100}%;background:${i.color||"var(--orange)"}"></i></div>
+        <span class="vv">${fmt(i.value)}${unit?" "+unit:""}</span></div>`).join("");
+  },
+};
+const EXPORTS = {
+  download(name,mime,content){ const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([content],{type:mime})); a.download=name; a.click(); URL.revokeObjectURL(a.href); },
+  json(){ const d={ _copyright:LEGAL.short+" — "+LEGAL.owner, ...Store.data };
+    this.download(`hectaris_${Store.data.active}_${today()}.json`,"application/json",JSON.stringify(d,null,2));
+    UI.toast("Export JSON téléchargé"); },
+  importJson(file){ const rd=new FileReader();
+    rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(!d.campaigns) throw 0;
+      Object.values(d.campaigns).forEach(migrateCampaign);
+      Store.data=d; Store.firstRun=false; Store.persist(); UI.closeModal(); UI.renderShell(); UI.render(); UI.toast("Données importées ✓");
+    }catch(e){ UI.toast("⚠ Fichier JSON invalide"); } };
+    rd.readAsText(file); },
+  xmlEsc(s){ return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); },
+  sheet(name,rows){ const cells=r=>r.map(v=>typeof v==="number"
+      ?`<Cell><Data ss:Type="Number">${v}</Data></Cell>`:`<Cell><Data ss:Type="String">${this.xmlEsc(v)}</Data></Cell>`).join("");
+    return `<Worksheet ss:Name="${this.xmlEsc(name)}"><Table>`+rows.map(r=>`<Row>${cells(r)}</Row>`).join("")+`</Table></Worksheet>`; },
+  excel(){
+    const c=Store.camp,C=CALC,sd=C.seeds(c),nit=C.nitrogen(c),fd=C.fond(c),ph=C.phyto(c),fv=C.fertView(c);
+    const cn=id=>C.cult(c,id)?.name||"", vn=id=>C.vari(c,id)?.name||"";
+    const PLACE=k=>k?place(c,k):"";
+    const sheets=[];
+    sheets.push(this.sheet("Assolement",[["N°","Parcelle","Commune","Lieu stockage","Surface ha","Culture","Variété","Précédent","Commentaire"],
+      ...C.active(c).map(p=>[p.num??"",p.name,p.commune,PLACE(p.storage),+p.area,cn(p.cult),vn(p.vari),p.prev||"",p.comment||""])]));
+    sheets.push(this.sheet("Semences",[["Parcelle","Culture","Variété","Surface","kg/ha","kg total","Doses/ha","Doses","Coût"],
+      ...sd.rows.map(r=>[r.parcel.name,cn(r.parcel.cult),r.v.name,+r.parcel.area,r.kgHa??"",r.kg??"",r.doseHa??"",r.doses??"",r.cost??0])]));
+    sheets.push(this.sheet("Azote",[["Parcelle","Culture","Surface","Sol39 L","N33 kg","Coût"],
+      ...nit.rows.map(r=>[r.parcel.name,r.cu.name,+r.parcel.area,r.sol39,r.n33,r.cost])]));
+    sheets.push(this.sheet("Engrais",[["Nom","Catégorie","Unité application","Unité prix","Prix","Prix converti","Densité","Teneur N","Fournisseur","MAJ prix","Actif"],
+      ...c.fertilizers.map(f=>{ const up=FERT.unitPrice(f);
+        return [f.name,f.cat,f.appUnit,PRICE_UNITS[f.priceUnit]||"",+f.price||0,up.ok?(up.label||""):up.reason,f.density??"",f.tenor??"",f.supplier||"",f.priceUpdated||"",f.active!==false?"oui":"archivé"]; })]));
+    sheets.push(this.sheet("Historique prix",[["Date","Engrais","Fournisseur","Prix","Unité","Quantité proposée","Retenu","Commentaire"],
+      ...c.fertilizers.flatMap(f=>(f.history||[]).map(h=>[h.date||"",f.name,h.supplier||"",+h.price||0,PRICE_UNITS[h.unit]||h.unit||"",h.qty||"",h.retained?"oui":"non",h.comment||""]))]));
+    sheets.push(this.sheet("Engrais de fond",[["Parcelle","Culture",...C.fondFerts(c).map(f=>f.name+" ("+APP_UNITS[f.appUnit]+")"),"Coût"],
+      ...fd.rows.map(r=>[r.parcel.name,r.cu.name,...r.items.map(i=>i.qty),r.cost])]));
+    sheets.push(this.sheet("Previsionnel",[["Engrais","Besoin","Unité","Tonnes","Stock t","Sécurisé t","PMP","Reste t","Prix","Unité prix","Coût besoin"],
+      ...fv.map(x=>[x.f.name,x.need,APP_UNITS[x.f.appUnit]||"",x.tons??"",+x.f.stock||0,x.secured,x.pmp,x.left??"",+x.f.price||0,PRICE_UNITS[x.f.priceUnit]||"",x.needCost.ok?Math.round(x.needCost.cost):"n/a"])]));
+    sheets.push(this.sheet("Achats",[["Date","Produit","Fournisseur","Quantité t","Prix","Lieu","Commentaire"],
+      ...c.purchases.map(b=>[b.date,C.fert(c,b.fert)?.name||"",b.supplier||"",+b.qty||0,+b.price||0,b.place||"",b.comment||""])]));
+    sheets.push(this.sheet("Programmes",[["Période","Statut","Culture","Variété","Parcelles","Surface","Produit","Type","Dose/ha","Quantité","Coût","Date prévue","Note"],
+      ...C.programs(c).flatMap(v=>v.lines.map(x=>[v.pg.period,v.pg.status,cn(v.pg.cult),v.pg.vari?vn(v.pg.vari):"Toutes",
+        v.parcels.length,v.area,x.prod?.name||"",x.l.type||"",x.l.dose??"",x.qty??"",x.cost??"",v.pg.datePlan||"",v.pg.note||""]))]));
+    sheets.push(this.sheet("Mentions",[["Hectaris — Assolement & Prévision de campagne"],
+      [LEGAL.short],["Propriété exclusive de "+LEGAL.owner],
+      ["Reproduction, diffusion ou exploitation interdites sans autorisation écrite (CPI art. L.111-1, L.122-4, L.335-2 s.)"],
+      ["Contact : "+LEGAL.contact],["Export du "+today()+" — campagne "+Store.data.active]]));
+    const xml=`<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheets.join("")}</Workbook>`;
+    this.download(`Hectaris_${Store.data.active}.xls`,"application/vnd.ms-excel",xml);
+    UI.toast("Export Excel téléchargé (9 feuilles)");
+  },
+  pdf(){ window.print(); },
+};
+
+/* =====================================================================
+   MODULE 6 — UI
+   ===================================================================== */
+const ICONS = {
+  dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>',
+  asso:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 20l4-14 5 9 4-6 5 11z"/></svg>',
+  parc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>',
+  cult:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9M12 9c0-4 3-6 7-6 0 4-3 6-7 6zM12 13c0-4-3-6-7-6 0 4 3 6 7 6z"/></svg>',
+  seed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="14" r="6"/><path d="M12 8V3M9 5l3-2 3 2"/></svg>',
+  azo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s6 6.3 6 11a6 6 0 0 1-12 0c0-4.7 6-11 6-11z"/></svg>',
+  fond:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17c3-2 6-2 9 0s6 2 9 0M3 12c3-2 6-2 9 0s6 2 9 0M3 7c3-2 6-2 9 0s6 2 9 0"/></svg>',
+  eng:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12l-2 7a6 6 0 0 1-8 0z"/><path d="M9 21h6M12 13v8"/></svg>',
+  prev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l5-5 4 3 8-9"/><path d="M15 6h5v5"/></svg>',
+  phyto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
+  param:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2z"/></svg>',
+};
+const PAGES = [
+  { id:"dash",  name:"Tableau de bord",     icon:"dash",  sec:"Pilotage" },
+  { id:"prev",  name:"Prévisionnel d'achat",icon:"prev",  sec:"Pilotage" },
+  { id:"phyto", name:"Interventions",       icon:"phyto", sec:"Pilotage" },
+  { id:"asso",  name:"Assolement",          icon:"asso",  sec:"Campagne" },
+  { id:"parc",  name:"Parcellaire",         icon:"parc",  sec:"Campagne" },
+  { id:"seed",  name:"Semences",            icon:"seed",  sec:"Intrants" },
+  { id:"azo",   name:"Azote",               icon:"azo",   sec:"Intrants" },
+  { id:"fond",  name:"Engrais de fond",     icon:"fond",  sec:"Intrants" },
+  { id:"eng",   name:"Engrais & prix",      icon:"eng",   sec:"Référentiels" },
+  { id:"cult",  name:"Cultures & variétés", icon:"cult",  sec:"Référentiels" },
+  { id:"param", name:"Paramètres & données",icon:"param", sec:"Référentiels" },
+];
+const place = (c,k) => k ? ((c.storageNames||{})[k] || {bran:"Site 1",fouch:"Site 2"}[k] || "—") : "—";
+const stchip = s => `<span class="stchip st-${(s||"").replace(/ /g,"")}">${s||"—"}</span>`;
+
+const UI = {
+  page:"dash",
+  toggleSidebar(){ document.getElementById("sidebar").classList.toggle("open"); },
+  toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg;
+    document.body.appendChild(t); setTimeout(()=>t.remove(),2700); },
+  go(p){ this.page=p; document.getElementById("sidebar").classList.remove("open"); this.render(); },
+  renderShell() {
+    const nav=document.getElementById("nav"); let sec=""; nav.innerHTML="";
+    PAGES.forEach(pg=>{ if(pg.sec!==sec){ sec=pg.sec; nav.insertAdjacentHTML("beforeend",`<div class="nav-sec">${sec}</div>`); }
+      nav.insertAdjacentHTML("beforeend",
+        `<a href="#" class="${pg.id===this.page?'on':''}" onclick="UI.go('${pg.id}');return false">${ICONS[pg.icon]}${pg.name}</a>`); });
+    const sel=document.getElementById("camp-sel");
+    sel.innerHTML=Object.keys(Store.data.campaigns).sort()
+      .map(n=>`<option ${n===Store.data.active?"selected":""}>${n}</option>`).join("");
+  },
+  renderStrip() {
+    const c=Store.camp, by=CALC.surfByCult(c), tot=CALC.surfTot(c)||1;
+    document.getElementById("strip").innerHTML=c.cultures.filter(cu=>by[cu.id]>0)
+      .map(cu=>`<i title="${cu.name} — ${fmt(by[cu.id],2)} ha" style="width:${by[cu.id]/tot*100}%;background:${cu.color}"></i>`).join("");
+    document.getElementById("foot-camp").textContent=Store.data.active;
+    document.getElementById("foot-surf").textContent=fmt(tot,2)+" ha · "+CALC.active(c).length+" parcelles";
+  },
+  render() {
+    this.renderShell(); this.renderStrip();
+    const pg=PAGES.find(p=>p.id===this.page);
+    document.getElementById("crumb").textContent=pg.name;
+    const demo = Store.camp && Store.camp.demo
+      ? `<div class="alertbox" style="display:flex;gap:10px;align-items:center"><span>🧪</span>
+         <span><b style="display:inline">Données de démonstration</b> — ne pas utiliser comme référence agronomique.
+         Pour démarrer avec vos propres données : Paramètres → Réinitialiser Hectaris.</span></div>` : "";
+    document.getElementById("view").innerHTML = demo + this["pg_"+this.page]();
+    window.scrollTo({top:0});
+  },
+  set(coll,id,key,val,isNum){
+    if(coll==="params"){ Store.mutate(c=>{ c.params[key]= val===""?null:+val; }); return; }
+    Store.mutate(c=>{ const item=c[coll].find(x=>x.id===id); if(!item) return;
+      item[key]= isNum?(val===""?null:+val):val; });
+  },
+  setDeep(coll,id,path,key,val,isNum){
+    Store.mutate(c=>{ const item=c[coll].find(x=>x.id===id); if(!item) return;
+      if(!item[path]) item[path]={};
+      item[path][key]= isNum?(val===""?null:+val):val; });
+  },
+  inp(coll,id,key,val,{num=true,w=64,deep=null,cls=""}={}){
+    const v=val==null?"":val;
+    const fn=deep?`UI.setDeep('${coll}','${id}','${deep}','${key}',this.value,${num})`
+                 :`UI.set('${coll}','${id}','${key}',this.value,${num})`;
+    return `<input class="${num?'num ':''}ed ${cls}" style="width:${w}px" value="${String(v).replace(/"/g,'&quot;')}" onchange="${fn}">`;
+  },
+  sel(coll,id,key,val,options,{deep=null}={}){
+    const fn=deep?`UI.setDeep('${coll}','${id}','${deep}','${key}',this.value,false)`
+                 :`UI.set('${coll}','${id}','${key}',this.value,false)`;
+    return `<select class="ed" onchange="${fn}">`+options.map(o=>
+      `<option value="${o.v}" ${String(o.v)===String(val??"")?"selected":""}>${o.l}</option>`).join("")+`</select>`;
+  },
+  cultOpts(withEmpty){ const c=Store.camp;
+    return (withEmpty?[{v:"",l:"—"}]:[]).concat(c.cultures.map(cu=>({v:cu.id,l:cu.name}))); },
+  variOpts(cultId){ const c=Store.camp;
+    return [{v:"",l:"—"}].concat(c.varieties.filter(v=>!cultId||v.cult===cultId).map(v=>({v:v.id,l:v.name}))); },
+  prevOpts(){ const c=Store.camp;
+    const names=c.cultures.map(cu=>cu.name);
+    const extra=[...new Set(c.parcels.map(p=>p.prev).filter(v=>v&&!names.includes(v)))];
+    return [{v:"",l:"—"}].concat(names.concat(extra).map(n=>({v:n,l:n}))).concat([{v:"__autre",l:"Autre…"}]); },
+  setPrev(pid,val){
+    if(val==="__autre"){
+      const p=Store.camp.parcels.find(x=>x.id===pid);
+      this.modal("Précédent cultural — "+p.name,
+        `<div class="field"><label>Précédent cultural (saisie libre)</label><input id="m-prev" value="${(p.prev||"").replace(/"/g,'&quot;')}" placeholder="Luzerne, Pois, Betterave…"></div>`,
+        ()=>{ Store.mutate(c=>{ p.prev=this.mval("m-prev"); }); });
+      return;
+    }
+    Store.mutate(c=>{ const p=c.parcels.find(x=>x.id===pid); p.prev=val; });
+  },
+  prevSel(p){ return `<select class="ed" onchange="UI.setPrev('${p.id}',this.value)">`+
+    this.prevOpts().map(o=>`<option value="${o.v}" ${o.v===(p.prev||"")?"selected":""}>${o.l}</option>`).join("")+`</select>`; },
+  prevFiltOpts(list){
+    const vals=[...new Set(list.map(p=>p.prev).filter(Boolean))].sort();
+    return `<option value="">Précédent : tous</option><option value="__none">Sans précédent renseigné</option>`+
+      vals.map(v=>`<option value="${v}" ${v===(this._prevFilt||"")?"selected":""}>${v}</option>`).join("");
+  },
+  applyPrevFilt(list){ const f=this._prevFilt;
+    return !f ? list : f==="__none" ? list.filter(p=>!p.prev) : list.filter(p=>p.prev===f); },
+  _prevFilt:"",
+  modal(title,body,onOk,okLabel="Enregistrer",wide){
+    const root=document.getElementById("modal-root");
+    root.innerHTML=`<div class="overlay" onclick="if(event.target===this)UI.closeModal()">
+      <div class="modal" style="${wide?'width:min(760px,100%)':''}"><div class="m-hd"><h3>${title}</h3><button class="x" onclick="UI.closeModal()">✕</button></div>
+      <div class="m-bd">${body}</div>
+      <div class="m-ft"><button class="btn" onclick="UI.closeModal()">Annuler</button>
+      <button class="btn pri" id="m-ok">${okLabel}</button></div></div></div>`;
+    document.getElementById("m-ok").onclick=()=>{ if(onOk()!==false) UI.closeModal(); };
+  },
+  closeModal(){ document.getElementById("modal-root").innerHTML=""; },
+  mval(id){ return document.getElementById(id)?.value?.trim() ?? ""; },
+  mnum(id){ const v=this.mval(id); return v===""?null:+v; },
+  newCampaign(){
+    const next=String((+Store.data.active||new Date().getFullYear())+1);
+    this.modal("Nouvelle campagne",
+      `<div class="field"><label>Nom de la campagne</label><input id="m-name" value="${next}"></div>
+      <div style="display:grid;gap:10px;margin-top:6px">
+        <label style="display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:11px 13px;cursor:pointer">
+          <input type="radio" name="m-mode" value="rotate" checked style="margin-top:3px">
+          <span><b>Copier les parcelles et transformer les cultures actuelles en précédents culturaux</b>
+          <span class="hint" style="display:block;margin-top:3px">Recommandé. Parcelles, surfaces et communes copiées ; la culture ${Store.data.active} devient le précédent ; culture et variété de la nouvelle campagne à définir ; interventions et achats non copiés.</span></span></label>
+        <label style="display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:11px 13px;cursor:pointer">
+          <input type="radio" name="m-mode" value="full" style="margin-top:3px">
+          <span><b>Dupliquer entièrement la campagne précédente</b>
+          <span class="hint" style="display:block;margin-top:3px">Copie complète : cultures, variétés, programmes d'interventions et achats inclus.</span></span></label>
+      </div>`,
+      ()=>{ const n=this.mval("m-name"); if(!n) return false;
+        const mode=document.querySelector('input[name="m-mode"]:checked')?.value||"rotate";
+        Store.createCampaign(n,mode); },"Créer la campagne");
+  },
+
+  /* ---------- Assistant de premier démarrage ---------- */
+  wizard(){
+    const y=String(new Date().getFullYear());
+    const root=document.getElementById("modal-root");
+    root.innerHTML=`<div class="overlay">
+      <div class="modal" style="width:min(560px,100%)">
+        <div class="m-hd"><h3>Bienvenue dans Hectaris</h3></div>
+        <div class="m-bd">
+          <p style="font-size:13.5px;color:var(--tx-2);line-height:1.6;margin-bottom:16px">
+          Vos données sont enregistrées <b>uniquement dans votre navigateur</b>.<br>
+          Elles ne sont ni envoyées sur GitHub, ni partagées avec d'autres utilisateurs.</p>
+          <div style="display:grid;gap:10px">
+            <button class="btn pri" style="justify-content:flex-start;padding:13px 16px" onclick="UI.wizardBlank()">
+              <span style="text-align:left"><b>Créer mon exploitation</b><br><span style="font-weight:400;font-size:12px;opacity:.9">Base vide, campagne ${y} — vous saisissez vos parcelles et vos référentiels.</span></span></button>
+            <label class="btn" style="justify-content:flex-start;padding:13px 16px;cursor:pointer">
+              <span style="text-align:left"><b>Importer une sauvegarde</b><br><span style="font-weight:400;font-size:12px;color:var(--tx-2)">Restaurer un fichier JSON exporté depuis Hectaris.</span></span>
+              <input type="file" accept=".json" hidden onchange="if(this.files[0])EXPORTS.importJson(this.files[0])"></label>
+            <button class="btn" style="justify-content:flex-start;padding:13px 16px" onclick="UI.wizardDemo()">
+              <span style="text-align:left"><b>Charger une démonstration</b><br><span style="font-weight:400;font-size:12px;color:var(--tx-2)">Ferme fictive pour découvrir l'application. Données de démonstration — ne pas utiliser comme référence agronomique.</span></span></button>
+          </div>
+        </div></div></div>`;
+  },
+  wizardBlank(){
+    Store.firstRun=false; Store.persist(); this.closeModal(); this.render();
+    this.toast("Exploitation créée — commencez par le Parcellaire et la page Engrais & prix");
+    this.go("parc");
+  },
+  wizardDemo(){
+    const y=String(new Date().getFullYear());
+    Store.data={ version:2, active:y, campaigns:{ [y]: demoCampaign() } };
+    Store.firstRun=false; Store.persist(); this.closeModal(); this.renderShell(); this.render();
+    this.toast("Démonstration chargée — données fictives");
+  },
+  signal(s){ return {g:'<span class="chip sig-g"><i></i>Intéressant</span>',a:'<span class="chip sig-a"><i></i>Acceptable</span>',
+    r:'<span class="chip sig-r"><i></i>Cher</span>',n:'<span class="chip sig-n"><i></i>—</span>'}[s]; },
+  /* ---------- TABLEAU DE BORD ---------- */
+  pg_dash() {
+    const c=Store.camp, t=CALC.totals(c), by=CALC.surfByCult(c), fv=CALC.fertView(c);
+    const mg=CALC.margins(c,null);
+    const margeTot=mg.reduce((s,m)=>s+m.margin*m.area,0);
+    const sol=fv.find(x=>x.f.id==="sol39");
+    const needs=CALC.productNeeds(c,t.ph.views);
+    const toBuy=needs.filter(b=>b.left>0);
+    const po=CALC.periodOrder(c);
+    const nextPeriod=t.ph.views.filter(v=>!["Réalisée","Annulée"].includes(v.pg.status))
+      .sort((a,b)=>(po[a.pg.period]??99)-(po[b.pg.period]??99))[0]?.pg.period||"—";
+    const donut=CHARTS.donut(c.cultures.filter(cu=>by[cu.id]>0).map(cu=>({label:cu.name,value:by[cu.id],color:cu.color})));
+    const legend=c.cultures.filter(cu=>by[cu.id]>0).map(cu=>
+      `<span><i style="background:${cu.color}"></i>${cu.name} · ${fmt(by[cu.id],2)} ha</span>`).join("");
+    const K=(l,v,s,color)=>`<div class="kpi" style="--k:${color}"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+    const fertBars=fv.filter(x=>x.needCost.ok&&x.needCost.cost>0)
+      .map(x=>({label:x.f.name,value:Math.round(x.needCost.cost),color:x.f.cat==="azote"?"#2C6E9E":"#6D9E4F"}));
+    return `
+    <div class="page-head"><div><h1>Tableau de bord</h1>
+      <p>Campagne ${Store.data.active} — vision instantanée. Toutes les valeurs proviennent des autres pages, sans double saisie.</p></div>
+      <div class="actions"><button class="btn" onclick="EXPORTS.pdf()">Exporter en PDF</button></div></div>
+    <div class="grid g4">
+      ${K("Surface totale",fmt(t.surf,2)+" ha",CALC.active(c).length+" parcelles actives","var(--green)")}
+      ${K("Coût total intrants",eur(t.intr),eurHa(t.intrHa)+" · semences incluses","var(--orange)")}
+      ${K("Marge prévisionnelle",eur(Math.round(margeTot)),"aux prix engrais actuels","#2C6E9E")}
+      ${K("Couverture sol. 39",sol&&sol.cover!=null?fmt(sol.cover*100)+" %":"—",sol&&sol.left!=null?fmt(sol.left,1)+" t restant à acheter":"",sol?.signal==="g"?"var(--green)":sol?.signal==="a"?"var(--amber)":"var(--red)")}
+    </div>
+    <div class="grid g4" style="margin-top:16px">
+      ${K("Interventions prévues",t.ph.counts.total,t.ph.counts.todo+" à réaliser · "+t.ph.counts.done+" réalisées","var(--blue)")}
+      ${K("Surface restant à traiter",fmt(t.ph.areaTodo,1)+" ha","cumul des programmes non réalisés","var(--amber)")}
+      ${K("Coût phyto prévisionnel",eur(t.ph.cost),"réalisé : "+eur(t.ph.realCost),"var(--orange)")}
+      ${K("Prochaine période",nextPeriod,toBuy.length+" produit(s) à commander","#8C5E2A")}
+    </div>
+    <div class="grid g4" style="margin-top:16px">
+      ${K("Solution 39",fmt(t.nit.sol39)+" L",(sol?.tons!=null?"= "+fmt(sol.tons,1)+" t · ":"")+place(c,"bran")+" "+fmt(t.nit.byPlace.bran.sol39)+" / "+place(c,"fouch")+" "+fmt(t.nit.byPlace.fouch.sol39)+" L","var(--blue)")}
+      ${K("N33 solide",fmt(t.nit.n33)+" kg","= "+fmt(t.nit.n33/1000,1)+" t","var(--blue)")}
+      ${K("Semences",fmt(t.sd.totKg)+" kg",fmt(t.sd.totDoses,1)+" doses · "+eur(t.sd.totCost),"#8C5E2A")}
+      ${K("Coût engrais",eur(t.nit.cost+t.fd.cost),eurHa((t.nit.cost+t.fd.cost)/(t.surf||1))+(t.nit.priced&&t.fd.priced?"":" · ⚠ prix incomplets"),"var(--orange)")}
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><div class="hd"><h2>Répartition des cultures</h2><span class="sub">${fmt(t.surf,2)} ha</span></div>
+        <div class="bd" style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">
+          ${donut}<div class="legend" style="flex-direction:column;align-items:flex-start">${legend}</div></div></div>
+      <div class="card"><div class="hd"><h2>Coût par engrais</h2><span class="sub">besoin total valorisé</span></div>
+        <div class="bd">${fertBars.length?CHARTS.bars(fertBars):'<div class="empty">Renseignez les prix des engrais</div>'}
+        <div class="hint">Azote en bleu, fond en vert. Les nouveaux engrais apparaissent automatiquement.</div></div></div>
+    </div>
+    <div class="grid g2" style="margin-top:16px">
+      <div class="card"><div class="hd"><h2>Marge par culture</h2><span class="sub">€/ha — prix engrais actuels</span></div>
+        <div class="bd">${CHARTS.bars(mg.map(m=>({label:m.cu.name,value:Math.round(m.margin),color:m.margin<0?"var(--red)":m.margin<150?"var(--amber)":m.cu.color})),"€/ha")}</div></div>
+      <div class="card"><div class="hd"><h2>Interventions & achats</h2>
+        <button class="btn sm" onclick="UI.go('phyto')">Voir les interventions de la période</button></div>
+        <div class="bd"><table class="tb"><thead><tr><th>Produit à commander</th><th class="num">Besoin</th><th class="num">Reste</th></tr></thead><tbody>
+        ${toBuy.slice(0,6).map(b=>`<tr><td>${b.prod.name}</td><td class="num">${fmt(b.qty,1)} ${b.prod.unit}</td>
+          <td class="num" style="color:var(--orange);font-weight:700">${fmt(b.left,1)} ${b.prod.unit}</td></tr>`).join("")
+          ||'<tr><td colspan="3" class="empty">Rien à commander — stocks à jour</td></tr>'}</tbody></table></div></div>
+    </div>`;
+  },
+
+  /* ---------- ASSOLEMENT ---------- */
+  pg_asso() {
+    const c=Store.camp, by=CALC.surfByCult(c), tot=CALC.surfTot(c);
+    const shown=this.applyPrevFilt(CALC.active(c));
+    const rows=shown.map(p=>`<tr>
+        <td class="muted">${p.num??""}</td><td><b>${p.name}</b></td>
+        <td>${this.inp("parcels",p.id,"area",p.area,{w:70})}</td>
+        <td>${this.prevSel(p)}</td>
+        <td>${this.sel("parcels",p.id,"cult",p.cult,this.cultOpts(true))}</td>
+        <td>${this.sel("parcels",p.id,"vari",p.vari,this.variOpts(p.cult))}</td>
+        <td>${this.inp("parcels",p.id,"commune",p.commune,{num:false,w:90})}</td>
+        <td>${this.sel("parcels",p.id,"storage",p.storage,[{v:"",l:"—"},{v:"bran",l:place(c,"bran")},{v:"fouch",l:place(c,"fouch")}])}</td>
+        <td>${this.inp("parcels",p.id,"comment",p.comment,{num:false,w:150})}</td></tr>`).join("");
+    const rep=c.cultures.filter(cu=>by[cu.id]>0).map(cu=>({label:cu.name,value:Math.round(by[cu.id]*100)/100,color:cu.color}));
+    return `
+    <div class="page-head"><div><h1>Assolement</h1><p>Une ligne = une parcelle. Toute modification se propage aux semences, à l'azote, aux engrais, aux interventions et au prévisionnel.</p></div>
+      <div class="actions"><select class="ed" style="border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:#fff"
+        onchange="UI._prevFilt=this.value;UI.render()">${this.prevFiltOpts(CALC.active(c))}</select>
+      <button class="btn" onclick="UI.go('parc')">Gérer le parcellaire</button>
+      <button class="btn pri" onclick="UI.addParcel()">＋ Nouvelle parcelle</button></div></div>
+    <div class="grid g3" style="margin-bottom:16px">
+      <div class="kpi" style="--k:var(--green)"><div class="l">Surface totale</div><div class="v">${fmt(tot,2)} ha</div><div class="s">${CALC.active(c).length} parcelles</div></div>
+      <div class="card"><div class="bd" style="padding:14px 18px">${CHARTS.bars(rep,"ha")}</div></div>
+      <div class="card"><div class="hd"><h2>Lieux de stockage azote</h2></div><div class="bd">
+        ${["bran","fouch"].map(k=>{const s=CALC.active(c).filter(p=>p.storage===k).reduce((a,p)=>a+ +p.area,0);
+          return `<div class="bar-row"><span>${place(c,k)}</span><div class="tr"><i style="width:${tot?s/tot*100:0}%;background:var(--blue)"></i></div><span class="vv">${fmt(s,2)} ha</span></div>`;}).join("")}
+      </div></div></div>
+    <div class="card"><div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>N°</th><th>Parcelle</th><th>Surface (ha)</th><th>Précédent cultural</th><th>Culture</th><th>Variété</th><th>Commune</th><th>Stockage azote</th><th>Commentaire</th>
+    </tr></thead><tbody>${rows}
+    <tr class="tot"><td></td><td>TOTAL${this._prevFilt?" (filtré)":""}</td><td>${fmt(shown.reduce((s,p)=>s+ +p.area,0),2)} ha</td><td colspan="6">${Object.keys(by).length} cultures</td></tr>
+    </tbody></table></div></div>` + this.assoPrevSynth(c);
+  },
+  assoPrevSynth(c) {
+    const act=CALC.active(c), sau=CALC.surfTot(c)||1;
+    const m={};
+    act.forEach(p=>{ const k=p.prev||"Non renseigné";
+      const b=m[k]||(m[k]={area:0,n:0}); b.area+=+p.area||0; b.n++; });
+    const rows=Object.entries(m).sort((a,b)=>b[1].area-a[1].area).map(([k,b])=>
+      `<tr><td>${k==="Non renseigné"?'<span class="muted">Non renseigné</span>':"<b>"+k+"</b>"}</td>
+      <td class="num">${fmt(b.area,2)} ha</td><td class="num">${fmt(b.area/sau*100,1)} %</td><td class="num">${b.n}</td></tr>`).join("");
+    return `<div class="card" style="margin-top:16px"><div class="hd"><h2>Répartition des précédents culturaux</h2>
+      <span class="sub">rotation — campagne ${Store.data.active}</span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr><th>Précédent</th><th class="num">Surface</th><th class="num">% SAU</th><th class="num">Parcelles</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="4" class="empty">Aucune parcelle</td></tr>'}</tbody></table></div></div>`;
+  },
+
+  /* ---------- PARCELLAIRE ---------- */
+  pg_parc() {
+    const c=Store.camp;
+    const shown=c.parcels.filter(p=>p.archived||!this._prevFilt?true:true).filter(p=>{
+      if(!this._prevFilt) return true;
+      if(this._prevFilt==="__none") return !p.prev;
+      return p.prev===this._prevFilt; });
+    const row=p=>`<tr style="${p.archived?'opacity:.45':''}">
+      <td><input type="checkbox" class="check pk" data-id="${p.id}"></td>
+      <td class="muted">${p.num??""}</td><td><b>${p.name}</b>${p.archived?' <span class="tag">archivée</span>':''}</td>
+      <td>${p.commune||"—"}</td><td class="num">${fmt(p.area,2)}</td>
+      <td>${this.prevSel(p)}</td>
+      <td>${CALC.cult(c,p.cult)?.name||"—"}</td><td>${place(c,p.storage)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn sm" onclick="UI.editParcel('${p.id}')">Modifier</button>
+        <button class="btn sm" onclick="UI.splitParcel('${p.id}')">Diviser</button>
+        <button class="btn sm ghost" onclick="UI.toggleArchive('${p.id}')">${p.archived?"Restaurer":"Archiver"}</button>
+        <button class="btn sm ghost danger" onclick="UI.delParcel('${p.id}')">Suppr.</button></td></tr>`;
+    return `
+    <div class="page-head"><div><h1>Parcellaire</h1><p>Créer, modifier, diviser, fusionner ou archiver. Cochez plusieurs parcelles pour les fusionner.</p></div>
+      <div class="actions"><select class="ed" style="border:1px solid var(--line);border-radius:9px;padding:7px 10px;background:#fff"
+        onchange="UI._prevFilt=this.value;UI.render()">${this.prevFiltOpts(c.parcels)}</select>
+      <button class="btn" onclick="UI.mergeParcels()">Fusionner la sélection</button>
+      <button class="btn pri" onclick="UI.addParcel()">＋ Nouvelle parcelle</button></div></div>
+    <div class="card"><div class="tb-wrap"><table class="tb"><thead><tr>
+      <th></th><th>N°</th><th>Nom</th><th>Commune</th><th class="num">Surface</th><th>Précédent cultural</th><th>Culture</th><th>Stockage</th><th>Actions</th>
+    </tr></thead><tbody>${shown.map(row).join("")||'<tr><td colspan="9" class="empty">Aucune parcelle — créez la première ou changez le filtre.</td></tr>'}</tbody></table></div></div>`;
+  },
+  parcelForm(p={}) {
+    const prevOptions=this.prevOpts().filter(o=>o.v!=="__autre").map(o=>
+      `<option value="${o.v}" ${o.v===(p.prev||"")?"selected":""}>${o.l}</option>`).join("")
+      + `<option value="__autre">Autre (saisie libre)…</option>`;
+    return `<div class="frow">
+      <div class="field"><label>Nom</label><input id="m-name" value="${p.name||""}"></div>
+      <div class="field"><label>N°</label><input id="m-num" value="${p.num??""}"></div></div>
+    <div class="frow">
+      <div class="field"><label>Commune</label><input id="m-com" value="${p.commune||""}"></div>
+      <div class="field"><label>Surface (ha)</label><input id="m-area" type="number" step="0.01" value="${p.area??""}"></div></div>
+    <div class="frow">
+      <div class="field"><label>Précédent cultural</label><select id="m-prev"
+        onchange="document.getElementById('m-prev-libre').style.display=this.value==='__autre'?'block':'none'">${prevOptions}</select>
+        <input id="m-prev-libre" placeholder="Précédent libre…" value="${(p.prev||"").replace(/"/g,'&quot;')}" style="display:none;margin-top:6px"></div>
+      <div class="field"><label>Culture</label><select id="m-cult">${this.cultOpts(true).map(o=>`<option value="${o.v}" ${o.v===(p.cult||"")?"selected":""}>${o.l}</option>`).join("")}</select></div></div>
+    <div class="frow">
+      <div class="field"><label>Lieu de stockage azote</label><select id="m-sto">
+        ${[["","—"],["bran",place(Store.camp,"bran")],["fouch",place(Store.camp,"fouch")]].map(([v,l])=>`<option value="${v}" ${v===(p.storage||"")?"selected":""}>${l}</option>`).join("")}</select></div>
+      <div class="field"><label>Commentaire</label><input id="m-cmt" value="${p.comment||""}"></div></div>`;
+  },
+  readPrevForm(){
+    const sel=this.mval("m-prev");
+    return sel==="__autre" ? this.mval("m-prev-libre") : sel;
+  },
+  addParcel() {
+    this.modal("Nouvelle parcelle",this.parcelForm(),()=>{
+      const name=this.mval("m-name"); if(!name){ this.toast("Un nom est requis"); return false; }
+      Store.mutate(c=>c.parcels.push({ id:uid(), num:this.mval("m-num"), name,
+        area:+this.mval("m-area")||0, commune:this.mval("m-com"), cult:this.mval("m-cult"),
+        vari:"", storage:this.mval("m-sto"), prev:this.readPrevForm(), comment:this.mval("m-cmt"), archived:false, nOv:{}, fOv:{} }));
+      this.toast("Parcelle créée"); },"Créer");
+  },
+  editParcel(id) {
+    const p=Store.camp.parcels.find(x=>x.id===id);
+    this.modal("Modifier « "+p.name+" »",this.parcelForm(p),()=>{
+      Store.mutate(c=>{ Object.assign(p,{ num:this.mval("m-num"), name:this.mval("m-name")||p.name,
+        area:+this.mval("m-area")||0, commune:this.mval("m-com"), cult:this.mval("m-cult"),
+        storage:this.mval("m-sto"), prev:this.readPrevForm(), comment:this.mval("m-cmt") }); }); });
+  },
+  splitParcel(id) {
+    const p=Store.camp.parcels.find(x=>x.id===id);
+    const half=Math.round(p.area/2*100)/100;
+    this.modal("Diviser « "+p.name+" »",
+      `<p class="hint" style="margin-bottom:12px">Surface actuelle : <b>${fmt(p.area,2)} ha</b>. Cultures et réglages conservés sur les deux parties.</p>
+      <div class="frow"><div class="field"><label>Surface partie 1 (ha)</label><input id="m-a1" type="number" step="0.01" value="${half}"></div>
+      <div class="field"><label>Nom partie 2</label><input id="m-n2" value="${p.name} (2)"></div></div>`,
+      ()=>{ const a1=+this.mval("m-a1"); if(!(a1>0&&a1<p.area)){ this.toast("Surface partie 1 invalide"); return false; }
+        Store.mutate(c=>{ const a2=Math.round((p.area-a1)*100)/100;
+          const copy=JSON.parse(JSON.stringify(p));
+          copy.id=uid(); copy.name=this.mval("m-n2")||p.name+" (2)"; copy.area=a2;
+          p.area=a1; c.parcels.splice(c.parcels.indexOf(p)+1,0,copy); });
+        this.toast("Parcelle divisée"); },"Diviser");
+  },
+  mergeParcels() {
+    const ids=[...document.querySelectorAll(".pk:checked")].map(x=>x.dataset.id);
+    if(ids.length<2){ this.toast("Cochez au moins 2 parcelles à fusionner"); return; }
+    const c=Store.camp, ps=ids.map(i=>c.parcels.find(p=>p.id===i));
+    const tot=ps.reduce((s,p)=>s+ +p.area,0);
+    this.modal("Fusionner "+ids.length+" parcelles",
+      `<p class="hint" style="margin-bottom:12px">${ps.map(p=>"<b>"+p.name+"</b> ("+fmt(p.area,2)+" ha)").join(" + ")} = <b>${fmt(tot,2)} ha</b>. La première est conservée.</p>
+      <div class="field"><label>Nom de la parcelle fusionnée</label><input id="m-name" value="${ps[0].name}"></div>`,
+      ()=>{ Store.mutate(cc=>{ ps[0].name=this.mval("m-name")||ps[0].name;
+          ps[0].area=Math.round(tot*100)/100;
+          ps.slice(1).forEach(p=>cc.parcels.splice(cc.parcels.indexOf(p),1)); });
+        this.toast("Parcelles fusionnées"); },"Fusionner");
+  },
+  toggleArchive(id){ Store.mutate(c=>{ const p=c.parcels.find(x=>x.id===id); p.archived=!p.archived; }); },
+  delParcel(id) {
+    const p=Store.camp.parcels.find(x=>x.id===id);
+    this.modal("Supprimer « "+p.name+" »",
+      `<p class="hint">Suppression définitive pour la campagne ${Store.data.active}. Préférez <b>Archiver</b> pour conserver l'historique.</p>`,
+      ()=>{ Store.mutate(c=>{ c.parcels.splice(c.parcels.indexOf(p),1); }); this.toast("Parcelle supprimée"); },"Supprimer");
+  },
+
+  /* ---------- SEMENCES ---------- */
+  pg_seed() {
+    const c=Store.camp, s=CALC.seeds(c);
+    const rows=s.rows.map(r=>`<tr>
+      <td><b>${r.parcel.name}</b></td><td>${CALC.cult(c,r.parcel.cult)?.name||""}</td><td>${r.v.name}</td>
+      <td class="num">${fmt(r.parcel.area,2)}</td>
+      <td class="num">${r.kgHa!=null?fmt(r.kgHa):"—"}</td><td class="num calc">${r.kg!=null?fmt(r.kg):"—"}</td>
+      <td class="num">${r.doseHa!=null?fmt(r.doseHa,1):"—"}</td><td class="num calc">${r.doses!=null?fmt(r.doses,1):"—"}</td>
+      <td class="num muted">${r.price?fmt(r.price,2):"—"}</td><td class="num calc">${r.price?eur(r.cost):MISS}</td></tr>`).join("");
+    const syn=Object.values(s.byVar).map(b=>{ const so=c.seedOrders;
+      return `<tr><td><b>${b.v.name}</b></td><td>${CALC.cult(c,b.v.cult)?.name||""}</td>
+      <td class="num calc">${b.kg?fmt(b.kg)+" kg":fmt(b.doses,1)+" doses"}</td>
+      <td><input class="num ed" style="width:70px" value="${so[b.v.id]?.stock??""}" onchange="UI.setSeedOrder('${b.v.id}','stock',this.value)"></td>
+      <td><input class="num ed" style="width:70px" value="${so[b.v.id]?.ordered??""}" onchange="UI.setSeedOrder('${b.v.id}','ordered',this.value)"></td>
+      <td class="num calc" style="font-weight:750;${b.left>0?'color:var(--orange)':''}">${fmt(b.left,1)}</td>
+      <td class="num calc">${eur(b.cost)}</td></tr>`;}).join("");
+    return `
+    <div class="page-head"><div><h1>Semences</h1>
+      <p>Céréales : kg/ha = PMG × grains/m² ÷ ${c.params.pmgDiv}. Colza & tournesol : doses = surface × dose/ha, à une décimale. Prix issus des variétés.</p></div>
+      <div class="actions"><button class="btn" onclick="UI.go('cult')">Modifier les variétés</button></div></div>
+    <div class="grid g3" style="margin-bottom:16px">
+      <div class="kpi" style="--k:#8C5E2A"><div class="l">Besoin céréales</div><div class="v">${fmt(s.totKg)} kg</div><div class="s">blés & orges</div></div>
+      <div class="kpi" style="--k:#F2C230"><div class="l">Besoin colza & tournesol</div><div class="v">${fmt(s.totDoses,1)} doses</div><div class="s"></div></div>
+      <div class="kpi" style="--k:var(--orange)"><div class="l">Coût semences</div><div class="v">${eur(s.totCost)}</div><div class="s">${eurHa(s.totCost/(CALC.surfTot(c)||1))} en moyenne</div></div>
+    </div>
+    <div class="card"><div class="hd"><h2>Synthèse par variété — stock & commandes</h2><span class="sub">reste = besoin − stock − commandé</span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Variété</th><th>Culture</th><th class="num">Besoin</th><th>Stock</th><th>Déjà commandé</th><th class="num">Reste à commander</th><th class="num">Coût besoin</th>
+      </tr></thead><tbody>${syn}</tbody></table></div></div>
+    <div class="card" style="margin-top:16px"><div class="hd"><h2>Détail par parcelle</h2></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Parcelle</th><th>Culture</th><th>Variété</th><th class="num">ha</th><th class="num">kg/ha</th><th class="num">kg</th>
+      <th class="num">Doses/ha</th><th class="num">Doses</th><th class="num">Prix</th><th class="num">Coût</th>
+      </tr></thead><tbody>${rows}
+      <tr class="tot"><td colspan="5">TOTAL</td><td class="num">${fmt(s.totKg)}</td><td></td><td class="num">${fmt(s.totDoses,1)}</td><td></td><td class="num">${eur(s.totCost)}</td></tr>
+      </tbody></table></div></div>`;
+  },
+  setSeedOrder(vid,key,val){ Store.mutate(c=>{ if(!c.seedOrders[vid]) c.seedOrders[vid]={};
+    c.seedOrders[vid][key]= val===""?0:+val; }); },
+  /* ---------- CULTURES & VARIÉTÉS (colonnes fond dynamiques) ---------- */
+  pg_cult() {
+    const c=Store.camp, by=CALC.surfByCult(c), ff=CALC.fondFerts(c);
+    const cultRows=c.cultures.map(cu=>`<tr>
+      <td><i style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${cu.color};margin-right:7px"></i><b>${cu.name}</b></td>
+      <td class="num muted">${fmt(by[cu.id]||0,2)} ha</td>
+      <td>${this.inp("cultures",cu.id,"a1",cu.n.a1,{deep:"n",w:50})}</td>
+      <td>${this.inp("cultures",cu.id,"a2",cu.n.a2,{deep:"n",w:50})}</td>
+      <td>${this.inp("cultures",cu.id,"a3",cu.n.a3,{deep:"n",w:50})}</td>
+      <td>${this.sel("cultures",cu.id,"f3",cu.n.f3,[{v:"sol39",l:"Sol.39"},{v:"n33",l:"N33"}],{deep:"n"})}</td>
+      <td>${this.inp("cultures",cu.id,"a4",cu.n.a4,{deep:"n",w:50})}</td>
+      <td>${this.sel("cultures",cu.id,"f4",cu.n.f4,[{v:"sol39",l:"Sol.39"},{v:"n33",l:"N33"}],{deep:"n"})}</td>
+      ${ff.map(f=>`<td>${this.inp("cultures",cu.id,f.id,cu.fond?.[f.id],{deep:"fond",w:54})}</td>`).join("")}
+      <td>${this.inp("cultures",cu.id,"rdt",cu.eco.rdt,{deep:"eco",w:50})}</td>
+      <td>${this.inp("cultures",cu.id,"prix",cu.eco.prix,{deep:"eco",w:56})}</td>
+      <td>${this.inp("cultures",cu.id,"autres",cu.eco.autres,{deep:"eco",w:56})}</td>
+      <td><button class="btn sm ghost danger" onclick="UI.delCulture('${cu.id}')">✕</button></td></tr>`).join("");
+    const varRows=c.varieties.map(v=>`<tr>
+      <td>${this.sel("varieties",v.id,"cult",v.cult,this.cultOpts(false))}</td>
+      <td>${this.inp("varieties",v.id,"name",v.name,{num:false,w:220})}</td>
+      <td>${this.inp("varieties",v.id,"pmg",v.pmg,{w:50})}</td>
+      <td>${this.inp("varieties",v.id,"grains",v.grains,{w:56})}</td>
+      <td>${this.inp("varieties",v.id,"dose",v.dose,{w:50})}</td>
+      <td>${this.inp("varieties",v.id,"prixKg",v.prixKg,{w:56})}</td>
+      <td>${this.inp("varieties",v.id,"prixDose",v.prixDose,{w:56})}</td>
+      <td>${this.inp("varieties",v.id,"comment",v.comment,{num:false,w:180})}</td>
+      <td><button class="btn sm ghost danger" onclick="UI.delVariety('${v.id}')">✕</button></td></tr>`).join("");
+    return `
+    <div class="page-head"><div><h1>Cultures & variétés</h1>
+      <p>Doses d'azote par apport (uN/ha), doses d'engrais de fond (une colonne par engrais créé) et hypothèses économiques.</p></div>
+      <div class="actions"><button class="btn" onclick="UI.addVariety()">＋ Variété</button>
+      <button class="btn pri" onclick="UI.addCulture()">＋ Culture</button></div></div>
+    <div class="card"><div class="hd"><h2>Cultures — doses par défaut & économie</h2>
+      <span class="sub">azote en uN/ha · fond selon l'unité de chaque engrais</span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Culture</th><th class="num">Sole</th><th>A1</th><th>A2</th><th>A3</th><th>Forme A3</th><th>A4</th><th>Forme A4</th>
+      ${ff.map(f=>`<th>${f.name}<div class="muted" style="font-weight:400;text-transform:none">${f.appUnit}</div></th>`).join("")}
+      <th>Rdt t/ha</th><th>Prix €/t</th><th>Autres €/ha</th><th></th>
+      </tr></thead><tbody>${cultRows}</tbody></table></div></div>
+    <div class="card" style="margin-top:16px"><div class="hd"><h2>Variétés</h2>
+      <span class="sub">PMG & grains/m² → céréales (kg) · dose/ha → colza & tournesol</span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Culture</th><th>Variété</th><th>PMG</th><th>Grains/m²</th><th>Dose/ha</th><th>Prix €/kg</th><th>Prix €/dose</th><th>Commentaire</th><th></th>
+      </tr></thead><tbody>${varRows}</tbody></table></div></div>`;
+  },
+  addCulture() {
+    this.modal("Nouvelle culture",
+      `<div class="frow"><div class="field"><label>Nom</label><input id="m-name" placeholder="Pois de printemps"></div>
+      <div class="field"><label>Couleur</label><input id="m-col" type="color" value="#7E9E6B" style="height:38px"></div></div>`,
+      ()=>{ const n=this.mval("m-name"); if(!n) return false;
+        Store.mutate(c=>c.cultures.push({ id:uid(), name:n, color:document.getElementById("m-col").value,
+          n:{a1:0,a2:0,a3:0,a4:0,f3:"sol39",f4:"sol39"}, fond:{}, eco:{rdt:0,prix:0,autres:420} }));
+        this.toast("Culture ajoutée — renseignez ses doses"); },"Ajouter");
+  },
+  delCulture(id) {
+    const c=Store.camp;
+    if(c.parcels.some(p=>p.cult===id)){ this.toast("Impossible : des parcelles utilisent cette culture"); return; }
+    Store.mutate(cc=>{ cc.cultures.splice(cc.cultures.findIndex(x=>x.id===id),1); });
+  },
+  addVariety(){ Store.mutate(c=>c.varieties.push({ id:uid(), cult:c.cultures[0].id, name:"Nouvelle variété",
+      pmg:null, grains:null, dose:null, prixKg:null, prixDose:null, comment:"" }));
+    this.toast("Variété ajoutée en bas de liste"); },
+  delVariety(id){ if(Store.camp.parcels.some(p=>p.vari===id)){ this.toast("Impossible : des parcelles utilisent cette variété"); return; }
+    Store.mutate(c=>{ c.varieties.splice(c.varieties.findIndex(x=>x.id===id),1); }); },
+
+  /* ---------- AZOTE ---------- */
+  pg_azo() {
+    const c=Store.camp, n=CALC.nitrogen(c);
+    const f39=CALC.fert(c,"sol39"), f33=CALC.fert(c,"n33");
+    const up39=FERT.unitPrice(f39), up33=FERT.unitPrice(f33);
+    const ap=(r,i)=>{ const a=r.apports[i]; if(!a) return `<td class="muted">—</td><td class="muted"></td>`;
+      return `<td class="num">${a.uN} uN <span class="muted">→ ${fmt(a.perHa)} ${a.form==="n33"?"kg":"L"}/ha</span></td>
+              <td class="num calc">${fmt(a.tot)} ${a.form==="n33"?"kg":"L"}</td>`; };
+    const rows=n.rows.map(r=>{ const p=r.parcel, ov=p.nOv||{};
+      return `<tr><td><b>${p.name}</b><div class="muted" style="font-size:11.5px">${r.cu.name} · ${fmt(p.area,2)} ha · ${place(c,p.storage)}</div></td>
+      ${ap(r,0)}${ap(r,1)}${ap(r,2)}${ap(r,3)}
+      <td class="num calc">${fmt(r.sol39)} L</td><td class="num calc">${fmt(r.n33)} kg</td>
+      <td class="num calc">${r.priced?eur(r.cost):MISS}</td><td class="num muted">${r.priced?eurHa(r.costHa):"—"}</td>
+      <td><button class="btn sm" onclick="UI.editNOv('${p.id}')">${Object.keys(ov).length?"Perso ✓":"Personnaliser"}</button></td></tr>`;}).join("");
+    const byC=Object.entries(n.byCult).map(([id,b])=>{ const cu=CALC.cult(c,id);
+      return `<tr><td><b>${cu.name}</b></td><td class="num">${fmt(b.sol39)} L</td><td class="num">${fmt(b.n33)} kg</td>
+      <td class="num">${eur(b.cost)}</td><td class="num muted">${b.area?eurHa(b.cost/b.area):"—"}</td></tr>`;}).join("");
+    return `
+    <div class="page-head"><div><h1>Azote</h1>
+      <p>Sol. 39 : L/ha = uN ÷ ${f39.tenor} · N33 : kg/ha = uN ÷ ${f33.tenor}.
+      Prix : ${fmt(f39.price)} €/t × densité ${f39.density} ÷ 1000 = <b>${up39.ok?up39.label:up39.reason}</b> · N33 ${fmt(f33.price)} €/t = <b>${up33.ok?up33.label:up33.reason}</b>.
+      Le prix au litre n'est jamais saisi : il est calculé.</p></div>
+      <div class="actions"><button class="btn" onclick="UI.go('eng')">Prix & densité des engrais</button>
+      <button class="btn" onclick="UI.go('cult')">Doses par culture</button></div></div>
+    <div class="grid g4" style="margin-bottom:16px">
+      <div class="kpi" style="--k:var(--blue)"><div class="l">Solution 39</div><div class="v">${fmt(n.sol39)} L</div><div class="s">= ${fmt(FERT.toTons(f39,n.sol39),1)} t · ${up39.ok?up39.label:"—"}</div></div>
+      <div class="kpi" style="--k:var(--blue)"><div class="l">N33 solide</div><div class="v">${fmt(n.n33)} kg</div><div class="s">= ${fmt(n.n33/1000,1)} t</div></div>
+      <div class="kpi" style="--k:var(--green)"><div class="l">${place(c,"bran")}</div><div class="v">${fmt(n.byPlace.bran.sol39)} L</div><div class="s">+ ${fmt(n.byPlace.bran.n33)} kg N33</div></div>
+      <div class="kpi" style="--k:var(--green)"><div class="l">${place(c,"fouch")}</div><div class="v">${fmt(n.byPlace.fouch.sol39)} L</div><div class="s">+ ${fmt(n.byPlace.fouch.n33)} kg N33</div></div>
+    </div>
+    <div class="grid g2" style="margin-bottom:16px">
+      <div class="card"><div class="hd"><h2>Par culture</h2><span class="sub">coût total ${n.priced?eur(n.cost):"incomplet"}</span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr><th>Culture</th><th class="num">Sol.39</th><th class="num">N33</th><th class="num">Coût</th><th class="num">€/ha</th></tr></thead>
+      <tbody>${byC}</tbody></table></div></div>
+      <div class="card"><div class="hd"><h2>Coût azote par culture</h2></div><div class="bd">
+      ${CHARTS.bars(Object.entries(n.byCult).map(([id,b])=>({label:CALC.cult(c,id).name,value:b.cost,color:CALC.cult(c,id).color})))}</div></div>
+    </div>
+    <div class="card"><div class="hd"><h2>Détail par parcelle</h2><span class="sub">« Personnaliser » remplace les doses culture</span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Parcelle</th><th class="num">Apport 1</th><th class="num">Total</th><th class="num">Apport 2</th><th class="num">Total</th>
+      <th class="num">Apport 3</th><th class="num">Total</th><th class="num">Apport 4</th><th class="num">Total</th>
+      <th class="num">Sol.39</th><th class="num">N33</th><th class="num">Coût</th><th class="num">€/ha</th><th></th>
+      </tr></thead><tbody>${rows}
+      <tr class="tot"><td>TOTAL</td><td colspan="8"></td><td class="num">${fmt(n.sol39)} L</td><td class="num">${fmt(n.n33)} kg</td><td class="num">${eur(n.cost)}</td><td colspan="2"></td></tr>
+      </tbody></table></div></div>`;
+  },
+  editNOv(id) {
+    const c=Store.camp, p=c.parcels.find(x=>x.id===id), cu=CALC.cult(c,p.cult), ov=p.nOv||{};
+    const F=(k,lab,def)=>`<div class="field"><label>${lab} <span class="muted">(défaut : ${def??0} uN)</span></label>
+      <input id="m-${k}" type="number" placeholder="${def??0}" value="${ov[k]??""}"></div>`;
+    this.modal("Azote personnalisé — "+p.name,
+      `<p class="hint" style="margin-bottom:12px">Laissez vide pour garder la dose de la culture <b>${cu?.name||""}</b>.</p>
+      <div class="frow">${F("a1","Apport 1",cu?.n.a1)}${F("a2","Apport 2",cu?.n.a2)}</div>
+      <div class="frow">${F("a3","Apport 3",cu?.n.a3)}${F("a4","Apport 4",cu?.n.a4)}</div>
+      <div class="frow">
+      <div class="field"><label>Forme apport 3</label><select id="m-f3"><option value="">Défaut (${cu?.n.f3==="n33"?"N33":"Sol.39"})</option><option value="sol39" ${ov.f3==="sol39"?"selected":""}>Sol.39</option><option value="n33" ${ov.f3==="n33"?"selected":""}>N33</option></select></div>
+      <div class="field"><label>Forme apport 4</label><select id="m-f4"><option value="">Défaut (${cu?.n.f4==="n33"?"N33":"Sol.39"})</option><option value="sol39" ${ov.f4==="sol39"?"selected":""}>Sol.39</option><option value="n33" ${ov.f4==="n33"?"selected":""}>N33</option></select></div></div>`,
+      ()=>{ Store.mutate(cc=>{ const o={};
+        ["a1","a2","a3","a4"].forEach(k=>{ const v=this.mval("m-"+k); if(v!=="") o[k]=+v; });
+        ["f3","f4"].forEach(k=>{ const v=this.mval("m-"+k); if(v) o[k]=v; });
+        p.nOv=o; }); });
+  },
+
+  /* ---------- ENGRAIS DE FOND (dynamique) ---------- */
+  pg_fond() {
+    const c=Store.camp, f=CALC.fond(c), ff=CALC.fondFerts(c);
+    const rows=f.rows.map(r=>{ const p=r.parcel;
+      return `<tr><td><b>${p.name}</b><div class="muted" style="font-size:11.5px">${r.cu.name} · ${fmt(p.area,2)} ha</div></td>
+      ${r.items.map(i=>`<td class="num">${fmt(i.dose,i.f.appUnit==="t/ha"?1:0)}</td>
+        <td class="num calc">${fmt(i.qty,i.f.appUnit==="t/ha"?1:0)} ${APP_UNITS[i.f.appUnit]}</td>`).join("")}
+      <td class="num calc">${r.priced?eur(r.cost):MISS}</td><td class="num muted">${r.priced?eurHa(r.costHa):"—"}</td>
+      <td><button class="btn sm" onclick="UI.editFOv('${p.id}')">${r.hasOv?"Perso ✓":"Personnaliser"}</button></td></tr>`;}).join("");
+    const synth=Object.values(f.byFert).map(b=>{ const up=FERT.unitPrice(b.f);
+      return `<tr><td><b>${b.f.name}</b></td><td>${b.f.appUnit}</td>
+      <td class="num calc">${fmt(b.qty,1)} ${APP_UNITS[b.f.appUnit]}</td>
+      <td class="num calc">${b.f.appUnit==="dose/ha"||b.f.appUnit==="u/ha"?"—":fmt(b.tons,2)+" t"}</td>
+      <td class="num">${fmt(b.f.price)} ${PRICE_UNITS[b.f.priceUnit]}</td>
+      <td class="num muted">${up.ok?(up.label||"forfait"):'<span class="miss">'+up.reason+'</span>'}</td>
+      <td class="num calc">${b.ok?eur(Math.round(b.cost)):MISS}</td></tr>`;}).join("");
+    return `
+    <div class="page-head"><div><h1>Engrais de fond</h1>
+      <p>Doses par culture (page Cultures), personnalisables par parcelle. Les prix se saisissent dans leur unité commerciale (€/t…) sur la page <b>Engrais & prix</b> — les conversions sont automatiques.</p></div>
+      <div class="actions"><button class="btn" onclick="UI.go('eng')">Engrais & prix</button>
+      <button class="btn pri" onclick="UI.addFert('fond')">＋ Ajouter un engrais</button></div></div>
+    <div class="card" style="margin-bottom:16px"><div class="hd"><h2>Synthèse par engrais</h2><span class="sub">coût total ${f.priced?eur(f.cost):"incomplet"}</span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Engrais</th><th>Application</th><th class="num">Quantité totale</th><th class="num">Tonnes</th><th class="num">Prix</th><th class="num">Prix converti</th><th class="num">Coût</th>
+      </tr></thead><tbody>${synth}</tbody></table></div></div>
+    <div class="card"><div class="hd"><h2>Détail par parcelle</h2></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr><th>Parcelle</th>
+      ${ff.map(fz=>`<th class="num">${fz.name}<div class="muted" style="font-weight:400;text-transform:none">${fz.appUnit}</div></th><th class="num">Total</th>`).join("")}
+      <th class="num">Coût</th><th class="num">€/ha</th><th></th></tr></thead><tbody>${rows}
+      <tr class="tot"><td>TOTAL</td>${ff.map(fz=>{const b=f.byFert[fz.id];
+        return `<td></td><td class="num">${fmt(b.qty,1)} ${APP_UNITS[fz.appUnit]}</td>`;}).join("")}
+      <td class="num">${eur(f.cost)}</td><td colspan="2"></td></tr></tbody></table></div></div>`;
+  },
+  editFOv(id) {
+    const c=Store.camp, p=c.parcels.find(x=>x.id===id), cu=CALC.cult(c,p.cult), ov=p.fOv||{};
+    const ff=CALC.fondFerts(c);
+    const fields=ff.map(f=>`<div class="field"><label>${f.name} (${f.appUnit}) <span class="muted">(défaut : ${cu?.fond?.[f.id]??0})</span></label>
+      <input id="m-f-${f.id}" type="number" step="0.1" placeholder="${cu?.fond?.[f.id]??0}" value="${ov[f.id]??""}"></div>`).join("");
+    this.modal("Engrais de fond personnalisé — "+p.name,
+      `<p class="hint" style="margin-bottom:12px">Laissez vide pour garder la dose de la culture <b>${cu?.name||""}</b>. Une valeur saisie est prioritaire.</p>${fields}`,
+      ()=>{ Store.mutate(cc=>{ const o={};
+        ff.forEach(f=>{ const v=this.mval("m-f-"+f.id); if(v!=="") o[f.id]=+v; });
+        p.fOv=o; }); });
+  },
+  /* ---------- ENGRAIS & PRIX (référentiel + historique) ---------- */
+  pg_eng() {
+    const c=Store.camp;
+    const rows=c.fertilizers.map(f=>{
+      const up=FERT.unitPrice(f), h=FERT.histStats(f);
+      return `<tr style="${f.active===false?'opacity:.45':''}">
+      <td><b>${f.name}</b>${f.active===false?' <span class="tag">archivé</span>':''}
+        <div class="muted" style="font-size:11.5px">${f.cat==="azote"?"Azote":"Fond"} · ${f.supplier||"—"}${f.composition?" · "+f.composition:""}</div></td>
+      <td>${f.appUnit}</td><td>${PRICE_UNITS[f.priceUnit]}</td>
+      <td class="num" style="font-weight:700">${+f.price>0?fmt(f.price,f.priceUnit==="kg"||f.priceUnit==="L"?2:0):MISS}</td>
+      <td class="num muted">${up.ok?(up.label||"forfait"):'<span class="miss">'+up.reason+'</span>'}</td>
+      <td class="num">${f.density??"—"}</td>
+      <td class="muted">${f.priceUpdated||"—"}</td>
+      <td>${h?`<span class="muted">dernier ${fmt(h.last)} · meilleur ${fmt(h.best)} · moy. ${fmt(h.avg)}${h.delta!=null?" · "+(h.delta>0?"▲ +":"▼ ")+fmt(h.delta):""}</span>`:"—"}</td>
+      <td style="white-space:nowrap">
+        <button class="btn sm" onclick="UI.editFert('${f.id}')">Modifier</button>
+        <button class="btn sm" onclick="UI.fertHistory('${f.id}')">Historique</button>
+        <button class="btn sm ghost" onclick="UI.dupFert('${f.id}')">Dupliquer</button>
+        <button class="btn sm ghost" onclick="UI.toggleFert('${f.id}')">${f.active===false?"Restaurer":"Archiver"}</button>
+        <button class="btn sm ghost danger" onclick="UI.delFert('${f.id}')">Suppr.</button></td></tr>`;}).join("");
+    return `
+    <div class="page-head"><div><h1>Engrais & prix</h1>
+      <p>Chaque engrais a son unité d'application et son unité commerciale : l'application choisit seule la bonne conversion.
+      Exemple : 400 €/t × densité 1,30 ÷ 1000 = 0,52 €/L. L'historique conserve tous les prix proposés.</p></div>
+      <div class="actions"><button class="btn pri" onclick="UI.addFert('fond')">＋ Ajouter un engrais</button></div></div>
+    <div class="card"><div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Engrais</th><th>Application</th><th>Unité prix</th><th class="num">Prix</th><th class="num">Prix converti</th>
+      <th class="num">Densité</th><th>MAJ prix</th><th>Historique</th><th>Actions</th>
+      </tr></thead><tbody>${rows}</tbody></table></div></div>
+    <div class="hint" style="margin-top:10px">Un engrais utilisé dans une campagne doit être <b>archivé</b> plutôt que supprimé : il sort des saisies mais l'historique est conservé.</div>`;
+  },
+  fertForm(f={}) {
+    const opt=(list,cur)=>Object.entries(list).map(([v,l])=>`<option value="${v}" ${v===(cur||"")?"selected":""}>${l}</option>`).join("");
+    return `<div class="frow">
+      <div class="field"><label>Nom de l'engrais *</label><input id="m-name" value="${f.name||""}"></div>
+      <div class="field"><label>Catégorie</label><select id="m-cat">
+        <option value="fond" ${f.cat!=="azote"?"selected":""}>Engrais de fond</option>
+        <option value="azote" ${f.cat==="azote"?"selected":""}>Azote</option></select></div></div>
+    <div class="frow">
+      <div class="field"><label>Unité d'application</label><select id="m-app">${opt({"kg/ha":"kg/ha","t/ha":"t/ha","l/ha":"l/ha","u/ha":"unités/ha","dose/ha":"doses/ha"},f.appUnit||"kg/ha")}</select></div>
+      <div class="field"><label>Unité commerciale du prix</label><select id="m-pu">${opt(PRICE_UNITS,f.priceUnit||"t")}</select></div></div>
+    <div class="frow">
+      <div class="field"><label>Prix</label><input id="m-price" type="number" step="0.01" value="${f.price??""}"></div>
+      <div class="field"><label>Densité (kg/L) — requise si appliqué en l/ha et acheté au poids</label><input id="m-dens" type="number" step="0.01" value="${f.density??""}" placeholder="1.30"></div></div>
+    <div class="frow">
+      <div class="field"><label>Fournisseur</label><input id="m-sup" value="${f.supplier||""}"></div>
+      <div class="field"><label>Composition</label><input id="m-comp" value="${f.composition||""}"></div></div>
+    <div class="field"><label>Commentaire</label><input id="m-cmt" value="${f.comment||""}"></div>`;
+  },
+  readFertForm(f) {
+    const name=this.mval("m-name");
+    if(!name){ this.toast("Un nom est requis"); return false; }
+    const price=this.mnum("m-price");
+    if(price!=null&&price<0){ this.toast("Prix négatif interdit"); return false; }
+    const dens=this.mnum("m-dens");
+    if(dens!=null&&dens<=0){ this.toast("La densité doit être positive"); return false; }
+    const app=this.mval("m-app"), pu=this.mval("m-pu");
+    const tmp={ appUnit:app, priceUnit:pu, price:price||0, density:dens };
+    if(price>0){ const up=FERT.unitPrice(tmp); if(!up.ok&&up.reason.startsWith("Unités")){ this.toast("⚠ "+up.reason); return false; } }
+    Object.assign(f,{ name, cat:this.mval("m-cat"), appUnit:app, priceUnit:pu,
+      density:dens, supplier:this.mval("m-sup"), composition:this.mval("m-comp"), comment:this.mval("m-cmt") });
+    if(price!=null&&price!==f.price){
+      f.price=price; f.priceUpdated=today();
+      (f.history=f.history||[]).push({ id:uid(), date:today(), supplier:f.supplier, price, unit:pu, qty:"", comment:"", retained:true });
+    }
+    return true;
+  },
+  addFert(cat) {
+    this.modal("Nouvel engrais",this.fertForm({cat,density:null}),()=>{
+      const f={ id:uid(), tenor:null, active:true, history:[], stock:0, cur:null, tgt:null, low:null, high:null, decision:"Surveiller", pct:0, priceUpdated:today() };
+      if(this.readFertForm(f)===false) return false;
+      Store.mutate(c=>c.fertilizers.push(f));
+      this.toast("Engrais créé — il apparaît dans Cultures, Fond, Prévisionnel et exports"); },"Créer");
+  },
+  editFert(id) {
+    const f=Store.camp.fertilizers.find(x=>x.id===id);
+    this.modal("Modifier « "+f.name+" »",this.fertForm(f),()=>{
+      let ok; Store.mutate(()=>{ ok=this.readFertForm(f); },true);
+      if(ok===false) return false; Store.persist(); UI.render(); });
+  },
+  dupFert(id) {
+    Store.mutate(c=>{ const f=c.fertilizers.find(x=>x.id===id);
+      const copy=JSON.parse(JSON.stringify(f)); copy.id=uid(); copy.name=f.name+" (copie)"; copy.history=[];
+      c.fertilizers.splice(c.fertilizers.indexOf(f)+1,0,copy); });
+    this.toast("Engrais dupliqué");
+  },
+  toggleFert(id){ Store.mutate(c=>{ const f=c.fertilizers.find(x=>x.id===id); f.active=f.active===false; }); },
+  delFert(id) {
+    const c=Store.camp, f=c.fertilizers.find(x=>x.id===id);
+    const used = Object.values(Store.data.campaigns).some(cc=>
+      cc.cultures.some(cu=>+cu.fond?.[id]>0) || cc.parcels.some(p=>p.fOv?.[id]!=null) || cc.purchases.some(b=>b.fert===id))
+      || f.id==="sol39" || f.id==="n33";
+    this.modal("Supprimer « "+f.name+" »",
+      used?`<p class="hint">⚠ Cet engrais est <b>utilisé dans une campagne</b> (doses, achats ou azote). La suppression casserait l'historique : préférez <b>Archiver</b>.</p>`
+          :`<p class="hint">Suppression définitive de l'engrais et de son historique de prix.</p>`,
+      ()=>{ if(used){ Store.mutate(cc=>{ f.active=false; }); this.toast("Engrais archivé (utilisé dans une campagne)"); }
+        else { Store.mutate(cc=>{ cc.fertilizers.splice(cc.fertilizers.indexOf(f),1); }); this.toast("Engrais supprimé"); } },
+      used?"Archiver":"Supprimer");
+  },
+  fertHistory(id) {
+    const f=Store.camp.fertilizers.find(x=>x.id===id), h=FERT.histStats(f);
+    const rows=(f.history||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(x=>`<tr>
+      <td>${x.date||"—"}</td><td>${x.supplier||"—"}</td><td class="num"><b>${fmt(x.price,2)}</b> ${PRICE_UNITS[x.unit]||""}</td>
+      <td>${x.qty||"—"}</td><td>${x.retained?'<span class="chip sig-g"><i></i>Retenu</span>':'<span class="chip sig-n"><i></i>Non retenu</span>'}</td>
+      <td class="muted">${x.comment||""}</td></tr>`).join("");
+    this.modal("Historique des prix — "+f.name,
+      `${h?`<p class="hint" style="margin-bottom:10px">Dernier : <b>${fmt(h.last)}</b> (${h.lastDate}) · meilleur : <b>${fmt(h.best)}</b> · moyen : <b>${fmt(h.avg)}</b>
+        ${h.delta!=null?" · écart vs précédent : <b>"+(h.delta>0?"+":"")+fmt(h.delta)+"</b>":""} · ${h.count} relevé(s)</p>`:""}
+      <div style="max-height:38vh;overflow:auto"><table class="tb"><thead><tr>
+      <th>Date</th><th>Fournisseur</th><th class="num">Prix</th><th>Qté proposée</th><th>Décision</th><th>Commentaire</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="6" class="empty">Aucun relevé</td></tr>'}</tbody></table></div>
+      <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px">
+      <b style="font-size:13px">Ajouter un relevé de prix</b>
+      <div class="frow" style="margin-top:8px">
+        <div class="field"><label>Date</label><input id="mh-date" type="date" value="${today()}"></div>
+        <div class="field"><label>Fournisseur</label><input id="mh-sup" value="${f.supplier||""}"></div></div>
+      <div class="frow">
+        <div class="field"><label>Prix (${PRICE_UNITS[f.priceUnit]})</label><input id="mh-price" type="number" step="0.01"></div>
+        <div class="field"><label>Quantité proposée</label><input id="mh-qty"></div></div>
+      <div class="frow">
+        <div class="field"><label>Commentaire</label><input id="mh-cmt"></div>
+        <div class="field"><label>Prix retenu ?</label><select id="mh-ret"><option value="1">Oui — devient le prix de l'engrais</option><option value="0">Non — simple relevé</option></select></div></div></div>`,
+      ()=>{ const price=this.mnum("mh-price");
+        if(price==null){ this.closeModal(); return; }
+        if(price<=0){ this.toast("Prix invalide"); return false; }
+        const retained=this.mval("mh-ret")==="1";
+        Store.mutate(c=>{ f.history.push({ id:uid(), date:this.mval("mh-date"), supplier:this.mval("mh-sup"),
+            price, unit:f.priceUnit, qty:this.mval("mh-qty"), comment:this.mval("mh-cmt"), retained });
+          if(retained){ f.price=price; f.priceUpdated=this.mval("mh-date"); } });
+        this.toast(retained?"Prix retenu — tous les coûts sont recalculés":"Relevé ajouté à l'historique"); },
+      "Ajouter le relevé");
+  },
+
+  /* ---------- PRÉVISIONNEL D'ACHAT ---------- */
+  pg_prev() {
+    const c=Store.camp, fv=CALC.fertView(c), surf=CALC.surfTot(c)||1;
+    const mg=CALC.margins(c,null);
+    const cards=fv.map(x=>{ const f=x.f, up=x.up;
+      return `<div class="card"><div class="hd"><h2>${f.name}</h2>${this.signal(x.signal)}</div><div class="bd">
+      <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px">
+        <div><div style="font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--tx-3);font-weight:700">Besoin</div>
+          <div style="font-size:19px;font-weight:800">${fmt(x.need)} ${APP_UNITS[f.appUnit]}</div>
+          <div class="muted" style="font-size:12px">${x.tons!=null?"= "+fmt(x.tons,1)+" t":""}</div></div>
+        <div><div style="font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--tx-3);font-weight:700">Reste à acheter</div>
+          <div style="font-size:19px;font-weight:800;color:${x.left>0?"var(--orange)":"var(--green)"}">${x.left!=null?fmt(x.left,1)+" t":"—"}</div>
+          <div class="muted" style="font-size:12px">${x.cover!=null?"couverture "+fmt(x.cover*100)+" %":""}</div></div>
+        <div><div style="font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--tx-3);font-weight:700">Coût du besoin</div>
+          <div style="font-size:19px;font-weight:800">${x.needCost.ok?eur(Math.round(x.needCost.cost)):MISS}</div>
+          <div class="muted" style="font-size:12px">${x.needCost.ok?eurHa(x.needCost.cost/surf)+" moy.":""}</div></div>
+      </div>
+      ${x.cover!=null?`<div class="bar-row" style="grid-template-columns:110px 1fr 60px"><span>Couverture</span>
+        <div class="tr"><i style="width:${Math.min(100,x.cover*100)}%;background:${x.cover>=1?"var(--green)":"var(--orange)"}"></i></div>
+        <span class="vv">${fmt(x.cover*100)} %</span></div>`:""}
+      <table class="tb" style="margin-top:8px"><tbody>
+      <tr><td class="muted">Prix ${PRICE_UNITS[f.priceUnit]}</td><td class="num">${this.inp("fertilizers",f.id,"price",f.price,{w:70})}</td>
+          <td class="muted">Prix converti</td><td class="num calc">${up.ok?(up.label||"forfait"):'<span class="miss">'+up.reason+'</span>'}</td></tr>
+      <tr><td class="muted">Stock (t)</td><td class="num">${this.inp("fertilizers",f.id,"stock",f.stock,{w:70})}</td>
+          <td class="muted">Sécurisé</td><td class="num calc">${fmt(x.secured,1)} t${x.pmp?` <span class="muted">@ ${fmt(x.pmp)} €/t (${eur(Math.round(x.spent))})</span>`:""}</td></tr>
+      <tr><td class="muted">Prix actuel €/t</td><td class="num">${this.inp("fertilizers",f.id,"cur",f.cur,{w:70})}</td>
+          <td class="muted">Prix cible €/t</td><td class="num">${this.inp("fertilizers",f.id,"tgt",f.tgt,{w:70})}</td></tr>
+      ${x.scn?`<tr><td class="muted">Scénarios €/t</td><td class="num">${this.inp("fertilizers",f.id,"low",f.low,{w:58})}</td>
+          <td class="num muted" style="text-align:center">réf. ${fmt(f.price)}</td><td class="num">${this.inp("fertilizers",f.id,"high",f.high,{w:58})}</td></tr>
+      <tr><td class="muted">Coût scénarios</td><td class="num calc">${eur(x.scn.low)}</td><td class="num calc">${eur(x.scn.mid)}</td><td class="num calc">${eur(x.scn.high)}</td></tr>`:""}
+      <tr><td class="muted">Coût restant</td><td class="num calc">${x.remainCost!=null?eur(x.remainCost):"—"}</td>
+          <td class="muted">Économies</td><td class="num calc">réal. ${eur(x.ecoDone)} · pot. ${eur(x.ecoPot)}</td></tr>
+      <tr><td class="muted">Décision</td><td colspan="2">${this.sel("fertilizers",f.id,"decision",f.decision,
+        ["Acheter maintenant","Attendre","Sécuriser une partie","Surveiller"].map(d=>({v:d,l:d})))}</td>
+        <td class="num">${this.inp("fertilizers",f.id,"pct",f.pct,{w:52})} %</td></tr>
+      </tbody></table>
+      <div style="margin-top:8px;display:flex;gap:8px"><button class="btn sm" onclick="UI.fertHistory('${f.id}')">Historique prix</button></div>
+      </div></div>`;}).join("");
+    const tf=key=>fv.reduce((s,x)=>s+(x.scn?x.scn[key]??x.scn.mid:(x.needCost.ok?Math.round(x.needCost.cost):0)),0);
+    const totLow=tf("low"), totMid=tf("mid"), totHigh=tf("high");
+    const sol=fv.find(x=>x.f.id==="sol39"), n33=fv.find(x=>x.f.id==="n33");
+    const sens=[20,50,100].map(h=>{ const i1=Math.round((sol.left||0)*h), i2=Math.round((n33.left||0)*h);
+      return `<tr><td>+${h} €/t</td><td class="num">${eur(i1)}</td><td class="num">${eur(i2)}</td>
+      <td class="num calc">${eur(i1+i2)}</td><td class="num muted">${eurHa((i1+i2)/surf)}</td></tr>`;}).join("");
+    const mgRows=mg.map(m=>{ const risk=m.margin<0?"r":m.margin<150?"a":"g";
+      return `<tr><td><b>${m.cu.name}</b></td><td class="num">${fmt(m.area,2)}</td><td class="num">${eur(m.pb)}</td>
+      <td class="num">${eur(Math.round(m.seedHa))}</td><td class="num">${eur(Math.round(m.phytoHa))}</td><td class="num">${eur(m.autres)}</td>
+      <td class="num" style="font-weight:700">${eur(Math.round(m.fertHa))}</td>
+      <td class="num calc" style="font-weight:800;color:${m.margin<0?"var(--red)":"inherit"}">${eur(Math.round(m.margin))}</td>
+      <td class="num muted">${m.seuil?fmt(m.seuil)+" €/t":"—"}</td><td>${this.signal(risk)}</td></tr>`;}).join("");
+    const margeTot=mg.reduce((s,m)=>s+m.margin*m.area,0);
+    const journal=c.purchases.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(b=>{
+      const f=CALC.fert(c,b.fert);
+      return `<tr><td>${b.date||"—"}</td><td><b>${f?.name||"?"}</b></td><td>${b.supplier||"—"}</td>
+      <td class="num">${fmt(b.qty,1)} t</td><td class="num">${fmt(b.price)} €/t</td>
+      <td class="num calc">${eur(Math.round((+b.qty||0)*(+b.price||0)))}</td><td>${b.place||"—"}</td><td class="muted">${b.comment||""}</td>
+      <td><button class="btn sm ghost danger" onclick="UI.delPurchase('${b.id}')">✕</button></td></tr>`;}).join("");
+    return `
+    <div class="page-head"><div><h1>Prévisionnel d'achat</h1>
+      <p>Quand acheter, combien, à quel prix. Prix saisis dans leur unité commerciale, conversions et impacts automatiques. Sécurisé & PMP issus du journal.</p></div>
+      <div class="actions"><button class="btn" onclick="UI.go('eng')">Engrais & prix</button>
+      <button class="btn pri" onclick="UI.addPurchase()">＋ Enregistrer un achat</button></div></div>
+    <div class="grid g2" style="margin-bottom:16px">${cards}</div>
+    <div class="grid g2" style="margin-bottom:16px">
+      <div class="card"><div class="hd"><h2>Coût d'achat selon les scénarios</h2><span class="sub">sécurisé au PMP + reste au prix du scénario</span></div>
+        <div class="bd">${CHARTS.bars([{label:"Prix bas",value:totLow,color:"var(--green)"},
+          {label:"Prix référence",value:totMid,color:"var(--amber)"},{label:"Prix haut",value:totHigh,color:"var(--red)"}])}
+        <div class="hint">Écart haut − bas : <b>${eur(totHigh-totLow)}</b>, soit <b>${eurHa((totHigh-totLow)/surf)}</b>.</div></div></div>
+      <div class="card"><div class="hd"><h2>Si l'azote augmente…</h2><span class="sub">impact sur le reste à acheter</span></div>
+        <div class="tb-wrap"><table class="tb"><thead><tr><th>Hausse</th><th class="num">Sol. 39</th><th class="num">N33</th><th class="num">Total</th><th class="num">€/ha</th></tr></thead>
+        <tbody>${sens}</tbody></table></div></div>
+    </div>
+    <div class="card" style="margin-bottom:16px"><div class="hd"><h2>Impact par culture — marges €/ha</h2><span class="sub">aux prix engrais actuels</span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Culture</th><th class="num">ha</th><th class="num">Produit brut</th><th class="num">Semences</th><th class="num">Phyto</th>
+      <th class="num">Autres</th><th class="num">Engrais</th><th class="num">Marge</th><th class="num">Seuil</th><th>Risque</th>
+      </tr></thead><tbody>${mgRows}
+      <tr class="tot"><td colspan="7">MARGE EXPLOITATION</td><td class="num">${eur(Math.round(margeTot))}</td><td colspan="2" class="muted">${eurHa(margeTot/surf)}</td></tr>
+      </tbody></table></div></div>
+    <div class="card"><div class="hd"><h2>Journal des achats</h2><span class="sub">${c.purchases.length} achat(s) — alimente PMP et % sécurisé</span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Date</th><th>Produit</th><th>Fournisseur</th><th class="num">Quantité</th><th class="num">Prix</th><th class="num">Montant</th><th>Lieu</th><th>Commentaire</th><th></th>
+      </tr></thead><tbody>${journal||'<tr><td colspan="9" class="empty">Aucun achat enregistré.</td></tr>'}</tbody></table></div></div>`;
+  },
+  addPurchase() {
+    const c=Store.camp;
+    this.modal("Enregistrer un achat d'engrais",
+      `<div class="frow">
+      <div class="field"><label>Date</label><input id="m-date" type="date" value="${today()}"></div>
+      <div class="field"><label>Produit</label><select id="m-fert">${c.fertilizers.filter(f=>f.active!==false).map(f=>`<option value="${f.id}">${f.name}</option>`).join("")}</select></div></div>
+      <div class="frow">
+      <div class="field"><label>Quantité (tonnes)</label><input id="m-qty" type="number" step="0.1"></div>
+      <div class="field"><label>Prix (€/t HT)</label><input id="m-price" type="number" step="0.1"></div></div>
+      <div class="frow">
+      <div class="field"><label>Lieu de livraison</label><select id="m-place"><option>${place(c,"bran")}</option><option>${place(c,"fouch")}</option><option>Autre</option></select></div>
+      <div class="field"><label>Fournisseur</label><input id="m-sup" value=""></div></div>
+      <div class="field"><label>Commentaire</label><input id="m-cmt"></div>`,
+      ()=>{ const qty=+this.mval("m-qty"), price=+this.mval("m-price");
+        if(!qty||!price){ this.toast("Quantité et prix requis"); return false; }
+        if(qty<0||price<0){ this.toast("Valeur négative interdite"); return false; }
+        Store.mutate(cc=>cc.purchases.push({ id:uid(), date:this.mval("m-date"), fert:this.mval("m-fert"),
+          supplier:this.mval("m-sup"), qty, price, place:this.mval("m-place"), comment:this.mval("m-cmt") }));
+        this.toast("Achat enregistré — PMP mis à jour"); },"Enregistrer");
+  },
+  delPurchase(id){ Store.mutate(c=>{ c.purchases.splice(c.purchases.findIndex(x=>x.id===id),1); }); },
+  /* ---------- INTERVENTIONS : planning par programmes ---------- */
+  phView:"periode",
+  phFilt:{},
+  setFilt(k,v){ this.phFilt[k]=v||undefined; this.render(); },
+  pg_phyto() {
+    const c=Store.camp, ph=CALC.phyto(c);
+    const views=CALC.programs(c,this.phFilt);
+    const alerts=CALC.progAlerts(c);
+    const needs=CALC.productNeeds(c,views);
+    const F=(k,label,opts)=>`<span class="lbl">${label}</span><select onchange="UI.setFilt('${k}',this.value)">
+      <option value="">Tous</option>${opts.map(o=>`<option value="${o.v}" ${String(o.v)===String(this.phFilt[k]||"")?"selected":""}>${o.l}</option>`).join("")}</select>`;
+    const filters=`<div class="filters no-print">
+      ${F("period","Période",c.periods.filter(p=>!p.archived).map(p=>({v:p.name,l:p.name})))}
+      ${F("status","Statut",STATUSES.map(s=>({v:s,l:s})))}
+      ${F("type","Type",["Fongicide","Désherbage","Insecticide","Autre"].map(t=>({v:t,l:t})))}
+      ${F("cult","Culture",c.cultures.map(cu=>({v:cu.id,l:cu.name})))}
+      ${F("vari","Variété",c.varieties.map(v=>({v:v.id,l:v.name})))}
+      ${F("parcel","Parcelle",CALC.active(c).map(p=>({v:p.id,l:p.name})))}
+      ${F("prod","Produit",c.products.map(p=>({v:p.id,l:p.name})))}
+      ${Object.keys(this.phFilt).some(k=>this.phFilt[k])?`<button class="btn sm" onclick="UI.phFilt={};UI.render()">✕ Effacer</button>`:""}</div>`;
+    const tabs=`<div class="seg no-print" style="margin-bottom:14px">${[["periode","Par période"],["culture","Par culture"],["parcelle","Par parcelle"],["cal","Calendrier"],["liste","Liste"]]
+      .map(([k,l])=>`<button class="${this.phView===k?"on":""}" onclick="UI.phView='${k}';UI.render()">${l}</button>`).join("")}</div>`;
+    const body = this.phView==="periode"?this.phByPeriod(views)
+      : this.phView==="culture"?this.phByCult(views)
+      : this.phView==="parcelle"?this.phByParcel(views)
+      : this.phView==="cal"?this.phCalendar(views)
+      : this.phList(views);
+    return `
+    <div class="page-head"><div><h1>Interventions</h1>
+      <p>Planning prévisionnel des traitements par programmes : une période + une culture + des parcelles + plusieurs produits. Sélectionnez T1 + Blé pour voir tout le programme du T1.</p></div>
+      <div class="actions"><button class="btn" onclick="UI.editProducts()">Produits, prix & stocks</button>
+      <button class="btn" onclick="UI.editPeriods()">Périodes</button>
+      <button class="btn" onclick="EXPORTS.pdf()">Imprimer / PDF</button>
+      <button class="btn pri" onclick="UI.editProgram()">＋ Programme d'intervention</button></div></div>
+    <div class="grid g4" style="margin-bottom:14px">
+      <div class="kpi" style="--k:var(--blue)"><div class="l">Programmes affichés</div><div class="v">${views.length}</div><div class="s">${ph.counts.todo} à réaliser · ${ph.counts.done} réalisés (campagne)</div></div>
+      <div class="kpi" style="--k:var(--orange)"><div class="l">Coût sélection</div><div class="v">${eur(views.filter(v=>v.pg.status!=="Annulée").reduce((s,v)=>s+v.cost,0))}</div><div class="s">prévisionnel campagne : ${eur(ph.cost)}</div></div>
+      <div class="kpi" style="--k:var(--green)"><div class="l">Coût réalisé</div><div class="v">${eur(ph.realCost)}</div><div class="s">écart prévu/réalisé conservé par programme</div></div>
+      <div class="kpi" style="--k:#8C5E2A"><div class="l">Produits à acheter (sélection)</div><div class="v">${needs.filter(b=>b.left>0).length}</div><div class="s">voir synthèse en bas de page</div></div>
+    </div>
+    ${alerts.length?`<div class="alertbox no-print"><b>⚠ ${alerts.length} point(s) à vérifier</b><ul>${alerts.slice(0,8).map(a=>`<li>${a}</li>`).join("")}</ul>${alerts.length>8?'<div class="muted">…</div>':""}</div>`:""}
+    ${filters}${tabs}${body}
+    ${this.phNeeds(needs)}`;
+  },
+  progCard(v) {
+    const c=Store.camp, pg=v.pg;
+    const cu=CALC.cult(c,pg.cult), vari=pg.vari?CALC.vari(c,pg.vari)?.name:"Toutes variétés";
+    const lines=v.lines.map(x=>`<tr><td><b>${x.prod?.name||"?"}</b> <span class="tag">${x.l.type||""}</span></td>
+      <td class="num">${x.l.dose??'<span class="miss">dose ?</span>'} ${x.prod?.unit||""}/ha</td>
+      <td class="num calc">${x.qty!=null?fmt(x.qty,2)+" "+(x.prod?.unit||""):"—"}</td>
+      <td class="num muted">${x.costHa!=null?fmt(x.costHa,1)+" €/ha":""}</td>
+      <td class="num calc">${x.priced?eur(x.cost):MISS}</td>
+      <td class="muted">${x.l.note||""}</td></tr>`).join("");
+    const real=pg.real?`<div class="p-real">✅ Réalisé le <b>${pg.real.date||"?"}</b>${pg.real.area!=null?" · "+fmt(pg.real.area,2)+" ha traités":""}
+      · coût réel <b>${eur(v.realCost)}</b> (écart ${v.gap>0?"+":""}${eur(v.gap)})${pg.real.comment?" · "+pg.real.comment:""}${pg.real.reason?" · écart : "+pg.real.reason:""}</div>`:"";
+    return `<div class="pgcard">
+      <div class="p-hd"><span style="width:10px;height:10px;border-radius:3px;background:${cu?.color||"#999"};display:inline-block"></span>
+        <b>${pg.period||"Période non renseignée"} — ${cu?.name||"?"} — ${vari}</b>
+        ${stchip(pg.status)}
+        <span class="p-meta">${v.parcels.length} parcelle(s) · ${fmt(v.area,2)} ha · ${pg.lines.length} produit(s)
+        · ${fmt(v.costHa,1)} €/ha · <b>${eur(v.cost)}</b>${pg.datePlan?" · prévu le "+pg.datePlan:""}</span>
+        <span class="p-act no-print">
+          <button class="btn sm" onclick="UI.progDetail('${pg.id}')">Détail</button>
+          <button class="btn sm" onclick="UI.editProgram('${pg.id}')">Modifier</button>
+          <button class="btn sm" onclick="UI.dupProgram('${pg.id}')">Dupliquer</button>
+          ${pg.status!=="Réalisée"?`<button class="btn sm grn" onclick="UI.doneProgram('${pg.id}')">Réalisé</button>`:""}
+          <select class="ed" style="border:1px solid var(--line);border-radius:7px;padding:3px 5px;font-size:12px"
+            onchange="UI.set('programs','${pg.id}','status',this.value,false)">
+            ${STATUSES.map(s=>`<option ${s===pg.status?"selected":""}>${s}</option>`).join("")}</select>
+          <button class="btn sm ghost danger" onclick="UI.delProgram('${pg.id}')">✕</button></span></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr><th>Produit</th><th class="num">Dose</th><th class="num">Quantité totale</th><th class="num">Coût/ha</th><th class="num">Coût</th><th>Note</th></tr></thead>
+      <tbody>${lines}</tbody></table></div>${real}</div>`;
+  },
+  phByPeriod(views) {
+    const c=Store.camp, po=CALC.periodOrder(c);
+    const groups={};
+    views.forEach(v=>{ (groups[v.pg.period||"Période non renseignée"] ||= []).push(v); });
+    const keys=Object.keys(groups).sort((a,b)=>(po[a]??99)-(po[b]??99));
+    if(!keys.length) return `<div class="card"><div class="empty"><b>Aucun programme</b>Modifiez les filtres ou créez un programme d'intervention.</div></div>`;
+    return keys.map(k=>{ const g=groups[k];
+      const cost=g.reduce((s,v)=>s+(v.pg.status!=="Annulée"?v.cost:0),0);
+      const area=g.reduce((s,v)=>s+v.area,0);
+      return `<div class="period-h">${k}<span class="tag">${g.length} programme(s) · ${fmt(area,1)} ha · ${eur(cost)}</span></div>`
+        + g.map(v=>this.progCard(v)).join(""); }).join("");
+  },
+  phByCult(views) {
+    const c=Store.camp, po=CALC.periodOrder(c);
+    const groups={};
+    views.forEach(v=>{ (groups[v.pg.cult||"?"] ||= []).push(v); });
+    return Object.entries(groups).map(([cid,g])=>{
+      const cu=CALC.cult(c,cid);
+      g.sort((a,b)=>(po[a.pg.period]??99)-(po[b.pg.period]??99));
+      return `<div class="period-h"><span style="width:12px;height:12px;border-radius:3px;background:${cu?.color||"#999"}"></span>
+        ${cu?.name||"?"}<span class="tag">${g.length} programme(s) · ${eur(g.reduce((s,v)=>s+v.cost,0))}</span></div>`
+        + g.map(v=>this.progCard(v)).join(""); }).join("")
+      || `<div class="card"><div class="empty"><b>Aucun programme</b></div></div>`;
+  },
+  phByParcel(views) {
+    const c=Store.camp, po=CALC.periodOrder(c);
+    const perP={};
+    views.forEach(v=>v.parcels.forEach(p=>{ (perP[p.id] ||= { p, items:[] }).items.push(v); }));
+    return Object.values(perP).map(({p,items})=>{
+      items.sort((a,b)=>(po[a.pg.period]??99)-(po[b.pg.period]??99));
+      const rows=items.flatMap(v=>v.lines.map(x=>`<tr><td>${v.pg.period}</td><td>${stchip(v.pg.status)}</td>
+        <td><b>${x.prod?.name||"?"}</b></td><td class="num">${x.l.dose??"?"} ${x.prod?.unit||""}/ha</td>
+        <td class="num calc">${x.l.dose!=null?fmt(x.l.dose*p.area,2)+" "+(x.prod?.unit||""):"—"}</td>
+        <td class="num calc">${x.prod&&+x.prod.price>0&&x.l.dose!=null?eur(Math.round(x.l.dose*p.area*x.prod.price)):MISS}</td></tr>`)).join("");
+      return `<div class="card" style="margin-bottom:12px"><div class="hd"><h2>${p.name}</h2>
+        <span class="sub">${CALC.cult(c,p.cult)?.name||""} · ${fmt(p.area,2)} ha · ${items.length} passage(s)</span></div>
+        <div class="tb-wrap"><table class="tb"><thead><tr><th>Période</th><th>Statut</th><th>Produit</th><th class="num">Dose</th><th class="num">Quantité</th><th class="num">Coût</th></tr></thead>
+        <tbody>${rows}</tbody></table></div></div>`; }).join("")
+      || `<div class="card"><div class="empty"><b>Aucune parcelle concernée</b></div></div>`;
+  },
+  calMonth: (new Date()).toISOString().slice(0,7),
+  phCalendar(views) {
+    const [y,m]=this.calMonth.split("-").map(Number);
+    const first=new Date(y,m-1,1), start=(first.getDay()+6)%7, days=new Date(y,m,0).getDate();
+    const dated=views.filter(v=>v.pg.datePlan&&v.pg.datePlan.slice(0,7)===this.calMonth);
+    const undated=views.filter(v=>!v.pg.datePlan).length;
+    let cells="";
+    for(let i=0;i<start;i++) cells+='<div class="day off"></div>';
+    for(let d=1;d<=days;d++){
+      const ds=this.calMonth+"-"+String(d).padStart(2,"0");
+      const evs=dated.filter(v=>v.pg.datePlan===ds)
+        .map(v=>`<div class="ev" onclick="UI.progDetail('${v.pg.id}')" title="${v.pg.period} ${CALC.cult(Store.camp,v.pg.cult)?.name||""}">${v.pg.period} · ${CALC.cult(Store.camp,v.pg.cult)?.name||""}</div>`).join("");
+      cells+=`<div class="day"><div class="dnum">${d}</div>${evs}</div>`;
+    }
+    const nav=(off)=>{ const d=new Date(y,m-1+off,1); return d.toISOString().slice(0,7); };
+    return `<div class="card"><div class="hd"><h2>${first.toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}</h2>
+      <div class="no-print"><button class="btn sm" onclick="UI.calMonth='${nav(-1)}';UI.render()">←</button>
+      <button class="btn sm" onclick="UI.calMonth='${nav(1)}';UI.render()">→</button></div></div>
+      <div class="bd"><div class="cal">${["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"].map(d=>`<div class="dayh">${d}</div>`).join("")}${cells}</div>
+      <div class="hint">${undated?undated+" programme(s) sans date précise restent visibles dans la vue « Par période ».":"Tous les programmes filtrés ont une date."}</div></div></div>`;
+  },
+  phList(views) {
+    const c=Store.camp;
+    const rows=views.flatMap(v=>v.lines.map(x=>`<tr>
+      <td>${v.pg.period}</td><td>${stchip(v.pg.status)}</td><td>${CALC.cult(c,v.pg.cult)?.name||""}</td>
+      <td>${v.pg.vari?CALC.vari(c,v.pg.vari)?.name:"Toutes"}</td><td>${v.parcels.length} · ${fmt(v.area,1)} ha</td>
+      <td><b>${x.prod?.name||"?"}</b></td><td class="num">${x.l.dose??"?"}</td>
+      <td class="num calc">${x.qty!=null?fmt(x.qty,2):"—"}</td><td class="num calc">${x.priced?eur(x.cost):MISS}</td>
+      <td>${v.pg.datePlan||"—"}</td><td class="muted">${x.l.note||v.pg.note||""}</td></tr>`)).join("");
+    return `<div class="card"><div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Période</th><th>Statut</th><th>Culture</th><th>Variété</th><th>Parcelles</th><th>Produit</th>
+      <th class="num">Dose/ha</th><th class="num">Quantité</th><th class="num">Coût</th><th>Date prévue</th><th>Note</th>
+      </tr></thead><tbody>${rows||'<tr><td colspan="11" class="empty">Aucune ligne</td></tr>'}</tbody></table></div></div>`;
+  },
+  phNeeds(needs) {
+    if(!needs.length) return "";
+    return `<div class="card" style="margin-top:16px"><div class="hd"><h2>Quantités à préparer / acheter (sélection filtrée)</h2>
+      <button class="btn sm no-print" onclick="UI.buyList()">Générer la liste d'achat</button></div>
+      <div class="tb-wrap"><table class="tb"><thead><tr>
+      <th>Produit</th><th class="num">Quantité nécessaire</th><th>Stock dispo</th><th>Déjà commandé</th><th class="num">Reste à acheter</th>
+      </tr></thead><tbody>${needs.map(b=>`<tr><td><b>${b.prod.name}</b></td>
+      <td class="num calc">${fmt(b.qty,2)} ${b.prod.unit}</td>
+      <td>${this.inp("products",b.prod.id,"stock",b.prod.stock,{w:66})}</td>
+      <td>${this.inp("products",b.prod.id,"ordered",b.prod.ordered,{w:66})}</td>
+      <td class="num" style="font-weight:750;${b.left>0?'color:var(--orange)':'color:var(--green)'}">${fmt(b.left,2)} ${b.prod.unit}</td></tr>`).join("")}
+      </tbody></table></div></div>`;
+  },
+  buyList() {
+    const c=Store.camp;
+    const needs=CALC.productNeeds(c,CALC.programs(c,this.phFilt)).filter(b=>b.left>0);
+    const fl=Object.entries(this.phFilt).filter(([k,v])=>v).map(([k,v])=>k==="cult"?CALC.cult(c,v)?.name:k==="prod"?CALC.prod(c,v)?.name:v).join(" · ")||"Toute la campagne";
+    this.modal("Liste d'achat — "+fl,
+      needs.length?`<table class="tb"><thead><tr><th>Produit</th><th class="num">Reste à acheter</th><th class="num">Prix</th><th class="num">Budget</th></tr></thead>
+      <tbody>${needs.map(b=>`<tr><td><b>${b.prod.name}</b></td><td class="num">${fmt(b.left,2)} ${b.prod.unit}</td>
+      <td class="num">${+b.prod.price>0?fmt(b.prod.price,2)+" €":"—"}</td>
+      <td class="num">${+b.prod.price>0?eur(Math.round(b.left*b.prod.price)):"—"}</td></tr>`).join("")}
+      <tr class="tot"><td colspan="3">BUDGET</td><td class="num">${eur(needs.reduce((s,b)=>s+(+b.prod.price>0?Math.round(b.left*b.prod.price):0),0))}</td></tr></tbody></table>
+      <p class="hint">Imprimez cette fenêtre (Exporter PDF) pour votre bon de commande.</p>`
+      :'<div class="empty"><b>Rien à acheter</b>Stocks et commandes couvrent la sélection.</div>',
+      ()=>{},"Fermer");
+  },
+  /* ---------- Éditeur de programme (multi-produits, sélection parcelles) ---------- */
+  editProgram(id, presetDup) {
+    const c=Store.camp;
+    if(!c.products.length){ this.toast("Créez d'abord vos produits (bouton « Produits, prix & stocks »)"); this.editProducts(); return; }
+    const pg = id ? c.programs.find(x=>x.id===id)
+      : presetDup || { id:null, period:"", status:"Prévue", type:"Fongicide", cult:c.cultures[0].id, vari:"",
+          parcels:null, datePlan:"", objective:"", trigger:"", note:"", real:null, lines:[] };
+    const draft=JSON.parse(JSON.stringify(pg));
+    if(!draft.lines.length) draft.lines.push({ id:uid(), prod:c.products[0].id, dose:null, type:draft.type||"Fongicide", note:"" });
+    UI._draft=draft;
+    const body=`
+    <div class="frow">
+      <div class="field"><label>Période / stade / passage *</label>
+        <input id="mp-period" list="dl-periods" value="${draft.period||""}" placeholder="T1, Floraison, libre…">
+        <datalist id="dl-periods">${c.periods.filter(p=>!p.archived).map(p=>`<option value="${p.name}">`).join("")}</datalist></div>
+      <div class="field"><label>Statut</label><select id="mp-status">${STATUSES.map(s=>`<option ${s===draft.status?"selected":""}>${s}</option>`).join("")}</select></div></div>
+    <div class="frow">
+      <div class="field"><label>Culture</label><select id="mp-cult" onchange="UI.progFormRefresh()">
+        ${c.cultures.map(cu=>`<option value="${cu.id}" ${cu.id===draft.cult?"selected":""}>${cu.name}</option>`).join("")}</select></div>
+      <div class="field"><label>Variété</label><select id="mp-vari" onchange="UI.progFormRefresh()"></select></div></div>
+    <div class="frow">
+      <div class="field"><label>Parcelles</label><select id="mp-pmode" onchange="UI.progFormRefresh()">
+        <option value="auto" ${!draft.parcels?"selected":""}>Toutes les parcelles correspondantes</option>
+        <option value="manuel" ${draft.parcels?"selected":""}>Sélection manuelle</option></select></div>
+      <div class="field"><label>Date prévue (facultatif)</label><input id="mp-date" type="date" value="${draft.datePlan||""}"></div></div>
+    <div id="mp-pklist"></div>
+    <div id="mp-summary" class="hint" style="margin:10px 0"></div>
+    <b style="font-size:13px">Produits du programme</b>
+    <div class="lines-ed" id="mp-lines" style="margin-top:8px"></div>
+    <button class="btn sm" onclick="UI._draft.lines.push({id:'${""}'+Math.random().toString(36).slice(2,9),prod:'${c.products[0].id}',dose:null,type:'Fongicide',note:''});UI.progFormLines();UI.progFormSummary()">＋ Ajouter un produit</button>
+    <div class="frow" style="margin-top:12px">
+      <div class="field"><label>Objectif de l'intervention</label><input id="mp-obj" value="${draft.objective||""}"></div>
+      <div class="field"><label>Conditions / déclencheur</label><input id="mp-trig" value="${draft.trigger||""}"></div></div>
+    <div class="field"><label>Annotation</label><input id="mp-note" value="${draft.note||""}"></div>`;
+    this.modal(id?"Modifier le programme":"Nouveau programme d'intervention",body,()=>{
+      const period=this.mval("mp-period");
+      if(!period){ this.toast("La période est obligatoire"); return false; }
+      if(!draft.lines.length){ this.toast("Ajoutez au moins un produit"); return false; }
+      Store.mutate(cc=>{
+        if(!cc.periods.some(p=>p.name===period)) cc.periods.push({ id:uid(), name:period, archived:false });
+        Object.assign(draft,{ period, status:this.mval("mp-status"), cult:this.mval("mp-cult"),
+          vari:this.mval("mp-vari"), datePlan:this.mval("mp-date"),
+          objective:this.mval("mp-obj"), trigger:this.mval("mp-trig"), note:this.mval("mp-note") });
+        draft.parcels = this.mval("mp-pmode")==="manuel"
+          ? [...document.querySelectorAll(".mpk:checked")].map(x=>x.dataset.id) : null;
+        draft.type = draft.lines[0]?.type || "Autre";
+        if(id){ Object.assign(pg,draft); }
+        else { draft.id=uid(); cc.programs.push(draft); }
+      });
+      this.toast(id?"Programme mis à jour":"Programme créé");
+    },id?"Enregistrer":"Créer le programme",true);
+    this.progFormRefresh();
+  },
+  progFormRefresh() {
+    const c=Store.camp, d=UI._draft;
+    d.cult=this.mval("mp-cult")||d.cult;
+    const variSel=document.getElementById("mp-vari");
+    const vs=c.varieties.filter(v=>v.cult===d.cult);
+    variSel.innerHTML=`<option value="">Toutes les variétés</option>`+vs.map(v=>`<option value="${v.id}" ${v.id===d.vari?"selected":""}>${v.name}</option>`).join("");
+    d.vari=variSel.value;
+    const mode=this.mval("mp-pmode");
+    const box=document.getElementById("mp-pklist");
+    if(mode==="manuel"){
+      const cand=CALC.active(c).filter(p=>p.cult===d.cult&&(!d.vari||p.vari===d.vari));
+      const all=CALC.active(c);
+      const list=(cand.length?cand:all);
+      box.innerHTML=`<div class="pk-list">${list.map(p=>`<label><input type="checkbox" class="check mpk" data-id="${p.id}"
+        ${(d.parcels||cand.map(x=>x.id)).includes(p.id)?"checked":""} onchange="UI.progFormSummary()"> ${p.name} <span class="muted">${fmt(p.area,2)} ha</span></label>`).join("")}</div>`;
+    } else box.innerHTML="";
+    this.progFormLines(); this.progFormSummary();
+  },
+  progFormLines() {
+    const c=Store.camp, d=UI._draft;
+    document.getElementById("mp-lines").innerHTML=d.lines.map((l,i)=>`<div class="row">
+      <select onchange="UI._draft.lines[${i}].prod=this.value;UI.progFormSummary()">
+        ${c.products.map(p=>`<option value="${p.id}" ${p.id===l.prod?"selected":""}>${p.name}</option>`).join("")}</select>
+      <select onchange="UI._draft.lines[${i}].type=this.value">
+        ${["Fongicide","Désherbage","Insecticide","Autre"].map(t=>`<option ${t===l.type?"selected":""}>${t}</option>`).join("")}</select>
+      <input class="num" type="number" step="0.001" placeholder="dose/ha" value="${l.dose??""}"
+        onchange="UI._draft.lines[${i}].dose=this.value===''?null:+this.value;UI.progFormSummary()">
+      <input placeholder="note" value="${l.note||""}" onchange="UI._draft.lines[${i}].note=this.value">
+      <button class="btn sm ghost danger" onclick="UI._draft.lines.splice(${i},1);UI.progFormLines();UI.progFormSummary()">✕</button>
+    </div>`).join("");
+  },
+  progFormSummary() {
+    const c=Store.camp, d=UI._draft;
+    d.vari=this.mval("mp-vari");
+    let parcels;
+    if(this.mval("mp-pmode")==="manuel")
+      parcels=CALC.active(c).filter(p=>[...document.querySelectorAll(".mpk:checked")].map(x=>x.dataset.id).includes(p.id));
+    else parcels=CALC.active(c).filter(p=>p.cult===d.cult&&(!d.vari||p.vari===d.vari));
+    const area=Math.round(parcels.reduce((s,p)=>s+ +p.area,0)*100)/100;
+    let cost=0, missing=false;
+    d.lines.forEach(l=>{ const prod=CALC.prod(c,l.prod);
+      if(l.dose!=null&&prod&&+prod.price>0) cost+=Math.round(l.dose*area*prod.price); else if(l.dose!=null) missing=true; });
+    document.getElementById("mp-summary").innerHTML=
+      `<b>${parcels.length}</b> parcelle(s) — ${parcels.slice(0,6).map(p=>p.name).join(", ")}${parcels.length>6?"…":""}
+       · surface <b>${fmt(area,2)} ha</b> · coût prévisionnel <b>${eur(cost)}</b>${area?" ("+fmt(cost/area,1)+" €/ha)":""}${missing?' · <span class="miss">prix produit manquant</span>':""}
+       ${!parcels.length?'<br><span class="miss">⚠ Aucune parcelle ne correspond à cette culture/variété</span>':""}`;
+  },
+  progDetail(id) {
+    const c=Store.camp, v=CALC.progView(c,c.programs.find(x=>x.id===id));
+    this.modal("Détail — "+v.pg.period+" · "+(CALC.cult(c,v.pg.cult)?.name||""),
+      `<p class="hint" style="margin-bottom:10px">${stchip(v.pg.status)} · ${v.parcels.length} parcelle(s) · ${fmt(v.area,2)} ha
+        ${v.pg.datePlan?" · prévu le "+v.pg.datePlan:""}${v.pg.objective?"<br>Objectif : "+v.pg.objective:""}${v.pg.trigger?"<br>Déclencheur : "+v.pg.trigger:""}${v.pg.note?"<br>Note : "+v.pg.note:""}</p>
+      <b style="font-size:13px">Parcelles</b>
+      <p class="hint" style="margin:6px 0 12px">${v.parcels.map(p=>p.name+" ("+fmt(p.area,2)+" ha)").join(" · ")||"—"}</p>
+      <table class="tb"><thead><tr><th>Produit</th><th class="num">Dose</th><th class="num">Quantité</th><th class="num">Coût</th></tr></thead>
+      <tbody>${v.lines.map(x=>`<tr><td><b>${x.prod?.name}</b></td><td class="num">${x.l.dose??"?"} ${x.prod?.unit}/ha</td>
+      <td class="num">${x.qty!=null?fmt(x.qty,2)+" "+x.prod?.unit:"—"}</td><td class="num">${x.priced?eur(x.cost):MISS}</td></tr>`).join("")}
+      <tr class="tot"><td colspan="3">TOTAL — ${fmt(v.costHa,1)} €/ha</td><td class="num">${eur(v.cost)}</td></tr></tbody></table>
+      ${v.pg.real?`<p class="hint" style="margin-top:10px">✅ Réalisé le ${v.pg.real.date} · coût réel ${eur(v.realCost)} · écart ${v.gap>0?"+":""}${eur(v.gap)}
+        ${(v.pg.real.lines||[]).map(rl=>{const pr=CALC.prod(c,rl.prod);return "<br>· "+(pr?.name||"?")+" : "+rl.dose+" "+(pr?.unit||"")+"/ha réel";}).join("")}</p>`:""}`,
+      ()=>{},"Fermer");
+  },
+  dupProgram(id) {
+    const c=Store.camp, src=c.programs.find(x=>x.id===id);
+    const copy=JSON.parse(JSON.stringify(src));
+    copy.id=null; copy.status="Prévue"; copy.real=null; copy.datePlan="";
+    copy.lines.forEach(l=>l.id=uid());
+    this.editProgram(null,copy);
+    this.toast("Duplication : ajustez période, culture ou produits puis validez");
+  },
+  doneProgram(id) {
+    const c=Store.camp, pg=c.programs.find(x=>x.id===id), v=CALC.progView(c,pg);
+    const lines=pg.lines.map((l,i)=>{ const prod=CALC.prod(c,l.prod);
+      return `<div class="frow"><div class="field"><label>${prod?.name||"?"} — dose réelle (prévu : ${l.dose??"?"} ${prod?.unit||""}/ha)</label>
+      <input id="mr-d${i}" type="number" step="0.001" value="${l.dose??""}"></div>
+      <div class="field"><label>&nbsp;</label><span class="muted" style="padding-top:9px;display:block">consommation calculée automatiquement</span></div></div>`; }).join("");
+    this.modal("Marquer comme réalisé — "+pg.period,
+      `<div class="frow"><div class="field"><label>Date réelle *</label><input id="mr-date" type="date" value="${today()}"></div>
+      <div class="field"><label>Surface réellement traitée (ha)</label><input id="mr-area" type="number" step="0.01" value="${v.area}"></div></div>
+      ${lines}
+      <div class="frow"><div class="field"><label>Commentaire après réalisation</label><input id="mr-cmt"></div>
+      <div class="field"><label>Raison d'un éventuel écart</label><input id="mr-reason"></div></div>
+      <p class="hint">Le prévisionnel initial est conservé : l'écart de dose, de quantité et de coût sera affiché sur le programme.</p>`,
+      ()=>{ const date=this.mval("mr-date"); if(!date){ this.toast("La date réelle est obligatoire"); return false; }
+        Store.mutate(cc=>{ pg.real={ date, area:this.mnum("mr-area")??v.area,
+            comment:this.mval("mr-cmt"), reason:this.mval("mr-reason"),
+            lines:pg.lines.map((l,i)=>({ prod:l.prod, dose:this.mnum("mr-d"+i)??l.dose })) };
+          pg.status="Réalisée"; });
+        this.toast("Programme réalisé — prévisionnel conservé, écart calculé"); },"Valider la réalisation");
+  },
+  delProgram(id) {
+    const c=Store.camp, pg=c.programs.find(x=>x.id===id);
+    this.modal("Supprimer le programme "+(pg.period||""),
+      `<p class="hint">Suppression définitive du programme et de son réalisé éventuel. Vous pouvez aussi le passer en statut <b>Annulée</b> pour garder la trace.</p>`,
+      ()=>{ Store.mutate(cc=>{ cc.programs.splice(cc.programs.indexOf(pg),1); }); this.toast("Programme supprimé"); },"Supprimer");
+  },
+  editPeriods() {
+    const c=Store.camp;
+    const rows=c.periods.map((p,i)=>`<tr style="${p.archived?'opacity:.45':''}">
+      <td>${this.inp("periods",p.id,"name",p.name,{num:false,w:220})}</td>
+      <td><button class="btn sm ghost" onclick="Store.mutate(c=>{const x=c.periods.find(q=>q.id==='${p.id}');x.archived=!x.archived;},true);UI.closeModal();UI.editPeriods()">${p.archived?"Restaurer":"Archiver"}</button>
+      <button class="btn sm ghost danger" onclick="Store.mutate(c=>{c.periods.splice(c.periods.findIndex(q=>q.id==='${p.id}'),1);},true);UI.closeModal();UI.editPeriods()">✕</button></td></tr>`).join("");
+    this.modal("Périodes / stades / passages",
+      `<p class="hint" style="margin-bottom:10px">L'ordre de cette liste définit l'ordre chronologique des vues. Une période peut être un stade, un passage, une date ou une indication libre.</p>
+      <div style="max-height:50vh;overflow:auto"><table class="tb"><tbody>${rows}</tbody></table></div>
+      <button class="btn sm" style="margin-top:10px" onclick="Store.mutate(c=>c.periods.push({id:'${""}'+Math.random().toString(36).slice(2,9),name:'Nouvelle période',archived:false}),true);UI.closeModal();UI.editPeriods()">＋ Ajouter une période</button>`,
+      ()=>{ UI.render(); },"Fermer");
+  },
+  editProducts() {
+    const c=Store.camp;
+    const rows=c.products.map(p=>`<tr>
+      <td>${this.inp("products",p.id,"name",p.name,{num:false,w:120})}</td>
+      <td>${this.sel("products",p.id,"type",p.type,["Fongicide","Désherbage","Insecticide","Engrais","Autre"].map(t=>({v:t,l:t})))}</td>
+      <td>${this.sel("products",p.id,"unit",p.unit,["L","kg","g","dose"].map(u=>({v:u,l:u})))}</td>
+      <td>${this.inp("products",p.id,"price",p.price,{w:56})}</td>
+      <td>${this.inp("products",p.id,"stock",p.stock,{w:56})}</td>
+      <td>${this.inp("products",p.id,"ordered",p.ordered,{w:56})}</td></tr>`).join("");
+    this.modal("Produits — prix & stocks",
+      `<p class="hint" style="margin-bottom:10px">Prix indicatifs à remplacer. Stock et commandé alimentent la synthèse d'achat des interventions.</p>
+      <div style="max-height:52vh;overflow:auto"><table class="tb"><thead><tr><th>Produit</th><th>Type</th><th>Unité</th><th>Prix €</th><th>Stock</th><th>Commandé</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+      <button class="btn sm" style="margin-top:10px" onclick="Store.mutate(c=>c.products.push({id:'${""}'+Math.random().toString(36).slice(2,9),name:'Nouveau produit',type:'Fongicide',unit:'L',price:0,cults:'',comment:'',stock:0,ordered:0}),true);UI.closeModal();UI.editProducts()">＋ Ajouter un produit</button>`,
+      ()=>{ UI.render(); },"Fermer",true);
+  },
+
+  /* ---------- PARAMÈTRES & DONNÉES ---------- */
+  pg_param() {
+    const c=Store.camp, p=c.params;
+    const P=(k,lab,step)=>`<tr><td>${lab}</td><td class="num"><input class="num ed" style="width:90px" step="${step||0.001}" type="number"
+      value="${p[k]??""}" onchange="UI.set('params',null,'${k}',this.value,true)"></td></tr>`;
+    const camps=Object.keys(Store.data.campaigns).sort().map(n=>`<tr><td><b>${n}</b>${n===Store.data.active?' <span class="tag">active</span>':""}</td>
+      <td class="num muted">${CALC.active(Store.data.campaigns[n]).length} parcelles · ${fmt(CALC.surfTot(Store.data.campaigns[n]),1)} ha</td>
+      <td><button class="btn sm" onclick="Store.switchCampaign('${n}')">Ouvrir</button>
+      <button class="btn sm ghost danger" onclick="UI.delCamp('${n}')">Supprimer</button></td></tr>`).join("");
+    return `
+    <div class="page-head"><div><h1>Paramètres & données</h1>
+      <p>Constantes, campagnes et sauvegardes. Les prix, densités et teneurs des engrais se gèrent désormais sur la page <b>Engrais & prix</b>.</p></div></div>
+    <div class="grid g2">
+      <div class="card"><div class="hd"><h2>Constantes techniques</h2><span class="sub">utilisées par tous les calculs</span></div>
+        <div class="tb-wrap"><table class="tb"><tbody>
+        ${P("pmgDiv","Diviseur PMG (kg/ha = PMG × grains ÷ x)",1)}
+        ${P("tva","TVA % (info — tous les prix sont HT)",1)}
+        <tr><td>Nom du lieu de stockage azote n°1</td><td class="num"><input class="ed" style="width:130px" value="${(c.storageNames?.bran||"").replace(/"/g,'&quot;')}"
+          onchange="Store.mutate(cc=>{ if(!cc.storageNames)cc.storageNames={}; cc.storageNames.bran=this.value; })"></td></tr>
+        <tr><td>Nom du lieu de stockage azote n°2</td><td class="num"><input class="ed" style="width:130px" value="${(c.storageNames?.fouch||"").replace(/"/g,'&quot;')}"
+          onchange="Store.mutate(cc=>{ if(!cc.storageNames)cc.storageNames={}; cc.storageNames.fouch=this.value; })"></td></tr>
+        </tbody></table></div>
+        <div class="bd hint">Teneur N (0,39 kg N/L — « 39 » = 39 kg N/100 L) et densité de la solution 39 : voir la fiche de l'engrais.
+        Vérification : 80 uN ÷ 0,39 = 205 L/ha ✓ · prix €/L = €/t × densité ÷ 1000.</div></div>
+      <div class="card"><div class="hd"><h2>Campagnes</h2><span class="sub">chaque campagne est indépendante</span></div>
+        <div class="tb-wrap"><table class="tb"><tbody>${camps}</tbody></table></div>
+        <div class="bd"><button class="btn pri" onclick="UI.newCampaign()">＋ Nouvelle campagne (copie de l'actuelle)</button></div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="hd"><h2>Sauvegarde & exports</h2>
+      <span class="sub">sauvegarde automatique locale à chaque modification</span></div>
+      <div class="bd" style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn grn" onclick="EXPORTS.excel()">Exporter Excel (.xls — 9 feuilles)</button>
+      <button class="btn" onclick="EXPORTS.json()">Exporter JSON (sauvegarde complète)</button>
+      <button class="btn" onclick="EXPORTS.pdf()">Exporter PDF (imprimer la page)</button>
+      <label class="btn" style="cursor:pointer">Importer JSON<input type="file" accept=".json" hidden onchange="if(this.files[0])EXPORTS.importJson(this.files[0])"></label>
+      <button class="btn ghost danger" onclick="UI.resetAll()">Réinitialiser Hectaris</button></div>
+      <div class="bd hint" style="padding-top:0"><b>Pensez à exporter régulièrement une sauvegarde.</b> La suppression des données du navigateur (nettoyage, changement d'appareil) peut entraîner leur perte.
+      L'import d'une ancienne sauvegarde est automatiquement migré : engrais convertis au nouveau format, interventions regroupées en programmes (« Période non renseignée » si absente), sans aucune perte.</div></div>
+    <div class="card" style="margin-top:16px"><div class="hd"><h2>Propriété intellectuelle & mentions légales</h2><span class="sub">${LEGAL.short}</span></div>
+      <div class="bd" style="font-size:13px;line-height:1.65;color:var(--tx-2)">
+      <b style="color:var(--tx)">Hectaris — Assolement & Prévision de campagne</b> est une création originale de <b style="color:var(--tx)">${LEGAL.owner}</b>.<br>
+      Le logiciel, son code source, son interface, sa structure de données, ses formules de calcul, la marque « Hectaris » et l'ensemble
+      de ses éléments graphiques sont protégés au titre du droit d'auteur (Code de la propriété intellectuelle, art. L.111-1 et suivants).
+      Toute reproduction, représentation, diffusion, modification, adaptation, décompilation, extraction ou exploitation commerciale,
+      totale ou partielle, sans autorisation écrite préalable de l'auteur, est interdite et constitue une contrefaçon sanctionnée par
+      les articles L.122-4 et L.335-2 et suivants du même code.<br>
+      Les données saisies dans l'application restent la propriété exclusive de l'exploitant utilisateur ; elles sont stockées uniquement
+      en local sur son appareil et ne sont transmises à aucun serveur.<br>
+      L'application est fournie « en l'état », à titre d'outil d'aide à la décision : les résultats ne se substituent pas au conseil
+      agronomique, réglementaire ou comptable ; l'auteur ne saurait être tenu responsable des décisions prises sur leur fondement.<br>
+      <div style="margin-top:12px;padding:12px 15px;background:var(--paper);border:1px solid var(--line);border-radius:10px;display:flex;gap:12px;align-items:flex-start">
+        <span style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--orange),#FFA040);display:grid;place-items:center;color:#fff;font-weight:800;flex:none">RV</span>
+        <div><b style="color:var(--tx)">Contact — autorisations, licences & partenariats</b><br>${LEGAL.contactHtml}</div>
+      </div></div></div>`;
+  },
+  delCamp(n){ this.modal("Supprimer la campagne "+n,
+    `<p class="hint">Toutes les données de la campagne <b>${n}</b> seront définitivement supprimées.</p>`,
+    ()=>{ Store.deleteCampaign(n); this.toast("Campagne supprimée"); },"Supprimer"); },
+  resetAll(){ this.modal("Réinitialiser Hectaris",
+    `<p class="hint" style="font-size:13.5px"><b>Cette action supprimera toutes les données enregistrées dans ce navigateur.</b><br>
+    Cette opération est irréversible sans sauvegarde exportée. Exportez un JSON avant si nécessaire.</p>`,
+    ()=>{ Storage.del(DB_KEY); Store.load(); UI.renderShell(); UI.render();
+      UI.closeModal(); UI.wizard(); return false; },"Tout supprimer"); },
+};
+
+/* ===================== Démarrage ===================== */
+Store.load();
+UI.renderShell();
+UI.render();
+if (Store.firstRun) UI.wizard();
+if (!Storage.ok) UI.toast("Mode aperçu : sauvegarde désactivée — téléchargez le fichier et ouvrez-le dans votre navigateur");
+</script>
+</body>
+</html>
